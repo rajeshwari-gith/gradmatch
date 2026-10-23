@@ -1,0 +1,25 @@
+program_id,university,program_name,field,degree,state,tuition_in_state,tuition_out_state,duration_years,avg_gpa,avg_gre,acceptance_rate,stipend,min_toefl,application_deadline,website
+GVSU-MSCS,Grand Valley State University,MS in Computer Science,Computer Science,MS,MI,14400,14400,2,3.30,,0.70,0,80,2027-02-01,https://www.gvsu.edu/computing/
+UMICH-MSCSE,University of Michigan,MS in Computer Science and Engineering,Computer Science,MS,MI,30000,60000,2,3.70,,0.20,0,84,2026-12-15,https://cse.engin.umich.edu
+UMICH-PHDCSE,University of Michigan,PhD in Computer Science and Engineering,Computer Science,PhD,MI,30000,60000,5,3.80,,0.08,42000,84,2026-12-15,https://cse.engin.umich.edu
+MSU-MSCS,Michigan State University,MS in Computer Science,Computer Science,MS,MI,22000,42000,2,3.40,,0.45,0,80,2027-01-01,https://engineering.msu.edu/about/departments/cse
+WSU-MSCS,Wayne State University,MS in Computer Science,Computer Science,MS,MI,20000,40000,2,3.20,305,0.60,0,79,2027-03-01,https://engineering.wayne.edu/computer-science
+UIUC-MSCS,University of Illinois Urbana-Champaign,MS in Computer Science,Computer Science,MS,IL,38000,52000,2,3.70,,0.15,0,103,2026-12-15,https://siebelschool.illinois.edu
+UIUC-PHDCS,University of Illinois Urbana-Champaign,PhD in Computer Science,Computer Science,PhD,IL,38000,52000,5,3.80,,0.10,33000,103,2026-12-15,https://siebelschool.illinois.edu
+GT-MSCS,Georgia Institute of Technology,MS in Computer Science,Computer Science,MS,GA,16000,32000,2,3.60,320,0.25,0,100,2026-12-15,https://www.cc.gatech.edu
+GT-PHDCS,Georgia Institute of Technology,PhD in Computer Science,Computer Science,PhD,GA,16000,32000,5,3.80,,0.08,35000,100,2026-12-15,https://www.cc.gatech.edu
+UTA-MSCS,University of Texas at Austin,MS in Computer Science,Computer Science,MS,TX,22000,42000,2,3.70,,0.12,0,79,2026-12-15,https://www.cs.utexas.edu
+PURDUE-MSCS,Purdue University,MS in Computer Science,Computer Science,MS,IN,12000,30000,2,3.60,,0.20,0,80,2026-12-15,https://www.cs.purdue.edu
+PURDUE-PHDCS,Purdue University,PhD in Computer Science,Computer Science,PhD,IN,12000,30000,5,3.70,,0.12,30000,80,2026-12-15,https://www.cs.purdue.edu
+UW-PHDCSE,University of Washington,PhD in Computer Science and Engineering,Computer Science,PhD,WA,19000,34000,5,3.90,,0.06,45000,92,2026-12-15,https://www.cs.washington.edu
+BERKELEY-PHDEECS,University of California Berkeley,PhD in Electrical Engineering and Computer Sciences,Computer Science,PhD,CA,16000,31000,5,3.90,,0.05,45000,90,2026-12-09,https://eecs.berkeley.edu
+CMU-PHDCS,Carnegie Mellon University,PhD in Computer Science,Computer Science,PhD,PA,52000,52000,5,3.90,,0.05,45000,100,2026-12-10,https://csd.cmu.edu
+HARVARD-PHDCS,Harvard University,PhD in Computer Science,Computer Science,PhD,MA,56000,56000,5,3.90,,0.04,48000,,2026-12-15,https://seas.harvard.edu
+STANFORD-MSCS,Stanford University,MS in Computer Science,Computer Science,MS,CA,65000,65000,2,3.80,,0.06,0,100,2026-12-02,https://cs.stanford.edu
+UMN-PHDCS,University of Minnesota,PhD in Computer Science,Computer Science,PhD,MN,18000,27000,5,3.60,,0.12,32000,79,2026-12-15,https://cse.umn.edu/cs
+OSU-MSCSE,Ohio State University,MS in Computer Science and Engineering,Computer Science,MS,OH,15000,40000,2,3.50,,0.30,0,79,2026-12-15,https://cse.osu.edu
+ASU-MSCS,Arizona State University,MS in Computer Science,Computer Science,MS,AZ,13000,34000,2,3.30,310,0.50,0,80,2027-01-15,https://scai.engineering.asu.edu
+COLUMBIA-MSDS,Columbia University,MS in Data Science,Data Science,MS,NY,70000,70000,1.5,3.60,325,0.25,0,100,2027-02-15,https://datascience.columbia.edu
+NYU-MSDS,New York University,MS in Data Science,Data Science,MS,NY,60000,60000,2,3.60,,0.20,0,100,2027-01-15,https://cds.nyu.edu
+UCSD-MSDS,University of California San Diego,MS in Data Science,Data Science,MS,CA,18000,33000,2,3.50,,0.20,0,85,2027-01-15,https://datascience.ucsd.edu
+IU-MSDS,Indiana University Bloomington,MS in Data Science,Data Science,MS,IN,13000,38000,2,3.20,,0.60,0,80,2027-03-01,https://luddy.indiana.edu
