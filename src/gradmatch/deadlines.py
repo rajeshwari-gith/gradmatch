@@ -1,6 +1,6 @@
 """Deadline urgency for programs and scholarships.
 
-Rule (CLAUDE.md): days_left = (deadline - today).days
+Rule (CONTRIBUTING.md): days_left = (deadline - today).days
   days_left < 0      -> "closed"
   0 <= days_left <= 14  -> "urgent"
   15 <= days_left <= 30 -> "soon"
