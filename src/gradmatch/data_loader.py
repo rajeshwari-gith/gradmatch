@@ -144,7 +144,7 @@ def _number(row, name) -> float:
 def _optional_int(row, name) -> int | None:
     value = _cell(row, name)
     if not value:
-        return None             # empty cell = None (CLAUDE.md)
+        return None             # empty cell = None (CONTRIBUTING.md)
     try:
         return int(value)
     except ValueError:
