@@ -1,0 +1,22 @@
+[project]
+name = "gradmatch"
+version = "0.1.0"
+description = "Find graduate programs, funding, scholarships and deadlines."
+requires-python = ">=3.11"
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
+markers = [
+    "unit: tests one function or module on its own",
+    "integration: tests modules working together (database, API)",
+    "system: tests the whole Streamlit app",
+    "acceptance: tests a user story end to end",
+]
+
+[tool.coverage.run]
+source = ["src/gradmatch"]
+branch = true
+
+[tool.coverage.report]
+show_missing = true
