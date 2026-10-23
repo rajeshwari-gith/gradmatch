@@ -36,4 +36,4 @@ data/            program, scholarship and living-cost data (CSV)
 tests/           unit, integration, system and acceptance tests
 ```
 
-See `CLAUDE.md` for the team's rules, data formats and business rules.
+See `CONTRIBUTING.md` for the team's rules, data formats and business rules.
