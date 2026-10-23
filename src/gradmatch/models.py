@@ -1,6 +1,6 @@
 """Shared data models used by every part of GradMatch.
 
-Change this file only when both team members agree (see CLAUDE.md).
+Change this file only when both team members agree (see CONTRIBUTING.md).
 """
 from dataclasses import dataclass
 from datetime import date

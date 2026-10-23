@@ -1,6 +1,6 @@
 """Label how well a program is funded.
 
-Rules (see CLAUDE.md):
+Rules (see CONTRIBUTING.md):
 - stipend >= living cost of the program's state -> Fully Funded
 - 0 < stipend < living cost                     -> Partially Funded
 - stipend == 0                                  -> Self-Funded

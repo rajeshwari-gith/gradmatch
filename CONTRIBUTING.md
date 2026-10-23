@@ -9,7 +9,6 @@ opportunities and deadlines. Stack: Python 3.11+, Streamlit, FastAPI, SQLite, py
 - Each member commits ONLY their own components (see Ownership) from their own GitHub account.
 - Work on a branch `<name>/<feature>` (e.g. `sai/scholarships`), open a pull request, the other member reviews it.
 - Every line must be explainable by its owner. Keep code simple; no clever tricks.
-- Log AI use in `AI_LOG.md` (date, member, tool, what it helped with) for the report's AI disclosure.
 
 ## Repository layout
 ```

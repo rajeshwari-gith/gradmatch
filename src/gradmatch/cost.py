@@ -1,6 +1,6 @@
 """Work out what a program costs a student.
 
-Rules (see CLAUDE.md):
+Rules (see CONTRIBUTING.md):
 - In-state tuition if the student's home state is the program's state,
   otherwise out-of-state tuition.
 - Yearly cost = tuition + living cost of the program's state - stipend,

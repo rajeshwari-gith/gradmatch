@@ -1,6 +1,6 @@
 """Label a program as Reach, Match or Safety for a student.
 
-Rules (see CLAUDE.md):
+Rules (see CONTRIBUTING.md):
 - A program that accepts fewer than 10% of applicants is always Reach.
 - Otherwise compare the student's GPA to the program's average GPA
   (difference rounded to 2 decimals):
