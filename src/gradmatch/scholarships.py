@@ -1,6 +1,6 @@
 """Find the scholarships a student is eligible for.
 
-Eligibility rule (CLAUDE.md) - ALL of these must hold:
+Eligibility rule (CONTRIBUTING.md) - ALL of these must hold:
   1. profile.degree_sought is in scholarship.degree_levels
   2. profile.field is in scholarship.fields, or fields contains "Any"
   3. profile.gpa >= scholarship.min_gpa
