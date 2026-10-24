@@ -14,6 +14,9 @@ for a required number, put a clearly labeled estimate and note it in `data/READM
 `duration_years` · `avg_gpa` and `acceptance_rate` (often not published → estimate) · `avg_gre` · `stipend` (PhD) ·
 `min_toefl` · `application_deadline` for Fall 2027 · `website` (URL of the page used)
 
+For PhD programs, also check that funding includes a **tuition waiver**. If it does not, or the page
+does not say, note it in the row's Notes column before entering a `stipend`.
+
 ## Existing rows in `programs.csv` (24)
 All values in these rows are estimates. Most `website` values are department home pages and must be
 replaced by the program page.
