@@ -110,7 +110,7 @@ def cost_chart(results, gpa: float):
         tooltip=[alt.Tooltip("Program:N"), alt.Tooltip("Average GPA:Q"),
                  alt.Tooltip("Cost per year ($):Q", format=",.0f"), alt.Tooltip("Fit:N")])
     you = alt.Chart(alt.Data(values=[{"Your GPA": gpa}])).mark_rule(
-        strokeDash=[6, 4], size=2).encode(x="Your GPA:Q")
+        strokeDash=[6, 4], size=2, color="#8A94A6").encode(x="Your GPA:Q")
     return (points + you).properties(height=320).interactive()
 
 
