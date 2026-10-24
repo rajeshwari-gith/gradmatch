@@ -20,8 +20,8 @@ from gradmatch.data_loader import DataError, load_living_costs, load_programs  #
 from gradmatch.deadlines import upcoming  # noqa: E402
 from gradmatch.fit import MATCH, REACH, SAFETY  # noqa: E402
 from gradmatch.models import StudentProfile  # noqa: E402
-from gradmatch.presentation import (CARD_CSS, FIT_COLORS, deadline_label,  # noqa: E402
-                                    result_card_html)
+from gradmatch.presentation import (CARD_CSS, ESTIMATE_NOTE, FIT_COLORS,  # noqa: E402
+                                    deadline_label, result_card_html)
 from gradmatch.search import search_programs  # noqa: E402
 from gradmatch.validation import CITIZENSHIP, DEGREES, US_STATES, validate_profile  # noqa: E402
 
@@ -132,8 +132,10 @@ def show_results(profile: StudentProfile, programs, living_costs, today: date):
                   f"{counts[SAFETY]} / {counts[MATCH]} / {counts[REACH]}")
     third.metric("Next deadline", next_deadline)
 
+    st.caption(ESTIMATE_NOTE)
     st.markdown(CARD_CSS, unsafe_allow_html=True)
-    st.markdown("".join(result_card_html(r, today) for r in results), unsafe_allow_html=True)
+    st.markdown("".join(result_card_html(r, today, profile.toefl) for r in results),
+                unsafe_allow_html=True)
     st.subheader("Cost and admission fit")
     st.altair_chart(cost_chart(results, profile.gpa), width="stretch")
     st.caption("Dots to the right are programs whose admitted students have higher GPAs. "
