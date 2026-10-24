@@ -98,7 +98,8 @@ Every row needs a real `website` (official source). Data is an estimate; UI show
 - **Scholarship eligibility**: ALL must hold: degree in degree_levels; field in fields or "Any";
   gpa >= min_gpa; citizenship in list or "Any"; home_state in states or "Any"; every `special` item in profile.special.
 - **Tuition**: in-state rate if profile.home_state == program.state, else out-of-state.
-- **Yearly cost** = tuition + living cost of program state − stipend (never below 0).
+- **Tuition charged**: a PhD program with `stipend > 0` waives tuition (charged 0); MS programs always charge tuition.
+- **Yearly cost** = tuition charged + living cost of program state − stipend (never below 0).
 - **Fit** (diff = gpa − avg_gpa, rounded to 2 decimals): `diff >= 0.20` Safety; `-0.15 <= diff < 0.20` Match;
   `diff < -0.15` Reach. Exception: acceptance_rate < 0.10 is always Reach.
 - **PhD funding**: stipend >= living cost → "Fully Funded"; 0 < stipend < living cost → "Partially Funded"; 0 → "Self-Funded".
