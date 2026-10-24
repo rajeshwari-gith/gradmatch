@@ -27,6 +27,17 @@ pytest -m unit                           # only unit tests
 pytest --cov --cov-report=term-missing   # with line + branch coverage
 ```
 
+## Check the data links
+
+Every row in `data/` has an official `website`. After adding or editing rows, run this on
+your own computer (it needs internet) to find links that no longer open:
+
+```
+PYTHONPATH=src python -m gradmatch.link_check
+```
+
+It prints every broken link and exits with 1 if there are any. It never changes the data.
+
 ## Project layout
 
 ```
