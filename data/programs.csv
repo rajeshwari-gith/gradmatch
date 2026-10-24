@@ -1,5 +1,5 @@
 program_id,university,program_name,field,degree,state,tuition_in_state,tuition_out_state,duration_years,avg_gpa,avg_gre,acceptance_rate,stipend,min_toefl,application_deadline,website
-GVSU-MSCS,Grand Valley State University,MS in Computer Science,Computer Science,MS,MI,14400,14400,2,3.30,,0.70,0,80,2027-02-01,https://www.gvsu.edu/computing/
+GVSU-MSCS,Grand Valley State University,MS in Applied Computer Science,Computer Science,MS,MI,14400,14400,2,3.30,,0.70,0,80,2027-02-01,https://www.gvsu.edu/computing/
 UMICH-MSCSE,University of Michigan,MS in Computer Science and Engineering,Computer Science,MS,MI,30000,60000,2,3.70,,0.20,0,84,2026-12-15,https://cse.engin.umich.edu
 UMICH-PHDCSE,University of Michigan,PhD in Computer Science and Engineering,Computer Science,PhD,MI,30000,60000,5,3.80,,0.08,42000,84,2026-12-15,https://cse.engin.umich.edu
 MSU-MSCS,Michigan State University,MS in Computer Science,Computer Science,MS,MI,22000,42000,2,3.40,,0.45,0,80,2027-01-01,https://engineering.msu.edu/about/departments/cse
