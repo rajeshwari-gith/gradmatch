@@ -3,7 +3,9 @@
 Rules (see CONTRIBUTING.md):
 - In-state tuition if the student's home state is the program's state,
   otherwise out-of-state tuition.
-- Yearly cost = tuition + living cost of the program's state - stipend,
+- A PhD program that pays a stipend (stipend > 0) waives tuition, so the
+  student is charged no tuition. MS programs always charge tuition.
+- Yearly cost = tuition charged + living cost of the program's state - stipend,
   and never below 0.
 """
 from gradmatch.models import Program
@@ -15,8 +17,14 @@ def tuition_for(program: Program, home_state: str) -> float:
     return program.tuition_out_state
 
 
+def tuition_charged(program: Program, home_state: str) -> float:
+    if program.degree == "PhD" and program.stipend > 0:
+        return 0.0
+    return tuition_for(program, home_state)
+
+
 def yearly_cost(program: Program, home_state: str, living_cost: float) -> float:
-    cost = tuition_for(program, home_state) + living_cost - program.stipend
+    cost = tuition_charged(program, home_state) + living_cost - program.stipend
     return max(cost, 0.0)
 
 
