@@ -9,7 +9,7 @@ from pathlib import Path
 import pytest
 from streamlit.testing.v1 import AppTest
 
-from .conftest import LIVING_COSTS, PROGRAM_HEADER, PROGRAM_ROWS, SCHOLARSHIP_HEADER
+from data_fixtures import LIVING_COSTS, PROGRAM_HEADER, PROGRAM_ROWS, SCHOLARSHIP_HEADER
 
 pytestmark = pytest.mark.system
 
