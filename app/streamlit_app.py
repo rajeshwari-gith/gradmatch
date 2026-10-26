@@ -7,7 +7,7 @@ Run it with:  streamlit run app/streamlit_app.py
 """
 import os
 import sys
-from datetime import date
+from datetime import date, datetime, time
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -16,12 +16,17 @@ sys.path.insert(0, str(ROOT / "src"))
 import altair as alt  # noqa: E402
 import streamlit as st  # noqa: E402
 
-from gradmatch.data_loader import DataError, load_living_costs, load_programs  # noqa: E402
+from gradmatch.cost import cost_breakdown  # noqa: E402
+from gradmatch.data_loader import (DataError, load_living_costs, load_programs,  # noqa: E402
+                                   load_scholarships)
 from gradmatch.deadlines import upcoming  # noqa: E402
+from gradmatch.exports import to_csv, to_ics  # noqa: E402
 from gradmatch.fit import MATCH, REACH, SAFETY  # noqa: E402
 from gradmatch.models import StudentProfile  # noqa: E402
 from gradmatch.presentation import (CARD_CSS, ESTIMATE_NOTE, FIT_COLORS,  # noqa: E402
-                                    deadline_label, result_card_html)
+                                    SPECIAL_LABELS, deadline_item_html, deadline_label, money,
+                                    result_card_html, scholarship_card_html)
+from gradmatch.scholarships import eligible_scholarships  # noqa: E402
 from gradmatch.search import search_programs  # noqa: E402
 from gradmatch.validation import CITIZENSHIP, DEGREES, US_STATES, validate_profile  # noqa: E402
 
@@ -37,7 +42,8 @@ CITIZENSHIP_LABELS = {
 def load_data(data_dir: str = str(DATA_DIR)):
     programs = load_programs(Path(data_dir) / "programs.csv")
     living_costs = load_living_costs(Path(data_dir) / "living_costs.csv")
-    return programs, living_costs
+    scholarships = load_scholarships(Path(data_dir) / "scholarships.csv")
+    return programs, living_costs, scholarships
 
 
 def get_today() -> date:
@@ -79,6 +85,10 @@ def show_profile_form(fields: list[str]):
             budget = st.number_input("Yearly budget (USD)", min_value=0, max_value=500_000,
                                      value=40_000, step=1_000, key="budget",
                                      help="The most you can pay in one year, tuition plus living costs.")
+            special = st.multiselect("Does any of this apply to you? (optional)",
+                                     list(SPECIAL_LABELS), key="special",
+                                     format_func=lambda tag: SPECIAL_LABELS[tag].capitalize(),
+                                     help="Some scholarships are only for these groups.")
         submitted = st.form_submit_button("Find programs", type="primary")
 
     if not submitted:
@@ -93,6 +103,7 @@ def show_profile_form(fields: list[str]):
         preferred_states=tuple(preferred),
         gre=optional_int(gre),
         toefl=optional_int(toefl),
+        special=tuple(special),
     )
 
 
@@ -114,32 +125,111 @@ def cost_chart(results, gpa: float):
     return (points + you).properties(height=320).interactive()
 
 
-def show_results(profile: StudentProfile, programs, living_costs, today: date):
-    results = search_programs(profile, programs, living_costs)
+def breakdown_chart(breakdown: dict):
+    """Bar chart of what makes up one year's cost."""
+    values = [{"Part": "Tuition", "Amount ($)": breakdown["tuition"]},
+              {"Part": "Living costs", "Amount ($)": breakdown["living"]},
+              {"Part": "Stipend (reduces cost)", "Amount ($)": -breakdown["stipend"]}]
+    return alt.Chart(alt.Data(values=values)).mark_bar().encode(
+        x=alt.X("Part:N", sort=None, axis=alt.Axis(labelAngle=0)),
+        y=alt.Y("Amount ($):Q"),
+        color=alt.Color("Part:N", legend=None, scale=alt.Scale(
+            domain=["Tuition", "Living costs", "Stipend (reduces cost)"],
+            range=["#5B9BD5", "#F5C469", "#1BB89A"])),
+        tooltip=[alt.Tooltip("Part:N"), alt.Tooltip("Amount ($):Q", format=",.0f")],
+    ).properties(height=260)
+
+
+def show_programs(profile: StudentProfile, results, living_costs, today: date):
     if not results:
         st.info("No programs match this profile. Try a higher budget, fewer preferred "
                 "states, or a different field.")
         return
 
-    counts = {label: sum(r.fit == label for r in results) for label in (SAFETY, MATCH, REACH)}
-    open_deadlines = upcoming([r.program for r in results], today)
-    next_deadline = (deadline_label(open_deadlines[0].application_deadline, today)[1]
-                     if open_deadlines else "All closed")
-
-    first, second, third = st.columns(3)
-    first.metric("Programs found", len(results))
-    second.metric("Safety / Match / Reach",
-                  f"{counts[SAFETY]} / {counts[MATCH]} / {counts[REACH]}")
-    third.metric("Next deadline", next_deadline)
-
     st.caption(ESTIMATE_NOTE)
-    st.markdown(CARD_CSS, unsafe_allow_html=True)
     st.markdown("".join(result_card_html(r, today, profile.toefl) for r in results),
                 unsafe_allow_html=True)
+    st.download_button("Download these results (.csv)", to_csv(results),
+                       file_name="gradmatch_results.csv", mime="text/csv")
+
     st.subheader("Cost and admission fit")
     st.altair_chart(cost_chart(results, profile.gpa), width="stretch")
     st.caption("Dots to the right are programs whose admitted students have higher GPAs. "
                "The dashed line is your GPA.")
+
+    st.subheader("Cost breakdown")
+    labels = [f"{r.program.university} – {r.program.program_name}" for r in results]
+    chosen = st.selectbox("Choose a program", range(len(results)), key="cost_choice",
+                          format_func=lambda i: labels[i])
+    result = results[chosen]
+    parts = cost_breakdown(result.program, profile.home_state, living_costs[result.program.state])
+    cols = st.columns(4)
+    cols[0].metric("Tuition per year", money(parts["tuition"]))
+    cols[1].metric("Living costs per year", money(parts["living"]))
+    cols[2].metric("Stipend per year", money(parts["stipend"]))
+    cols[3].metric(f"Total for {parts['years']:g} years", money(parts["total"]))
+    st.altair_chart(breakdown_chart(parts), width="stretch")
+    if result.program.degree == "PhD" and result.program.stipend > 0:
+        st.caption("This PhD program pays a stipend, so tuition is assumed to be waived. "
+                   "Mandatory student fees are not included.")
+
+
+def show_scholarships(matches, open_matches, today: date):
+    if not matches:
+        st.info("No scholarships match your profile. Try another degree or field, or tick "
+                "the groups that apply to you in the form.")
+        return
+    hidden = len(matches) - len(open_matches)
+    noun = "scholarship or opportunity" if len(open_matches) == 1 else "scholarships and opportunities"
+    note = f"{len(open_matches)} open {noun} you qualify for"
+    if hidden:
+        note += f" ({hidden} already closed and hidden)"
+    st.caption(note + ". Always check the official page for the exact rules.")
+    if open_matches:
+        st.markdown("".join(scholarship_card_html(s, today) for s in open_matches),
+                    unsafe_allow_html=True)
+
+
+def show_deadlines(results, open_matches, today: date):
+    items = upcoming([r.program for r in results] + list(open_matches), today)
+    if not items:
+        st.info("There are no open deadlines for your programs or scholarships.")
+        return
+    st.caption("Open deadlines for your programs and scholarships, soonest first.")
+    st.markdown("".join(deadline_item_html(item, today) for item in items), unsafe_allow_html=True)
+    stamp = datetime.combine(today, time(0, 0))
+    st.download_button("Add these deadlines to my calendar (.ics)", to_ics(items, stamp),
+                       file_name="gradmatch_deadlines.ics", mime="text/calendar")
+
+
+def show_results(profile: StudentProfile, programs, living_costs, scholarships, today: date):
+    results = search_programs(profile, programs, living_costs)
+    matches = eligible_scholarships(profile, scholarships)
+    open_matches = upcoming(matches, today)
+
+    if results:
+        counts = {label: sum(r.fit == label for r in results) for label in (SAFETY, MATCH, REACH)}
+        coming = upcoming([r.program for r in results] + list(open_matches), today)
+        next_deadline = (deadline_label(_deadline(coming[0]), today)[1] if coming else "All closed")
+        cols = st.columns(4)
+        cols[0].metric("Programs found", len(results))
+        cols[1].metric("Safety / Match / Reach",
+                       f"{counts[SAFETY]} / {counts[MATCH]} / {counts[REACH]}")
+        cols[2].metric("Scholarships you qualify for", len(open_matches))
+        cols[3].metric("Next deadline", next_deadline)
+
+    st.markdown(CARD_CSS, unsafe_allow_html=True)
+    programs_tab, scholarships_tab, deadlines_tab = st.tabs(["Programs", "Scholarships", "Deadlines"])
+    with programs_tab:
+        show_programs(profile, results, living_costs, today)
+    with scholarships_tab:
+        show_scholarships(matches, open_matches, today)
+    with deadlines_tab:
+        show_deadlines(results, open_matches, today)
+
+
+def _deadline(item) -> date:
+    return item.application_deadline if hasattr(item, "application_deadline") else item.deadline
 
 
 def main():
@@ -149,29 +239,35 @@ def main():
                "All numbers are estimates – always check the official program website.")
 
     try:
-        programs, living_costs = load_data(os.environ.get("GRADMATCH_DATA_DIR", str(DATA_DIR)))
+        programs, living_costs, scholarships = load_data(
+            os.environ.get("GRADMATCH_DATA_DIR", str(DATA_DIR)))
     except (DataError, OSError) as error:
         st.error(f"The program data could not be loaded: {error}")
         st.stop()
 
     fields = sorted({program.field for program in programs})
-    profile = show_profile_form(fields)
+    submitted = show_profile_form(fields)
+    if submitted is not None:
+        errors = validate_profile(submitted)
+        if errors:
+            st.session_state.pop("profile", None)
+            bullets = "\n".join(f"- {message}" for message in errors)
+            st.error(f"Please fix the following and try again:\n\n{bullets}")
+            return
+        st.session_state["profile"] = submitted
+
+    # The profile stays in the session, so using a dropdown or a download button
+    # below does not make the results disappear.
+    profile = st.session_state.get("profile")
     if profile is None:
         return
 
-    errors = validate_profile(profile)
-    if errors:
-        bullets = "\n".join(f"- {message}" for message in errors)
-        st.error(f"Please fix the following and try again:\n\n{bullets}")
-        return
-
-    st.session_state["profile"] = profile
     st.success("Your profile looks good.")
     st.write(
         f"**{profile.degree_sought}** in **{profile.field}** · GPA **{profile.gpa:.2f}** · "
         f"home state **{profile.home_state}** · budget **${profile.annual_budget:,.0f}** per year"
     )
-    show_results(profile, programs, living_costs, get_today())
+    show_results(profile, programs, living_costs, scholarships, get_today())
 
 
 main()
