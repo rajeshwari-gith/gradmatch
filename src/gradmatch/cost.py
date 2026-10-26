@@ -35,3 +35,15 @@ def total_cost(program: Program, home_state: str, living_cost: float) -> float:
 def is_affordable(program: Program, home_state: str, living_cost: float,
                   annual_budget: float) -> bool:
     return yearly_cost(program, home_state, living_cost) <= annual_budget
+
+
+def cost_breakdown(program: Program, home_state: str, living_cost: float) -> dict[str, float]:
+    """The pieces of the yearly cost, for the cost details view."""
+    return {
+        "tuition": tuition_charged(program, home_state),
+        "living": living_cost,
+        "stipend": program.stipend,
+        "yearly": yearly_cost(program, home_state, living_cost),
+        "total": total_cost(program, home_state, living_cost),
+        "years": program.duration_years,
+    }
