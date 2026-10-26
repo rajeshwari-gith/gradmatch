@@ -8,13 +8,15 @@ from datetime import date
 
 import pytest
 
-from conftest import make_program
+from conftest import make_program, make_scholarship
 from gradmatch.deadlines import CLOSED, LATER, SOON, URGENT
 from gradmatch.fit import MATCH, REACH, SAFETY
 from gradmatch.funding import FULLY_FUNDED, PARTIALLY_FUNDED, SELF_FUNDED
 from gradmatch.presentation import (DEADLINE_COLORS, ESTIMATE_NOTE, FIT_COLORS, FUNDING_COLORS,
-                                    GREEN, YELLOW, chip, deadline_label, format_date, money,
-                                    percent, result_card_html, safe_link, toefl_warning)
+                                    BLUE, GREEN, YELLOW, chip, deadline_item_html, deadline_label,
+                                    eligibility_summary, format_date, money, percent,
+                                    result_card_html, safe_link, scholarship_card_html,
+                                    special_label, toefl_warning)
 from gradmatch.search import ProgramResult
 
 pytestmark = pytest.mark.unit
@@ -174,3 +176,88 @@ def test_gpa_and_acceptance_rate_are_labeled_as_estimates():
 def test_the_estimate_note_mentions_estimates_and_mandatory_fees():
     assert "estimates" in ESTIMATE_NOTE
     assert "mandatory student fees" in ESTIMATE_NOTE
+
+
+# ---- Scholarship eligibility summary ----
+
+def test_summary_of_a_simple_fellowship():
+    assert eligibility_summary(make_scholarship()) == (
+        "PhD · Any field · GPA 3.00+ · U.S. citizens / permanent residents · Any state")
+
+
+def test_summary_with_no_minimum_gpa_leaves_the_gpa_out():
+    assert "GPA" not in eligibility_summary(make_scholarship(min_gpa=0.0))
+
+
+def test_summary_lists_fields_states_and_special_groups():
+    s = make_scholarship(degree_levels=("MS", "PhD"), fields=("Computer Science", "Data Science"),
+                         citizenship=("Any",), states=("MI", "OH"),
+                         special=("first_gen", "women_stem"))
+    assert eligibility_summary(s) == (
+        "MS, PhD · Computer Science, Data Science · GPA 3.00+ · Any citizenship · "
+        "Residents of MI, OH · For first-generation students, women in STEM")
+
+
+@pytest.mark.parametrize("tag, label", [("first_gen", "first-generation students"),
+                                        ("mcnair_scholar", "McNair Scholars"),
+                                        ("some_new_tag", "some new tag")])
+def test_special_labels(tag, label):
+    assert special_label(tag) == label
+
+
+# ---- Scholarship card ----
+
+def test_scholarship_card_shows_the_important_facts():
+    html = scholarship_card_html(make_scholarship(), TODAY)
+    for text in ["Test Fellowship", "$30,000", "award per year", "Fellowship",
+                 "Dec 5, 2026 · 42 days left", "PhD · Any field"]:
+        assert text in html
+    assert 'href="https://example.org/fellowship"' in html
+
+
+def test_scholarship_with_no_money_says_non_monetary():
+    html = scholarship_card_html(make_scholarship(amount=0, type="fee_waiver"), TODAY)
+    assert "Non-monetary" in html and "$0" not in html
+    assert "Fee Waiver" in html
+
+
+@pytest.mark.parametrize("deadline, color", [
+    (date(2026, 10, 1), "#8A94A6"),      # closed
+    (date(2026, 10, 30), "#F0705F"),                   # urgent: 6 days
+    (date(2026, 11, 15), "#F5C469"),                   # soon: 22 days
+    (date(2027, 3, 1), BLUE),                          # later
+])
+def test_scholarship_stripe_color_follows_the_deadline(deadline, color):
+    assert f"border-left-color:{color}" in scholarship_card_html(make_scholarship(deadline=deadline), TODAY)
+
+
+def test_scholarship_text_cannot_inject_html():
+    evil = "<img src=x onerror=alert(1)>"
+    html = scholarship_card_html(make_scholarship(name=evil, fields=(evil,), states=(evil,)), TODAY)
+    assert "<img" not in html and "&lt;img" in html
+
+
+def test_scholarship_with_an_unsafe_website_is_not_linked():
+    html = scholarship_card_html(make_scholarship(website="javascript:alert(1)"), TODAY)
+    assert "<a " not in html
+
+
+# ---- Deadline rows ----
+
+def test_deadline_row_for_a_program():
+    html = deadline_item_html(make_program(), TODAY)
+    assert "Test University – MS in Computer Science" in html
+    assert chip("Program", BLUE) in html
+    assert "Jan 15, 2027 · 83 days left" in html
+
+
+def test_deadline_row_for_a_scholarship():
+    html = deadline_item_html(make_scholarship(), TODAY)
+    assert "Test Fellowship" in html
+    assert chip("Scholarship", BLUE) in html
+    assert "Dec 5, 2026 · 42 days left" in html
+
+
+def test_deadline_row_escapes_the_name():
+    html = deadline_item_html(make_scholarship(name="<b>x</b>"), TODAY)
+    assert "<b>" not in html
