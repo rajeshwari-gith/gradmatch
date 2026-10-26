@@ -63,3 +63,16 @@ def test_acceptance_rate_boundary(rate, expected):
 ])
 def test_fit_decision_table(rate, gpa, expected):
     assert classify_fit(gpa, make_program(acceptance_rate=rate)) == expected
+
+
+# ---- The GPA difference is rounded to 2 decimals before it is compared ----
+# Found by mutation testing: nothing checked the rounding rule yet.
+
+@pytest.mark.parametrize("gpa, expected", [
+    (3.5951, SAFETY),   # diff 0.1951 rounds to 0.20, so Safety (not Match)
+    (3.5949, MATCH),    # diff 0.1949 rounds to 0.19
+    (3.2491, MATCH),    # diff -0.1509 rounds to -0.15, so Match (not Reach)
+    (3.2449, REACH),    # diff -0.1551 rounds to -0.16
+])
+def test_gpa_difference_is_rounded_to_two_decimals(gpa, expected):
+    assert classify_fit(gpa, make_program(avg_gpa=3.40)) == expected

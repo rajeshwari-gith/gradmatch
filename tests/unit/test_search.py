@@ -119,3 +119,19 @@ def test_no_result_is_ever_over_budget(budget, stipends):
     programs = [make_program(program_id=str(i), stipend=s) for i, s in enumerate(stipends)]
     for result in search_programs(make_profile(annual_budget=budget), programs, LIVING):
         assert result.yearly_cost <= budget
+
+
+# ---- A program that does not fit must not stop the search ----
+# Found by mutation testing: every earlier test listed the matching programs first.
+
+def test_a_program_in_another_field_before_a_matching_one_does_not_stop_the_search():
+    programs = [make_program(program_id="BIO", field="Biology"),
+                make_program(program_id="CS")]
+    assert ids(search_programs(make_profile(), programs, LIVING)) == ["CS"]
+
+
+def test_a_too_expensive_program_before_an_affordable_one_does_not_stop_the_search():
+    programs = [make_program(program_id="PRICEY", state="CA"),     # 30,000 + 25,000
+                make_program(program_id="CHEAP", state="MI")]      # 15,000 + 12,000
+    results = search_programs(make_profile(annual_budget=30000), programs, LIVING)
+    assert ids(results) == ["CHEAP"]
