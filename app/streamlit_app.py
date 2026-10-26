@@ -121,7 +121,7 @@ def cost_chart(results, gpa: float):
         tooltip=[alt.Tooltip("Program:N"), alt.Tooltip("Average GPA:Q"),
                  alt.Tooltip("Cost per year ($):Q", format=",.0f"), alt.Tooltip("Fit:N")])
     you = alt.Chart(alt.Data(values=[{"Your GPA": gpa}])).mark_rule(
-        strokeDash=[6, 4], size=2, color="#8A94A6").encode(x="Your GPA:Q")
+        strokeDash=[6, 4], size=2, color="#8A94A6").encode(x=alt.X("Your GPA:Q", title="Average GPA"))
     return (points + you).properties(height=320).interactive()
 
 
@@ -129,12 +129,12 @@ def breakdown_chart(breakdown: dict):
     """Bar chart of what makes up one year's cost."""
     values = [{"Part": "Tuition", "Amount ($)": breakdown["tuition"]},
               {"Part": "Living costs", "Amount ($)": breakdown["living"]},
-              {"Part": "Stipend (reduces cost)", "Amount ($)": -breakdown["stipend"]}]
+              {"Part": "Stipend", "Amount ($)": -breakdown["stipend"]}]
     return alt.Chart(alt.Data(values=values)).mark_bar().encode(
         x=alt.X("Part:N", sort=None, axis=alt.Axis(labelAngle=0)),
         y=alt.Y("Amount ($):Q"),
         color=alt.Color("Part:N", legend=None, scale=alt.Scale(
-            domain=["Tuition", "Living costs", "Stipend (reduces cost)"],
+            domain=["Tuition", "Living costs", "Stipend"],
             range=["#5B9BD5", "#F5C469", "#1BB89A"])),
         tooltip=[alt.Tooltip("Part:N"), alt.Tooltip("Amount ($):Q", format=",.0f")],
     ).properties(height=260)
@@ -216,7 +216,9 @@ def show_results(profile: StudentProfile, programs, living_costs, scholarships, 
         cols[1].metric("Safety / Match / Reach",
                        f"{counts[SAFETY]} / {counts[MATCH]} / {counts[REACH]}")
         cols[2].metric("Scholarships you qualify for", len(open_matches))
-        cols[3].metric("Next deadline", next_deadline)
+        next_date, _, days_left = next_deadline.partition(" · ")
+        cols[3].metric("Next deadline", next_date, delta=days_left or None,
+                       delta_color="off", delta_arrow="off")
 
     st.markdown(CARD_CSS, unsafe_allow_html=True)
     programs_tab, scholarships_tab, deadlines_tab = st.tabs(["Programs", "Scholarships", "Deadlines"])

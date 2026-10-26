@@ -35,7 +35,8 @@ def submit(at):
 
 
 def metrics(at):
-    return {m.label: m.value for m in at.metric}
+    """Metric label -> shown text (the delta, such as '12 days left', is joined with ' · ')."""
+    return {m.label: m.value + (f" · {m.delta}" if m.delta else "") for m in at.metric}
 
 
 def tab_html(at, tab):
