@@ -10,3 +10,4 @@ coverage.xml
 .hypothesis/
 .DS_Store
 test-results.xml
+mutants/
