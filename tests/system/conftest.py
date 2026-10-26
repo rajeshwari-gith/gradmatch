@@ -3,6 +3,11 @@
 The app is pointed at a tiny data folder built here and at a fixed "today",
 so the tests never depend on the real CSV files or on the day they run.
 
+Scholarships (default student: MS, CS, GPA 3.5, U.S. citizen, MI, no special groups):
+  SCH1 PhD fellowship (PhD only), SCH2 first-gen grant (needs first_gen), SCH3 expired award
+  (eligible but closed), SCH4 women-in-STEM award (needs women_stem), SCH5 Michigan fee waiver
+  (eligible, non-monetary, open until Jan 10, 2027).
+
 Fixed "today": 2026-10-24. A student from MI with a $40,000 budget sees:
   CHEAP  MI  MS CS   $25,000/yr  Safety  (GPA diff +0.20)   deadline 12 days away -> urgent
   MID    MI  MS CS   $35,000/yr  Match                      deadline Jan 15, 2027
@@ -29,6 +34,13 @@ PROGRAM_ROWS = [
 LIVING_COSTS = "state,annual_living_cost\nMI,15000\nCA,25000\nTX,14000\n"
 SCHOLARSHIP_HEADER = ("scholarship_id,name,type,amount,degree_levels,fields,min_gpa,citizenship,"
                       "states,special,deadline,website\n")
+SCHOLARSHIP_ROWS = [
+    "SCH1,Funded PhD Fellowship,fellowship,40000,PhD,Computer Science,3.5,US;PR,Any,,2026-12-05,https://example.org/sch1",
+    "SCH2,First-Gen Grant,scholarship,5000,MS;PhD,Any,0.0,Any,MI,first_gen,2026-11-01,https://example.org/sch2",
+    "SCH3,Expired Award,scholarship,10000,MS,Any,0.0,Any,Any,,2026-10-01,https://example.org/sch3",
+    "SCH4,Women in STEM Award,scholarship,3000,MS;PhD,Any,3.0,Any,Any,women_stem,2027-03-01,https://example.org/sch4",
+    "SCH5,Michigan Fee Waiver,fee_waiver,0,MS,Computer Science,0.0,US,MI,,2027-01-10,https://example.org/sch5",
+]
 
 
 @pytest.fixture(scope="session")
@@ -36,7 +48,7 @@ def data_dir(tmp_path_factory):
     folder = tmp_path_factory.mktemp("system_test_data")
     (folder / "programs.csv").write_text(PROGRAM_HEADER + "\n".join(PROGRAM_ROWS) + "\n")
     (folder / "living_costs.csv").write_text(LIVING_COSTS)
-    (folder / "scholarships.csv").write_text(SCHOLARSHIP_HEADER)
+    (folder / "scholarships.csv").write_text(SCHOLARSHIP_HEADER + "\n".join(SCHOLARSHIP_ROWS) + "\n")
     return folder
 
 
