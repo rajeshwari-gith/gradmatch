@@ -15,7 +15,7 @@ markers = [
 ]
 
 [tool.coverage.run]
-source = ["src/gradmatch"]
+source = ["src/gradmatch", "app"]
 branch = true
 
 [tool.coverage.report]
