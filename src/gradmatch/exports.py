@@ -3,14 +3,16 @@
 to_csv() turns ProgramResults into spreadsheet text. The csv module does
 the quoting, so names with commas or quotes stay in one cell.
 
+A value that is not published (None) becomes an empty CSV cell.
+
 to_ics() turns Program and Scholarship deadlines into calendar text that
-calendar apps can import. It follows the parts of RFC 5545 we need:
+calendar apps can import; a program with no published deadline is left out. It follows the parts of RFC 5545 we need:
 lines end in CRLF, text values are escaped, and long lines are folded.
 The DTSTAMP time is passed in by the caller; this module never calls now().
 """
 import csv
 import io
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 
 from gradmatch.deadlines import deadline_of
 from gradmatch.models import Program, Scholarship
@@ -37,14 +39,22 @@ def to_csv(results: list[ProgramResult]) -> str:
             program.program_name,
             program.degree,
             program.state,
-            f"{result.yearly_cost:.2f}",
-            f"{result.total_cost:.2f}",
+            _money_cell(result.yearly_cost),
+            _money_cell(result.total_cost),
             result.fit,
             result.funding,
-            program.application_deadline.isoformat(),
+            _date_cell(program.application_deadline),
             program.website,
         ])
     return buffer.getvalue()
+
+
+def _money_cell(amount: float | None) -> str:
+    return "" if amount is None else f"{amount:.2f}"
+
+
+def _date_cell(day: date | None) -> str:
+    return "" if day is None else day.isoformat()
 
 
 # ---- iCalendar ----
@@ -53,7 +63,8 @@ def to_ics(items: list[Program | Scholarship], stamp: datetime) -> str:
     """Return a calendar with one all-day event per deadline."""
     lines = ["BEGIN:VCALENDAR", "VERSION:2.0", f"PRODID:{PRODID}", "CALSCALE:GREGORIAN"]
     for item in items:
-        lines += _event_lines(item, stamp)
+        if deadline_of(item) is not None:      # no published deadline: no event
+            lines += _event_lines(item, stamp)
     lines.append("END:VCALENDAR")
     # Every line, including the last, ends with CRLF.
     return "".join(_fold(line) + CRLF for line in lines)

@@ -12,7 +12,7 @@ from datetime import date, timedelta
 import pytest
 
 from conftest import make_program
-from gradmatch.deadlines import CLOSED, LATER, SOON, URGENT, deadline_status, upcoming
+from gradmatch.deadlines import CLOSED, LATER, SOON, URGENT, deadline_of, deadline_status, upcoming
 from gradmatch.models import Scholarship
 
 pytestmark = pytest.mark.unit
@@ -120,5 +120,27 @@ def test_upcoming_empty_list():
 
 def test_upcoming_all_closed_gives_empty_list():
     items = [make_program(application_deadline=in_days(-1)), make_scholarship("OLD", in_days(-30))]
+
+    assert upcoming(items, TODAY) == []
+
+
+# ---- Deadlines that are not published (None) ----
+
+def test_deadline_of_unpublished_program_deadline_is_none():
+    assert deadline_of(make_program(application_deadline=None)) is None
+
+
+def test_upcoming_leaves_out_programs_without_a_deadline():
+    unknown = make_program(program_id="UNKNOWN", application_deadline=None)
+    known = make_program(program_id="KNOWN", application_deadline=in_days(5))
+    scholarship = make_scholarship("SCH", in_days(1))
+
+    result = upcoming([unknown, known, scholarship], TODAY)
+
+    assert result == [scholarship, known]
+
+
+def test_upcoming_only_unpublished_deadlines_gives_empty_list():
+    items = [make_program(program_id=f"P{i}", application_deadline=None) for i in range(3)]
 
     assert upcoming(items, TODAY) == []

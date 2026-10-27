@@ -238,3 +238,51 @@ def test_ics_folded_lines_are_filled_to_75_bytes():
         summary_lines.append(line)
     # Every part except the last is full: 75 bytes, counting the leading space.
     assert [len(line) for line in summary_lines[:-1]] == [75] * (len(summary_lines) - 1)
+
+
+# ---- Values that are not published (None) ----
+
+def test_csv_unpublished_deadline_is_an_empty_cell():
+    rows = read_csv(to_csv([make_result(application_deadline=None)]))
+
+    assert rows[1][CSV_COLUMNS.index("deadline")] == ""
+    assert len(rows[1]) == len(CSV_COLUMNS)
+
+
+def test_csv_unknown_costs_are_empty_cells():
+    result = ProgramResult(program=make_program(), yearly_cost=None, total_cost=None,
+                           fit="Unknown", funding="Funding unknown")
+
+    row = read_csv(to_csv([result]))[1]
+
+    assert row[CSV_COLUMNS.index("yearly_cost")] == ""
+    assert row[CSV_COLUMNS.index("total_cost")] == ""
+    assert row[CSV_COLUMNS.index("fit")] == "Unknown"
+
+
+def test_csv_zero_cost_is_written_not_left_empty():
+    # Boundary: 0 is a real value, only None is empty.
+    result = ProgramResult(program=make_program(), yearly_cost=0.0, total_cost=0.0,
+                           fit="Match", funding="Fully Funded")
+
+    row = read_csv(to_csv([result]))[1]
+
+    assert row[CSV_COLUMNS.index("yearly_cost")] == "0.00"
+
+
+def test_ics_leaves_out_programs_without_a_deadline():
+    items = [make_program(program_id="UNKNOWN", application_deadline=None),
+             make_program(program_id="KNOWN"), make_scholarship()]
+
+    lines = unfold(to_ics(items, STAMP))
+
+    assert lines.count("BEGIN:VEVENT") == 2
+    assert "UID:program-UNKNOWN@gradmatch" not in lines
+    assert "UID:program-KNOWN@gradmatch" in lines
+
+
+def test_ics_only_unpublished_deadlines_gives_a_calendar_with_no_events():
+    lines = unfold(to_ics([make_program(application_deadline=None)], STAMP))
+
+    assert "BEGIN:VEVENT" not in lines
+    assert lines[-2:] == ["END:VCALENDAR", ""]

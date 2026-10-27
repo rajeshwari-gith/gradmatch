@@ -180,3 +180,60 @@ def test_deadlines_without_today_uses_the_server_date(client):
 
 def test_unknown_route_gives_404(client):
     assert client.get("/nothing-here").status_code == 404
+
+
+# ---- Values that are not published (CONTRIBUTING.md) ----
+# A second data folder: the fixture data plus one imported-style row with
+# blanks, and a `source` column. The extra row is in a field no other test
+# searches, so POST /match never has to cost it.
+
+UNPUBLISHED_ROW = ("IPEDS1,Imported University,MS in Business Analytics,Business Analytics,MS,OH,"
+                   "11000,22000,2,,,,,,,https://example.edu/ipeds1,ipeds")
+
+
+@pytest.fixture
+def client_with_blanks(tmp_path, monkeypatch):
+    folder = write_fixture_data(tmp_path)
+    lines = (folder / "programs.csv").read_text().strip().split("\n")
+    lines = [lines[0] + ",source"] + [line + "," for line in lines[1:]] + [UNPUBLISHED_ROW]
+    (folder / "programs.csv").write_text("\n".join(lines) + "\n")
+    (folder / "living_costs.csv").write_text((folder / "living_costs.csv").read_text() + "OH,15000\n")
+    monkeypatch.setenv("GRADMATCH_DATA_DIR", str(folder))
+    return TestClient(app)
+
+
+def test_programs_include_source(client):
+    sources = {p["source"] for p in client.get("/programs").json()}
+
+    assert sources == {"estimate"}          # no source column -> estimate
+
+
+def test_programs_unpublished_values_are_null(client_with_blanks):
+    [row] = client_with_blanks.get("/programs?field=Business Analytics").json()
+
+    assert row["source"] == "ipeds"
+    assert row["tuition_in_state"] == 11000
+    for name in ("avg_gpa", "avg_gre", "acceptance_rate", "stipend", "min_toefl",
+                 "application_deadline"):
+        assert row[name] is None, name
+
+
+def test_programs_blank_source_cell_is_estimate(client_with_blanks):
+    sources = {p["program_id"]: p["source"] for p in client_with_blanks.get("/programs").json()}
+
+    assert sources["CHEAP"] == "estimate"
+    assert sources["IPEDS1"] == "ipeds"
+
+
+def test_deadlines_leave_out_unpublished_deadline(client_with_blanks):
+    ids = [i["id"] for i in client_with_blanks.get(f"/deadlines?today={TODAY}").json()]
+
+    assert "IPEDS1" not in ids
+    assert ids[:2] == ["SCH2", "CHEAP"]      # the rest is unchanged
+
+
+def test_match_program_items_include_source(client_with_blanks):
+    programs = client_with_blanks.post("/match", json=profile()).json()["programs"]
+
+    assert [(p["program_id"], p["source"]) for p in programs] == [("CHEAP", "estimate"),
+                                                                    ("MID", "estimate")]

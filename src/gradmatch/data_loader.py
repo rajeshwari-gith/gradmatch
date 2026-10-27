@@ -16,6 +16,8 @@ GPA_MIN, GPA_MAX = 0.0, 4.0
 RATE_MIN, RATE_MAX = 0.0, 1.0
 DATE_FORMAT = "%Y-%m-%d"
 LIVING_COST_COLUMNS = ["state", "annual_living_cost"]
+SOURCES = ("estimate", "official-page", "ipeds")
+DEFAULT_SOURCE = "estimate"
 
 
 class DataError(ValueError):
@@ -68,9 +70,12 @@ def _load(path, columns, convert) -> list:
 # ---- Converting one row ----
 
 def _to_program(row) -> Program:
+    # A blank avg_gpa, acceptance_rate, stipend or deadline means "not published"
+    # and becomes None; a value that is there is still checked (CONTRIBUTING.md).
     degree = _degree(_text(row, "degree"))
-    avg_gpa = _in_range(_number(row, "avg_gpa"), GPA_MIN, GPA_MAX, "avg_gpa")
-    rate = _in_range(_number(row, "acceptance_rate"), RATE_MIN, RATE_MAX, "acceptance_rate")
+    avg_gpa = _optional_in_range(_optional_number(row, "avg_gpa"), GPA_MIN, GPA_MAX, "avg_gpa")
+    rate = _optional_in_range(_optional_number(row, "acceptance_rate"), RATE_MIN, RATE_MAX,
+                              "acceptance_rate")
     return Program(
         program_id=_text(row, "program_id"),
         university=_text(row, "university"),
@@ -84,10 +89,11 @@ def _to_program(row) -> Program:
         avg_gpa=avg_gpa,
         avg_gre=_optional_int(row, "avg_gre"),
         acceptance_rate=rate,
-        stipend=_number(row, "stipend"),
+        stipend=_optional_number(row, "stipend"),
         min_toefl=_optional_int(row, "min_toefl"),
-        application_deadline=_date(row, "application_deadline"),
+        application_deadline=_optional_date(row, "application_deadline"),
         website=_text(row, "website"),
+        source=_source(row),
     )
 
 
@@ -123,7 +129,9 @@ def _to_living_cost(row) -> tuple[str, float]:
 
 def _cell(row, name) -> str:
     # A short row gives None for the missing cells, so treat None as "".
-    return (row[name] or "").strip()
+    # get() allows optional columns such as `source`; required columns were
+    # already checked in the header.
+    return (row.get(name) or "").strip()
 
 
 def _text(row, name) -> str:
@@ -139,6 +147,12 @@ def _number(row, name) -> float:
         return float(value)
     except ValueError:
         raise ValueError(f"{name} must be a number, got '{value}'") from None
+
+
+def _optional_number(row, name) -> float | None:
+    if not _cell(row, name):
+        return None             # empty cell = not published
+    return _number(row, name)
 
 
 def _optional_int(row, name) -> int | None:
@@ -159,6 +173,19 @@ def _date(row, name) -> date:
         raise ValueError(f"{name} must be a real date in YYYY-MM-DD format, got '{value}'") from None
 
 
+def _optional_date(row, name) -> date | None:
+    if not _cell(row, name):
+        return None             # empty cell = not published
+    return _date(row, name)
+
+
+def _source(row) -> str:
+    value = _cell(row, "source") or DEFAULT_SOURCE
+    if value not in SOURCES:
+        raise ValueError(f"source must be estimate, official-page or ipeds, got '{value}'")
+    return value
+
+
 def _list(row, name) -> tuple[str, ...]:
     """Split a ';' list cell, e.g. 'MS;PhD' -> ('MS', 'PhD'). Empty cell -> ()."""
     return tuple(item.strip() for item in _cell(row, name).split(";") if item.strip())
@@ -168,6 +195,12 @@ def _degree(value) -> str:
     if value not in DEGREES:
         raise ValueError(f"degree must be MS or PhD, got '{value}'")
     return value
+
+
+def _optional_in_range(value, low, high, name) -> float | None:
+    if value is None:
+        return None
+    return _in_range(value, low, high, name)
 
 
 def _in_range(value, low, high, name) -> float:

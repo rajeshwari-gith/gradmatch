@@ -83,8 +83,10 @@ def test_good_row_updates_program_and_sources(tmp_path, data_dir):
     sources = (data_dir / "SOURCES.md").read_text()
     assert ("| MS1 | Test University | MS in Computer Science | verified by Rajeshwari Galugu "
             "on 2026-10-26 | https://example.edu/ms-cs | Fees not included |") in sources
-    assert summary[0] == "1 row(s) applied, 5 value(s) changed"
+    assert ms1.source == "official-page"
+    assert summary[0] == "1 row(s) applied, 6 value(s) changed"
     assert "MS1: tuition_in_state 15000 -> 16000" in summary
+    assert "MS1: source (empty) -> official-page" in summary
 
 
 def test_status_line_counts_verified_rows(tmp_path, data_dir):
@@ -270,3 +272,176 @@ def test_existing_bad_row_stops_the_update_and_writes_nothing(tmp_path, data_dir
         apply_lookup(write_sheet(tmp_path, [sheet_row()]), data_dir)
     assert files(data_dir) == before
     assert not (data_dir / "programs.csv.new").exists()
+
+
+# ---- The `source` column ----
+
+def test_source_column_is_added_when_missing(tmp_path, data_dir):
+    # The fixture programs.csv has no source column.
+    apply_lookup(write_sheet(tmp_path, [sheet_row()]), data_dir)
+
+    header = (data_dir / "programs.csv").read_text().splitlines()[0]
+    assert header.endswith(",website,source")
+    assert program(data_dir, "MS1").source == "official-page"
+    assert program(data_dir, "PHD1").source == "estimate"     # blank = estimate
+
+
+def test_existing_source_column_is_kept_and_updated(tmp_path, data_dir):
+    lines = PROGRAMS.strip().split("\n")
+    with_source = "\n".join([lines[0] + ",source", lines[1] + ",estimate",
+                             lines[2] + ",ipeds"]) + "\n"
+    (data_dir / "programs.csv").write_text(with_source)
+
+    apply_lookup(write_sheet(tmp_path, [sheet_row()]), data_dir)
+
+    header = (data_dir / "programs.csv").read_text().splitlines()[0]
+    assert header.count("source") == 1
+    assert program(data_dir, "MS1").source == "official-page"
+    assert program(data_dir, "PHD1").source == "ipeds"
+
+
+def test_unpublished_values_in_programs_csv_stay_blank_when_sheet_is_blank(tmp_path, data_dir):
+    (data_dir / "programs.csv").write_text(PROGRAMS.replace(",0.10,40000,90,2026-12-15,",
+                                                            ",,,90,,"))
+    row = phd_row(tuition_in_state="31000", stipend="", phd_tuition_waiver="",
+                  application_deadline="")
+
+    summary = apply_lookup(write_sheet(tmp_path, [row]), data_dir)
+
+    phd1 = program(data_dir, "PHD1")
+    assert (phd1.acceptance_rate, phd1.stipend, phd1.application_deadline) == (None, None, None)
+    assert phd1.tuition_in_state == 31000
+    assert "PHD1: tuition_in_state 30000 -> 31000" in summary
+
+
+def test_waiver_yes_fills_an_unpublished_stipend(tmp_path, data_dir):
+    (data_dir / "programs.csv").write_text(PROGRAMS.replace(",0.10,40000,", ",0.10,,"))
+
+    summary = apply_lookup(write_sheet(tmp_path, [phd_row(stipend="38000",
+                                                          phd_tuition_waiver="yes")]), data_dir)
+
+    assert program(data_dir, "PHD1").stipend == 38000
+    assert "PHD1: stipend (empty) -> 38000" in summary
+
+
+# ---- Tests added after mutation testing (see docs/mutation-testing.md) ----
+
+def test_error_message_is_exact_for_a_row_with_several_problems(tmp_path, data_dir):
+    row = sheet_row(official_url="http://x", application_deadline="soon", checked_on="today",
+                    phd_tuition_waiver="maybe")
+
+    with pytest.raises(SheetError) as error:
+        apply_lookup(write_sheet(tmp_path, [row, sheet_row(program_id="NOPE")]), data_dir)
+
+    assert str(error.value) == (
+        "line 2 (MS1): official_url must start with https://; "
+        "application_deadline must be a date in YYYY-MM-DD format; "
+        "checked_on must be a date in YYYY-MM-DD format; "
+        "phd_tuition_waiver must be yes, no or na\n"
+        "line 3 (NOPE): unknown program_id 'NOPE'")
+
+
+@pytest.mark.parametrize("row, message", [
+    (dict(phd_tuition_waiver="no"), "phd_tuition_waiver must be na or blank for an MS program"),
+    (dict(program_id="PHD1", degree="PhD", stipend="", phd_tuition_waiver="yes"),
+     "phd_tuition_waiver is yes, so stipend must be greater than 0"),
+    (dict(program_id="PHD1", degree="PhD", stipend="0.5", phd_tuition_waiver="no"),
+     "phd_tuition_waiver is no, so stipend must be blank or 0"),
+])
+def test_waiver_messages_are_exact(tmp_path, data_dir, row, message):
+    with pytest.raises(SheetError) as error:
+        apply_lookup(write_sheet(tmp_path, [sheet_row(**row)]), data_dir)
+
+    assert str(error.value).endswith("): " + message)
+
+
+def test_program_missing_from_sources_message_is_exact(tmp_path, data_dir):
+    (data_dir / "SOURCES.md").write_text(SOURCES.replace("| MS1 |", "| OTHER |"))
+
+    with pytest.raises(SheetError) as error:
+        apply_lookup(write_sheet(tmp_path, [sheet_row()]), data_dir)
+
+    assert str(error.value) == "line 2 (MS1): program_id has no row in SOURCES.md"
+
+
+def test_missing_sheet_columns_are_listed_with_comma_and_space(tmp_path, data_dir):
+    columns = [c for c in SHEET_COLUMNS if c not in ("checked_by", "checked_on")]
+
+    with pytest.raises(SheetError, match=r"missing column\(s\): checked_by, checked_on$"):
+        apply_lookup(write_sheet(tmp_path, [sheet_row()], columns), data_dir)
+
+
+def test_waiver_yes_with_stipend_just_above_zero_is_accepted(tmp_path, data_dir):
+    # Boundary: "greater than 0", so 0.5 is allowed.
+    row = sheet_row(program_id="PHD1", degree="PhD", stipend="0.5", phd_tuition_waiver="yes")
+
+    apply_lookup(write_sheet(tmp_path, [row]), data_dir)
+
+    assert program(data_dir, "PHD1").stipend == 0.5
+
+
+def test_unchecked_row_before_a_checked_row_does_not_stop_the_sheet(tmp_path, data_dir):
+    rows = [sheet_row(checked_by=""), sheet_row(program_id="PHD1", degree="PhD",
+                                                stipend="45000", phd_tuition_waiver="yes")]
+
+    summary = apply_lookup(write_sheet(tmp_path, rows), data_dir)
+
+    assert summary[0].startswith("1 row(s) applied")
+    assert program(data_dir, "PHD1").stipend == 45000
+
+
+def test_changes_from_every_row_are_listed(tmp_path, data_dir):
+    rows = [sheet_row(), sheet_row(program_id="PHD1", degree="PhD", stipend="45000",
+                                   phd_tuition_waiver="yes")]
+
+    summary = apply_lookup(write_sheet(tmp_path, rows), data_dir)
+
+    assert summary[0] == "2 row(s) applied, 13 value(s) changed"   # 6 for MS1, 7 for PHD1
+    assert "MS1: tuition_in_state 15000 -> 16000" in summary
+    assert "PHD1: stipend 40000 -> 45000" in summary
+
+
+def test_programs_csv_keeps_unix_line_endings(tmp_path, data_dir):
+    apply_lookup(write_sheet(tmp_path, [sheet_row()]), data_dir)
+
+    assert "\r" not in (data_dir / "programs.csv").read_bytes().decode("utf-8")
+
+
+def test_line_break_inside_quoted_notes_and_cells_is_kept(tmp_path, data_dir):
+    # Both files are read with newline="" as the csv module requires.
+    (data_dir / "programs.csv").write_text(PROGRAMS.replace("MS in Computer Science,Computer",
+                                                            '"MS in\r\nComputer Science",Computer'),
+                                           newline="")
+    apply_lookup(write_sheet(tmp_path, [sheet_row(notes="first\r\nsecond")]), data_dir)
+
+    assert program(data_dir, "MS1").program_name == "MS in\r\nComputer Science"
+    with open(data_dir / "SOURCES.md", newline="", encoding="utf-8") as file:
+        assert "| first\r\nsecond |" in file.read()
+
+
+def test_pipe_in_notes_is_replaced_so_the_table_stays_intact(tmp_path, data_dir):
+    apply_lookup(write_sheet(tmp_path, [sheet_row(notes="fees | extra")]), data_dir)
+
+    assert "| fees / extra |" in (data_dir / "SOURCES.md").read_text()
+
+
+def test_command_prints_every_change_on_its_own_line(tmp_path, data_dir, capsys):
+    main(["apply_lookup", str(write_sheet(tmp_path, [sheet_row()])), str(data_dir)])
+
+    lines = capsys.readouterr().out.splitlines()
+    assert lines[0] == "1 row(s) applied, 6 value(s) changed"
+    assert "MS1: min_toefl 80 -> 84" in lines
+
+
+def test_command_with_only_a_sheet_uses_the_data_folder(tmp_path, data_dir, monkeypatch, capsys):
+    monkeypatch.chdir(data_dir.parent)          # data_dir is <tmp>/data
+    sheet = write_sheet(tmp_path, [sheet_row()])
+
+    assert main(["apply_lookup", str(sheet)]) == 0
+    assert program(data_dir, "MS1").source == "official-page"
+
+
+def test_command_usage_text_is_exact(capsys):
+    main(["apply_lookup", "a", "b", "c"])
+
+    assert capsys.readouterr().out == "usage: python -m gradmatch.apply_lookup <sheet.csv> [data_dir]\n"

@@ -89,6 +89,26 @@ def test_every_degree_is_ms_or_phd(programs):
     assert bad == []
 
 
+def test_every_source_is_an_allowed_value(programs):
+    bad = [(p.program_id, p.source) for p in programs
+           if p.source not in ("estimate", "official-page", "ipeds")]
+    assert bad == []
+
+
+def test_unpublished_values_are_none_not_zero_or_text(programs):
+    # Blank cells must load as None; a value that is there must be a number or date.
+    for program in programs:
+        for value in (program.avg_gpa, program.acceptance_rate, program.stipend):
+            assert value is None or isinstance(value, float), program.program_id
+        assert program.application_deadline is None or isinstance(program.application_deadline, date)
+
+
+def test_programs_without_deadline_are_left_out_of_upcoming(programs):
+    undated = {p.program_id for p in programs if p.application_deadline is None}
+    listed = {p.program_id for p in upcoming(programs, TODAY)}
+    assert undated.isdisjoint(listed)
+
+
 def test_at_least_one_ms_and_one_phd_program(programs):
     degrees = {p.degree for p in programs}
     assert degrees == {"MS", "PhD"}
@@ -123,8 +143,8 @@ def test_fully_funded_phd_costs_nothing_in_or_out_of_state(programs, living_cost
         if program.degree != "PhD" or program.state not in living_costs:
             continue
         living = living_costs[program.state]
-        if program.stipend < living:
-            continue
+        if program.stipend is None or program.stipend < living:
+            continue                       # not published, or not fully funded
         out_of_state = "OH" if program.state != "OH" else "MI"
         for home_state in (program.state, out_of_state):
             cost = yearly_cost(program, home_state, living)
