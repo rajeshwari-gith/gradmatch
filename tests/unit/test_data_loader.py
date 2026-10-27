@@ -507,3 +507,19 @@ def test_programs_sat_boundaries_are_accepted(tmp_path, sat_25, sat_75):
 def test_programs_bad_test_scores_are_rejected(tmp_path, changes, message):
     with pytest.raises(DataError, match=message):
         load_programs(write_csv(tmp_path, [valid_program_row(**changes)]))
+
+
+# ---- Exact messages for the test-score percentiles (added after mutation testing) ----
+
+def test_programs_one_sided_sat_range_message_names_both_columns(tmp_path):
+    path = write_csv(tmp_path, [valid_program_row(sat_25="", sat_75="1300")])
+
+    with pytest.raises(DataError, match="line 2: sat_25 and sat_75 must both be filled in or both left blank$"):
+        load_programs(path)
+
+
+def test_programs_reversed_act_range_message_gives_both_values(tmp_path):
+    path = write_csv(tmp_path, [valid_program_row(act_25="30", act_75="24")])
+
+    with pytest.raises(DataError, match="line 2: act_25 cannot be above act_75, got 30 and 24$"):
+        load_programs(path)
