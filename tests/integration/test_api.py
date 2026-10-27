@@ -5,6 +5,10 @@ tables there), never on the real data/ folder. These tests check status
 codes, the JSON shape, validation errors and ordering, and that the API
 gives the same answers as the modules it calls.
 """
+# In plain words: these tests call the REST API the way another program would, through FastAPI's
+# TestClient, but on a tiny made-up data folder. They check the status codes (200, 404, 422),
+# the shape of the JSON, the order of the results and the paging limits.
+
 import pytest
 from fastapi.testclient import TestClient
 
@@ -20,6 +24,7 @@ def client(tmp_path, monkeypatch):
     return TestClient(app)
 
 
+# A valid student profile as JSON. A test changes one field to make it invalid or different.
 def profile(**changes) -> dict:
     """The default fixture student: MS in CS, GPA 3.5, U.S. citizen from MI, $40,000 budget."""
     body = dict(degree_sought="MS", gpa=3.5, field="Computer Science", home_state="MI",
@@ -29,6 +34,7 @@ def profile(**changes) -> dict:
 
 
 # ---- GET /health ----
+# Why: the simplest call; if this fails, the app itself did not start.
 
 def test_health(client):
     response = client.get("/health")
@@ -38,6 +44,7 @@ def test_health(client):
 
 
 # ---- GET /programs ----
+# Why: filters must match exactly, keep the file order, and an empty result is [] (not an error).
 
 def test_programs_returns_all_programs_in_file_order(client):
     response = client.get("/programs")
@@ -74,6 +81,7 @@ def test_programs_filter_with_no_match_gives_empty_list(client):
 
 
 # ---- POST /match ----
+# Why: the main feature. Same order and numbers as the website, and a bad profile gives 422 with clear messages.
 
 def test_match_returns_programs_with_cost_fit_and_funding(client):
     response = client.post("/match", json=profile())
@@ -136,6 +144,7 @@ def test_match_malformed_body_gives_422(client, body):
 
 
 # ---- GET /deadlines ----
+# Why: soonest first, closed ones left out, and a bad `today` (like 2027-02-29) gives 422.
 
 def test_deadlines_are_open_items_soonest_first_with_status(client):
     response = client.get(f"/deadlines?today={TODAY}")
@@ -177,12 +186,14 @@ def test_deadlines_without_today_uses_the_server_date(client):
 
 
 # ---- Unknown route ----
+# Why: a wrong address must give 404, not crash.
 
 def test_unknown_route_gives_404(client):
     assert client.get("/nothing-here").status_code == 404
 
 
 # ---- Values that are not published (CONTRIBUTING.md) ----
+# Why: missing values must reach the caller as null, never as 0 or as a made-up number.
 # A second data folder: the fixture data plus one imported-style row with
 # blanks, and a `source` column. The extra row is in a field no other test
 # searches, so POST /match never has to cost it.
@@ -263,6 +274,7 @@ def test_match_uses_sat_and_act_from_the_request(tmp_path, monkeypatch):
 
 # ---- Paging: limit and offset (programs.csv has over 22,000 rows) ----
 # Boundary values: limit 0 / 1 / 1000 / 1001, offset -1 / 0 / last / past the end.
+# Why: with 45,000 rows the API must hand out pages; the edges of each allowed range are tested.
 
 BULK_ROWS = 150
 

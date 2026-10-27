@@ -9,6 +9,11 @@ get boundary-value tests.
 Tests never read the real CSVs in data/. Each test writes a tiny CSV into
 pytest's tmp_path folder.
 """
+# In plain words: these tests feed the loader small, hand-made CSV files, some correct and
+# some broken on purpose, and check that good rows load with the right types and bad rows are
+# stopped with a clear message. We never use the real data here, so a change to the real data
+# can never break these tests, and every test is fast and repeatable.
+
 import csv
 from datetime import date
 
@@ -26,6 +31,7 @@ pytestmark = pytest.mark.unit
 
 
 # ---- Helpers that build small CSV files ----
+# Each helper makes one valid row; a test changes only the cell it is about, so it is obvious what is being tested.
 
 def valid_program_row(**changes) -> dict:
     row = dict(
@@ -82,9 +88,11 @@ def write_csv(tmp_path, rows, name="data.csv", columns=None):
 
 # =====================================================================
 # load_programs
+# Why: programs.csv feeds every search, so each kind of bad cell gets its own test (equivalence classes).
 # =====================================================================
 
 # ---- Valid class ----
+# Why: first prove that a correct row loads and every cell gets the right Python type.
 
 def test_programs_valid_row_is_loaded_with_correct_types(tmp_path):
     path = write_csv(tmp_path, [valid_program_row()])
@@ -127,6 +135,7 @@ def test_programs_header_only_gives_empty_list(tmp_path):
 
 
 # ---- Invalid class: missing column ----
+# Why: a missing column must fail once, at the header, not later on row 5,000.
 
 def test_programs_missing_column_is_rejected(tmp_path):
     columns = [c for c in valid_program_row() if c != "acceptance_rate"]
@@ -137,6 +146,7 @@ def test_programs_missing_column_is_rejected(tmp_path):
 
 
 # ---- GPA: valid boundaries and invalid classes (below 0, above 4) ----
+# Why (boundary values): 0.0 and 4.0 are the edges and must be accepted; just outside them must not.
 
 @pytest.mark.parametrize("gpa", ["0.0", "4.0"])
 def test_programs_gpa_boundaries_are_accepted(tmp_path, gpa):
@@ -154,6 +164,7 @@ def test_programs_gpa_outside_0_to_4_is_rejected(tmp_path, gpa):
 
 
 # ---- Acceptance rate: valid boundaries and invalid classes ----
+# Why (boundary values): a rate is a share from 0 to 1. "40" (meant as 40%) is a common typo and must be caught.
 
 @pytest.mark.parametrize("rate", ["0.0", "1.0"])
 def test_programs_acceptance_rate_boundaries_are_accepted(tmp_path, rate):
@@ -171,6 +182,7 @@ def test_programs_acceptance_rate_outside_0_to_1_is_rejected(tmp_path, rate):
 
 
 # ---- Invalid class: bad date ----
+# Why: a wrong deadline is worse than none, so impossible dates (Feb 30, Feb 29 in 2027) are rejected.
 
 @pytest.mark.parametrize("bad_date", [
     "01/15/2027",   # wrong format
@@ -193,6 +205,7 @@ def test_programs_leap_day_in_leap_year_is_accepted(tmp_path):
 
 
 # ---- Invalid class: degree not MS/PhD ----
+# Why: the search compares the exact text, so "ms" or "Masters" would silently match nothing. (BS is also valid now.)
 
 @pytest.mark.parametrize("degree", ["MBA", "ms", "phd", "Masters"])
 def test_programs_degree_not_ms_or_phd_is_rejected(tmp_path, degree):
@@ -203,6 +216,7 @@ def test_programs_degree_not_ms_or_phd_is_rejected(tmp_path, degree):
 
 
 # ---- Invalid classes: not a number, empty required cell ----
+# Why: "free" in a tuition cell or an empty website must stop the load, and the message must show the file and line.
 
 def test_programs_text_in_number_column_is_rejected(tmp_path):
     path = write_csv(tmp_path, [valid_program_row(tuition_in_state="free")])
@@ -236,6 +250,7 @@ def test_programs_error_message_names_file_and_line(tmp_path):
 
 # =====================================================================
 # load_scholarships
+# Why: the ";" lists (degree levels, fields, ...) must split into tuples, and bad levels or GPAs must be rejected.
 # =====================================================================
 
 def test_scholarships_valid_row_splits_list_fields(tmp_path):
@@ -291,6 +306,7 @@ def test_scholarships_bad_deadline_is_rejected(tmp_path):
 
 # =====================================================================
 # load_living_costs
+# Why: every program's cost uses this file, so a missing column, a negative cost or text is rejected.
 # =====================================================================
 
 def test_living_costs_valid_rows_become_a_dict(tmp_path):
@@ -324,6 +340,8 @@ def test_living_costs_text_cost_is_rejected(tmp_path):
 
 # =====================================================================
 # Tests added after mutation testing (see docs/mutation-testing.md)
+# Why (mutation testing): the tool changed the code in small ways and some changes went unnoticed.
+# Each test below catches one of those changes, for example a field silently dropped.
 # =====================================================================
 
 def test_programs_every_field_is_loaded(tmp_path):
@@ -386,6 +404,8 @@ def test_line_break_inside_a_quoted_cell_is_kept_exactly(tmp_path):
 
 # =====================================================================
 # Values that are not published (CONTRIBUTING.md): blank -> None
+# Why: government data leaves some cells empty. Blank must become None ("not published"), never 0,
+# and blank vs 0 is tested as a boundary because a 0 stipend and an unknown stipend mean different things.
 # =====================================================================
 
 @pytest.mark.parametrize("column", ["avg_gpa", "acceptance_rate", "stipend",
@@ -438,6 +458,7 @@ def test_programs_required_columns_still_cannot_be_blank(tmp_path, column):
 
 
 # ---- The optional `source` column ----
+# Why: only three sources exist; a typo like "IPEDS" must be rejected with the file and line.
 
 def test_programs_without_source_column_are_estimates(tmp_path):
     path = write_csv(tmp_path, [valid_program_row()])      # no source column at all
@@ -469,6 +490,7 @@ def test_programs_bad_source_is_rejected_with_file_and_line(tmp_path, value):
 
 
 # ---- Test-score percentiles (sat_25, sat_75, act_25, act_75): optional columns ----
+# Why: score ranges drive the Safety/Match/Reach label for colleges, so both ends, their limits and their order are checked.
 
 def test_programs_without_test_score_columns_have_none(tmp_path):
     [program] = load_programs(write_csv(tmp_path, [valid_program_row()]))
@@ -510,6 +532,7 @@ def test_programs_bad_test_scores_are_rejected(tmp_path, changes, message):
 
 
 # ---- Exact messages for the test-score percentiles (added after mutation testing) ----
+# Why (mutation testing): these check the whole message, so swapping the two column names in it is caught.
 
 def test_programs_one_sided_sat_range_message_names_both_columns(tmp_path):
     path = write_csv(tmp_path, [valid_program_row(sat_25="", sat_75="1300")])

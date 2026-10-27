@@ -6,6 +6,11 @@ across files, and works with the modules that use it. When a data row is
 added or changed, these tests catch mistakes the loader cannot see on its
 own (a state with no living cost, a duplicate id, a misspelled field).
 """
+# In plain words: the other tests use tiny made-up data. These tests read the REAL files in
+# data/ (45,000+ programs) and check that every row follows the rules: unique ids, a living
+# cost for every state, https links, allowed fields and degrees, score ranges in order. They
+# also run the search and the API on the real data, so a bad row added later is caught here.
+
 import time
 from collections import Counter
 from datetime import date
@@ -51,6 +56,7 @@ def living_costs():
 
 
 # ---- The files load ----
+# Why: if any row breaks a loader rule, nothing else can work, so this is checked first.
 
 def test_all_three_files_load_without_data_error(programs, scholarships, living_costs):
     assert programs
@@ -59,6 +65,7 @@ def test_all_three_files_load_without_data_error(programs, scholarships, living_
 
 
 # ---- The files agree with each other ----
+# Why: each file can be fine on its own but disagree with another (a program in a state with no living cost).
 
 def test_every_program_state_has_a_living_cost(programs, living_costs):
     missing = sorted({p.state for p in programs if p.state not in living_costs})
@@ -78,6 +85,7 @@ def test_scholarship_ids_are_unique(scholarships):
 
 
 # ---- Every row follows the data rules ----
+# Why: the loader checks one row at a time; these check rules across the whole file.
 
 def test_every_website_uses_https(programs, scholarships):
     bad = [p.program_id for p in programs if not p.website.startswith("https://")]
@@ -136,6 +144,7 @@ def test_imported_program_ids_are_unique(programs):
 
 
 # ---- The modules run on the real data ----
+# Why: real data has cases our small tests may not think of; the code must not crash on any of them.
 
 @pytest.mark.parametrize("profile", [
     make_profile(),
@@ -154,6 +163,7 @@ def test_upcoming_runs_on_real_programs_and_scholarships(programs, scholarships)
 
 
 # ---- Guard against defect D-001 coming back ----
+# Why: D-001 was a real bug (funded PhDs showed a cost). This test keeps it from coming back unnoticed.
 
 def test_fully_funded_phd_costs_nothing_in_or_out_of_state(programs, living_costs):
     # For every PhD whose stipend covers living costs, an in-state and an
@@ -175,6 +185,7 @@ def test_fully_funded_phd_costs_nothing_in_or_out_of_state(programs, living_cost
 
 
 # ---- Test scores and bachelor's rows (official data import) ----
+# Why: a reversed SAT range or a bachelor's row with a stipend would give wrong labels and costs.
 
 def test_sat_and_act_ranges_are_in_order(programs):
     bad = [p.program_id for p in programs
@@ -196,6 +207,7 @@ def test_bachelors_rows_are_four_years_with_no_stipend(programs):
 
 
 # ---- The API on the real data (22,000+ rows) ----
+# Why: the API must stay fast with the full file; 5 seconds is a generous limit for a request.
 
 MATCH_SECONDS = 5.0      # generous: about 0.5 s on a laptop, mostly loading the CSV
 

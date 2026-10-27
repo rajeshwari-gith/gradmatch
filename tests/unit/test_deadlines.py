@@ -7,6 +7,10 @@ February 29 is counted as a real day.
 
 `today` is a fixed date in every test, never date.today().
 """
+# In plain words: these tests check the deadline labels (closed / urgent / soon / later) and the
+# list of open deadlines. Every test uses the same fixed "today", so the results never change
+# from one day to the next. That is only possible because the code takes `today` as an argument.
+
 from datetime import date, timedelta
 
 import pytest
@@ -17,6 +21,7 @@ from gradmatch.models import Scholarship
 
 pytestmark = pytest.mark.unit
 
+# A fixed day for every test; the deadlines are written as "N days from TODAY".
 TODAY = date(2026, 10, 23)
 
 
@@ -42,6 +47,7 @@ def in_days(days) -> date:
 
 
 # ---- Boundary-value analysis on days_left ----
+# Why (boundary values): mistakes hide at the edges, so we test both sides of each cut-off: -1/0, 14/15 and 30/31 days.
 
 @pytest.mark.parametrize("days_left, expected", [
     (-1, CLOSED),    # yesterday
@@ -64,6 +70,7 @@ def test_deadline_status_far_future_is_later():
 
 
 # ---- Leap year ----
+# Why: February 29 is a real day in 2028; counting it wrong would move a deadline from "soon" to "later".
 
 def test_deadline_status_leap_day_deadline():
     # 2028 is a leap year, so 2028-02-29 is a real deadline date.
@@ -78,6 +85,7 @@ def test_deadline_status_counts_february_29():
 
 
 # ---- upcoming() ----
+# Why: the Deadlines tab must leave out closed items, keep "due today", and sort programs and scholarships together.
 
 def test_upcoming_drops_closed_items():
     closed = make_program(program_id="CLOSED", application_deadline=in_days(-1))
@@ -125,6 +133,7 @@ def test_upcoming_all_closed_gives_empty_list():
 
 
 # ---- Deadlines that are not published (None) ----
+# Why: imported programs often have no deadline. They must be left out, not crash the sort.
 
 def test_deadline_of_unpublished_program_deadline_is_none():
     assert deadline_of(make_program(application_deadline=None)) is None
