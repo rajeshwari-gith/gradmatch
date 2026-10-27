@@ -14,6 +14,9 @@ field, GPA, test scores, home state, citizenship and yearly budget. The app then
 SE 413/513 Software Testing, Fall 2026 – Track B project by
 Rajeshwari Galugu and Sai Nishith Jangili.
 
+**Live app:** https://gradmatch-rg.streamlit.app (it may take about 30 seconds to wake up if
+nobody has opened it for a while).
+
 **All numbers are estimates.** Average GPA, acceptance rate, funding and the fit labels are
 estimates, PhD costs leave out mandatory student fees, and most data rows are not yet verified
 against the official program pages (see `data/SOURCES.md` for the current count). Always check
@@ -22,6 +25,8 @@ the official program page.
 Built with Python, Streamlit, Altair and plain CSV data files.
 
 ## Install
+
+Needs **Python 3.11 or newer** (check with `python3 --version`).
 
 ```
 python -m venv .venv
