@@ -36,14 +36,19 @@ def deadline_status(deadline: date, today: date) -> str:
 def upcoming(items: list[Program | Scholarship], today: date) -> list[Program | Scholarship]:
     """Return the items that are not closed, earliest deadline first.
 
-    Items can be Programs, Scholarships, or a mix of both.
+    Items can be Programs, Scholarships, or a mix of both. A program whose
+    deadline is not published (None) is left out.
     """
-    still_open = [item for item in items if deadline_status(deadline_of(item), today) != CLOSED]
+    dated = [item for item in items if deadline_of(item) is not None]
+    still_open = [item for item in dated if deadline_status(deadline_of(item), today) != CLOSED]
     return sorted(still_open, key=deadline_of)
 
 
-def deadline_of(item: Program | Scholarship) -> date:
-    """Programs call their deadline application_deadline; scholarships call it deadline."""
+def deadline_of(item: Program | Scholarship) -> date | None:
+    """Programs call their deadline application_deadline; scholarships call it deadline.
+
+    A program's deadline is None when it is not published.
+    """
     if isinstance(item, Program):
         return item.application_deadline
     return item.deadline
