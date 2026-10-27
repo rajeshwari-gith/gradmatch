@@ -1,7 +1,10 @@
 # Program data sources
 
 **Verified: 3 of 24 rows (programs) · Scholarships verified: 0 of 13**
-(25 new programs are listed below but not yet in `programs.csv`.)
+(This count covers only the **24 hand-entered rows** listed below. The 22,723 rows imported from
+official government data are not checked by hand and are not part of it; see
+[Imported rows](#imported-rows-ipeds-2024). 25 more programs are listed below but not yet in
+`programs.csv`.)
 
 One entry per program. Status is one of:
 - **needs lookup** – the official page has not been opened yet; no value in `programs.csv` may be trusted
@@ -89,3 +92,28 @@ Notes for the lookup:
 - Some master's degrees are not called "MS" (Rice "Master of Data Science", Texas A&M "Master of Computer Science").
   They go in `programs.csv` with `degree` = `MS`, and the exact name goes in `program_name`.
 - Rice's thesis MS in Computer Science is not admitted to directly, so it is not listed.
+
+## Imported rows (IPEDS 2024)
+
+`programs.csv` also has **22,723 rows with `source=ipeds`**, built by
+`src/gradmatch/ipeds_import.py` from the US Department of Education's 2024 IPEDS files
+(https://nces.ed.gov/ipeds/datacenter/DataFiles.aspx):
+
+- **HD2024** (institution directory): school name, state and main website.
+- **COST1_2024** (cost): yearly tuition plus required fees, undergraduate rates for `BS` and
+  graduate rates for `MS` and `PhD`. This is a **school-wide rate**, not a price for one program.
+- **C2024_A** (completions): degrees awarded per school, field (CIP code) and award level; a row is
+  made when a school awarded at least 5 degrees in a field and level.
+- **ADM2024** (admissions): for `BS` rows only, the acceptance rate and the 25th/75th percentile
+  SAT and ACT scores.
+
+A blank cell in these rows means **"not published"**: the government data has no admitted GPA,
+GRE, TOEFL minimum or application deadline, no stipend for graduate programs, and no admissions
+numbers for some schools. Blanks are never guesses. The `website` is the school's main site, not
+the program page. Column by column: `data/README.md`; how to run the import:
+`docs/official-data-import.md`.
+
+These rows are official data, so they are not listed one by one here and are not counted in the
+"Verified" line above. A row that a person later checks on the official program page should be
+added to the table above, so that it is counted.
+
