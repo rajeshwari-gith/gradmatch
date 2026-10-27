@@ -119,3 +119,47 @@ the command run with only the sheet (default `data` folder) and its printed line
 - **`line.strip("XX|XX")` instead of `line.strip("|")` (2).** `strip` removes a *set* of characters
   from the ends of the line. Table lines start and end with `|`, and the first and last cells are
   separated from it by spaces, so the extra `X` never touches a cell.
+
+## Bachelor's data: `fit.py` score rules, `data_loader._percentiles`, `ipeds_import.py`
+
+Run after the BS degree, the SAT/ACT columns and the official-data importer were added.
+`ipeds_import.py` was added to `source_paths`; `fit.py` and `data_loader.py` were already in it.
+The new tests are in `tests/unit/test_ipeds_import_cli.py` (a new file, so Rajeshwari's
+`test_ipeds_import.py` is unchanged) and at the end of `tests/unit/test_data_loader.py`.
+
+| Module | Mutants | Killed (first run) | Survived (first run) | Killed (after) | Survived (after) |
+|---|---:|---:|---:|---:|---:|
+| `fit.py` (incl. SAT/ACT score rules) | 37 | 37 | 0 | 37 | 0 |
+| `data_loader.py` (incl. `_percentiles`) | 479 | 474 | 5 | 476 | 3 (equivalent, as before) |
+| `ipeds_import.py` | 644 | 550 | 94 | 625 | **19** (equivalent, see below) |
+
+The other modules are unchanged: `apply_lookup.py` 402/424 (22 equivalent, see above),
+`exports.py` 105/105, `deadlines.py` 20/20, `scholarships.py` 35/35, and Rajeshwari's `cost.py`,
+`funding.py`, `search.py` and `validation.py` 235/235.
+
+### What the survivors showed and the tests added
+| Survivors | What changed | Test added |
+|---|---|---|
+| 2 in `_percentiles` | the column names or values inside the error messages swapped | exact messages for a one-sided SAT range and a reversed ACT range |
+| 1 | `continue` became `break` when a school has no tuition rate | a school without a rate before one with a rate |
+| 2 | `admitted <= applicants` became `<`; rounding to 4 decimals | acceptance rate of exactly 100% (boundary); 1 of 3 admitted gives 0.333 |
+| 6 | `act_25`/`act_75` defaults and the `sat_75`/`act_25` names in `_fill_admissions` | every test-score column checked for BS rows with and without admissions data |
+| 2 | `merge_programs` lost the old column order or the column list | an old file with an extra column (`notes`) keeps it, in its order |
+| 4 | `newline=""` removed when reading an official file or merging | a line break inside a quoted cell is kept |
+| 3 | the common-to-official name lookup, `* 100` and the zero-rate check in `tuition_check` | a common name (Purdue University) matched to the official one, a 60% difference, a zero in-state rate with a known out-of-state rate |
+| 9 | `required=True` removed or changed for `--hd`, `--cost`, `--completions` | leaving out each file stops with exit code 2 and names it |
+| 8 | the `--data` and `--output` defaults | run without them from a folder with a `data/` subfolder |
+| 3 | the "row(s) added to …" message | exact message after `--merge` |
+| 54 | the description and help texts | `--help` shows the first docstring paragraph only, every help text exactly, and nothing added |
+
+### Equivalent mutants in `ipeds_import.py` (19, not killed on purpose)
+- **`encoding` (13).** `encoding=None`, no argument, `"UTF-8"` or `"UTF-8-SIG"` instead of the
+  lower-case names. Python runs in UTF-8 mode here and the names are the same codec.
+- **`newline` when writing (2, `write_csv`).** With `newline=None` Python changes `\n` to the
+  system line ending when writing; on Linux and macOS that is `\n`, so the file is identical. (On
+  Windows it would not be, which is why `newline=""` stays.)
+- **`newline` when `main` reads `living_costs.csv` and `programs.csv` (4).** Only a line break
+  inside a quoted cell would change. From `living_costs.csv` only the state codes are used, and the
+  `programs.csv` values `main` uses (school name, degree, field, tuition) never contain one; the
+  school name also goes through `normalize()`, which drops line breaks. So these are equivalent for
+  every file the importer is used with, and a test would only test a made-up file.
