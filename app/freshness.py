@@ -20,6 +20,8 @@ def forget_stale_gradmatch(package_dir, modules) -> bool:
     Returns True if modules were removed. A package loaded before this check existed has no
     signature at all, which also counts as stale.
     """
+    # "modules" is Python's list of already-imported code (sys.modules). We pass it in as an
+    # argument so the unit tests can use a fake one.
     package = modules.get("gradmatch")
     if package is None:
         return False

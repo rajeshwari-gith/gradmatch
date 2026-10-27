@@ -12,4 +12,5 @@ def _source_signature():
                  for p in sorted(Path(__file__).parent.glob("*.py")))
 
 
+# Computed once, when the package is first imported. app/freshness.py compares it with the disk.
 SOURCE_SIGNATURE = _source_signature()

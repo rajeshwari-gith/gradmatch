@@ -21,6 +21,8 @@ import csv
 import re
 from pathlib import Path
 
+# CIP codes are the government's numbers for fields of study (11.0701 = Computer Science).
+# To add a field to the app, add its code and a name here, then run the import again.
 CIP_FIELDS = {      # CIP code -> field name shown in the app
     "11.0102": "Artificial Intelligence", "11.0103": "Information Technology",
     "11.0401": "Information Science", "11.0701": "Computer Science",
@@ -75,6 +77,7 @@ CIP_FIELDS = {      # CIP code -> field name shown in the app
 }
 CIP_BY_FIELD = {field: cip for cip, field in CIP_FIELDS.items()}
 AWARD_DEGREES = {"5": "BS", "7": "MS", "17": "PhD"}   # IPEDS award levels: 5 bachelor's, 7 master's, 17 doctor's research
+# The government data does not say how long a program is, so we use the normal length.
 DEFAULT_YEARS = {"BS": 4.0, "MS": 2.0, "PhD": 5.0}
 # COST1 columns: in-state tuition, out-of-state tuition, in-state fees, out-of-state fees
 TUITION_COLUMNS = {"BS": ("TUITION2", "TUITION3", "FEE2", "FEE3"),
@@ -83,12 +86,15 @@ TUITION_COLUMNS = {"BS": ("TUITION2", "TUITION3", "FEE2", "FEE3"),
 DEFAULT_MIN_AWARDS = 5
 SOURCE = "ipeds"
 
+# The columns of programs.csv, in order. The importer writes rows in exactly this shape.
 OUTPUT_COLUMNS = ["program_id", "university", "program_name", "field", "degree", "state",
                   "tuition_in_state", "tuition_out_state", "duration_years", "avg_gpa", "avg_gre",
                   "acceptance_rate", "stipend", "min_toefl", "application_deadline", "website",
                   "source", "sat_25", "sat_75", "act_25", "act_75"]
 
 # Existing rows use common names; IPEDS uses the official ones.
+# Some of our hand-typed rows use everyday names ("University of Michigan") while the government
+# uses the full name. This table lets us recognise them so a program is not added twice.
 OFFICIAL_NAMES = {
     "University of California Berkeley": "University of California-Berkeley",
     "University of California San Diego": "University of California-San Diego",
@@ -104,6 +110,7 @@ OFFICIAL_NAMES = {
     "Columbia University": "Columbia University in the City of New York",
 }
 
+# The columns we need from each government file. If a file has other columns we simply ignore them.
 REQUIRED_COLUMNS = {
     "directory": ["UNITID", "INSTNM", "STABBR", "WEBADDR", "ADMINURL"],
     "cost": ["UNITID", "TUITION2", "TUITION3", "FEE2", "FEE3", "TUITION6", "TUITION7", "FEE6", "FEE7"],
@@ -119,6 +126,7 @@ class ImportDataError(ValueError):
 
 def read_csv(path, kind) -> list[dict]:
     """Read an official file (UTF-8 with or without a BOM) and check its columns."""
+    # utf-8-sig quietly removes the invisible mark some government files begin with.
     with open(path, newline="", encoding="utf-8-sig") as file:
         reader = csv.DictReader(file)
         header = [name.strip() for name in (reader.fieldnames or [])]
@@ -131,6 +139,7 @@ def read_csv(path, kind) -> list[dict]:
 
 def normalize(name) -> str:
     """Lowercase letters and digits only, so 'California-Berkeley' == 'california berkeley'."""
+    # Two spellings of the same school should compare equal, so we keep only letters and digits.
     return " ".join(re.findall(r"[a-z0-9]+", name.lower()))
 
 
@@ -143,6 +152,7 @@ def website_of(address) -> str:
 
 def money(text) -> float | None:
     """A non-negative amount, or None when the cell is blank, not a number or negative."""
+    # Government files use blanks and sometimes negative codes for "no data". Both become None.
     try:
         value = float(text)
     except ValueError:
@@ -154,6 +164,8 @@ def institutions(directory_rows, states) -> dict[str, dict]:
     """{unit id: name/state/website} for schools in a state we have living costs for."""
     found = {}
     for row in directory_rows:
+        # We skip schools in places we have no living cost for (like territories), and schools
+        # without any web page, because the app needs a link to send the student to.
         website = website_of(row["ADMINURL"]) or website_of(row["WEBADDR"])   # admissions page first
         if row["STABBR"] in states and website and row["INSTNM"]:
             found[row["UNITID"]] = {"name": row["INSTNM"], "state": row["STABBR"],
@@ -163,6 +175,8 @@ def institutions(directory_rows, states) -> dict[str, dict]:
 
 def tuition_rates(cost_rows, degree) -> dict[str, tuple[float, float]]:
     """{unit id: (in-state, out-of-state)} yearly tuition plus required fees for a degree level."""
+    # Undergraduate and graduate students are charged different tuition, so each degree
+    # looks at its own columns (see TUITION_COLUMNS).
     in_column, out_column, fee_in_column, fee_out_column = TUITION_COLUMNS[degree]
     rates = {}
     for row in cost_rows:
@@ -177,6 +191,8 @@ def tuition_rates(cost_rows, degree) -> dict[str, tuple[float, float]]:
 
 def awarded_programs(completion_rows, min_awards) -> dict[tuple[str, str, str], int]:
     """{(unit id, degree, field): degrees awarded} for the fields and levels we cover."""
+    # A school "has" a program when it gave out at least min_awards degrees in the year. That keeps
+    # out programs that barely exist. The same program can appear on several lines, so we add them.
     totals = {}
     for row in completion_rows:
         field, degree = CIP_FIELDS.get(row["CIPCODE"]), AWARD_DEGREES.get(row["AWLEVEL"])
@@ -195,6 +211,8 @@ def admissions(admission_rows) -> dict[str, dict]:
     """
     found = {}
     for row in admission_rows:
+        # Acceptance rate = students admitted / students who applied. We refuse nonsense
+        # (no applicants, or more admitted than applied) and leave it blank.
         applicants, admitted = money(row["APPLCN"]), money(row["ADMSSN"])
         rate = None
         if applicants and admitted is not None and admitted <= applicants:
@@ -220,6 +238,7 @@ def _sum_scores(first, second) -> int | None:
 
 def existing_keys(existing_rows) -> set[tuple[str, str, str]]:
     """(official school name, degree, field) of rows we already have, to avoid duplicates."""
+    # The key (school, degree, field) is how we decide two rows are the same program.
     return {(normalize(OFFICIAL_NAMES.get(r["university"], r["university"])), r["degree"], r["field"])
             for r in existing_rows}
 
@@ -232,7 +251,7 @@ def build_rows(schools, tuition, awards, existing_rows, admission=None) -> list[
     admissions(); it fills the acceptance rate and test-score percentiles of bachelor's rows.
     """
     admission = admission or {}
-    have = existing_keys(existing_rows)
+    have = existing_keys(existing_rows)     # programs we already have are not added a second time
     rows = []
     for (unit, degree, field), _count in sorted(awards.items()):
         school, rates = schools.get(unit), tuition[degree].get(unit)
@@ -283,6 +302,7 @@ def merge_programs(path, new_rows) -> None:
 
 def tuition_check(schools, tuition, existing_rows) -> list[dict]:
     """Compare the tuition typed into our own rows with the official school rates."""
+    # A quick check for our own typed rows: how far was our tuition guess from the official number?
     by_name = {normalize(s["name"]): unit for unit, s in schools.items()}
     report = []
     for row in existing_rows:
@@ -317,6 +337,8 @@ def main(argv=None) -> int:
     parser.add_argument("--report", help="optional CSV: our tuition vs the official rates")
     parser.add_argument("--min-awards", type=int, default=DEFAULT_MIN_AWARDS)
     args = parser.parse_args(argv)
+
+    # Steps: read our data -> read the three/four government files -> build rows -> write them.
 
     data = Path(args.data)
     with open(data / "living_costs.csv", newline="", encoding="utf-8") as file:

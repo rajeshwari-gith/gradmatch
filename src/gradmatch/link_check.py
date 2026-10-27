@@ -21,6 +21,7 @@ DATA_FILES = (
     ("programs.csv", "program_id"),
     ("scholarships.csv", "scholarship_id"),
 )
+# Some websites block programs that do not look like a browser, so we send a browser-like name.
 USER_AGENT = "Mozilla/5.0 (GradMatch link checker; student project)"
 TIMEOUT_SECONDS = 15
 WORKERS = 8
@@ -65,10 +66,13 @@ def collect_links(data_dir) -> list[tuple[str, str, str]]:
 def find_broken(data_dir, checker=check_url) -> list[tuple[str, str, str, str]]:
     """Return (file, id, url, detail) for each link that does not open."""
     links = collect_links(data_dir)
+    # Many rows share one link, so we check each web address once. Checking 8 at the same time
+    # (threads) makes it much faster than one by one.
     unique_urls = sorted({url for _, _, url in links})
     with ThreadPoolExecutor(max_workers=WORKERS) as pool:
         results = dict(zip(unique_urls, pool.map(checker, unique_urls)))
 
+    # Match every row back to the result of its link; an empty link counts as broken.
     broken = []
     for file_name, row_id, url in links:
         ok, detail = results[url] if url else (False, "empty website")

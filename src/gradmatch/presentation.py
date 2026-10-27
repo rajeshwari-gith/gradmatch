@@ -13,6 +13,8 @@ from gradmatch.funding import FULLY_FUNDED, FUNDING_UNKNOWN, PARTIALLY_FUNDED, S
 from gradmatch.models import Program, Scholarship
 from gradmatch.search import ProgramResult
 
+# Colours are defined once so the cards, chips and chart always match. Green = good,
+# yellow = be careful, coral = urgent or hard, grey = unknown or closed.
 GREEN, YELLOW, CORAL, GREY, BLUE = "#1BB89A", "#F5C469", "#F0705F", "#8A94A6", "#5B9BD5"
 
 FIT_COLORS = {SAFETY: GREEN, MATCH: YELLOW, REACH: CORAL, UNKNOWN: GREY}
@@ -30,6 +32,7 @@ SPECIAL_LABELS = {
 CITIZENSHIP_WORDS = {"US": "U.S. citizens", "PR": "permanent residents",
                      "International": "international students"}
 
+# What a card shows when the government data has no value. "n/a" is honest; a made-up number is not.
 NOT_PUBLISHED = "n/a"
 SOURCE_CHIPS = {"ipeds": ("Official school data", BLUE), "official-page": ("Verified on official page", GREEN)}
 
@@ -38,6 +41,7 @@ ESTIMATE_NOTE = ("Average GPA, acceptance rate, funding and fit are estimates. "
                  "Where a value is shown as n/a, the school does not publish it in official "
                  "data. Always check the official program page.")
 
+# The look of the cards (a bit of CSS). Streamlit has no card widget, so we draw them as HTML.
 CARD_CSS = """
 <style>
 .gm-card {display:flex; flex-wrap:wrap; align-items:center; gap:0.75rem 1.5rem;
@@ -58,6 +62,7 @@ CARD_CSS = """
 
 
 def money(amount: float) -> str:
+    # 27000 -> "$27,000" (no cents, with commas).
     return f"${amount:,.0f}"
 
 
@@ -71,13 +76,15 @@ def format_date(day: date) -> str:
 
 def safe_link(url: str) -> str | None:
     """Return the url if it is a normal web address, otherwise None."""
+    # Only http(s) links become clickable. A bad value like "javascript:..." could run code in
+    # the page, so we refuse anything else.
     url = (url or "").strip()
     return url if url.startswith(("http://", "https://")) else None
 
 
 def deadline_label(deadline: date, today: date) -> tuple[str, str]:
     """Return (status, text), e.g. ("urgent", "Dec 15, 2026 · 3 days left")."""
-    status = deadline_status(deadline, today)
+    status = deadline_status(deadline, today)     # closed / urgent / soon / later
     days_left = (deadline - today).days
     if status == CLOSED:
         return status, f"Closed {format_date(deadline)}"
@@ -97,6 +104,8 @@ def toefl_warning(program_min_toefl: int | None, student_toefl: int | None) -> s
 
 
 def chip(text: str, color: str) -> str:
+    # A chip is the small rounded label on a card. escape() turns characters like < and > into
+    # safe text, so data from a file can never inject HTML into the page.
     return f'<span class="gm-chip" style="--chip:{color}">{escape(text)}</span>'
 
 
@@ -125,6 +134,7 @@ def _test_score_stats(program: Program) -> list[str]:
 
 def result_card_html(result: ProgramResult, today: date, student_toefl: int | None = None) -> str:
     program = result.program
+    # The card is built from small pieces: title, numbers (stats), then chips (labels).
     title = f"{program.university} – {program.program_name}"
     link = safe_link(program.website)
     if link:
@@ -143,6 +153,7 @@ def result_card_html(result: ProgramResult, today: date, student_toefl: int | No
         chip(result.fit, FIT_COLORS[result.fit]),
         chip(result.funding, FUNDING_COLORS[result.funding]),
     ]
+    # Many imported programs have no deadline, so we send the student to the program page.
     if program.application_deadline is None:
         chip_list.append(chip("Deadline: check program page", GREY))
     else:
@@ -150,6 +161,7 @@ def result_card_html(result: ProgramResult, today: date, student_toefl: int | No
         chip_list.append(chip(deadline_text, DEADLINE_COLORS[status]))
     if program.source in SOURCE_CHIPS:
         chip_list.append(chip(*SOURCE_CHIPS[program.source]))
+    # Warn international students whose TOEFL is below the program's minimum.
     warning = toefl_warning(program.min_toefl, student_toefl)
     if warning:
         chip_list.append(chip(warning, YELLOW))
@@ -169,6 +181,7 @@ def special_label(tag: str) -> str:
     return SPECIAL_LABELS.get(tag, tag.replace("_", " "))
 
 
+# The scholarship cards describe who can apply in one short line.
 def eligibility_summary(scholarship: Scholarship) -> str:
     """One line describing who can apply, e.g. 'PhD · Any field · GPA 3.00+ · U.S. citizens'."""
     parts = [", ".join(scholarship.degree_levels)]

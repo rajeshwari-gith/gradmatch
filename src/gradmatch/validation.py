@@ -25,6 +25,8 @@ ACT_MIN, ACT_MAX = 1, 36
 
 
 def validate_profile(profile: StudentProfile) -> list[str]:
+    # We collect ALL the problems instead of stopping at the first one, so the student can fix
+    # everything in one go. An empty list means the profile is fine.
     errors = []
 
     if profile.degree_sought not in DEGREES:
@@ -46,6 +48,7 @@ def validate_profile(profile: StudentProfile) -> list[str]:
     if profile.citizenship not in CITIZENSHIP:
         errors.append("Citizenship must be US, PR or International.")
 
+    # GRE, TOEFL, SAT and ACT are optional (None). We only check the range when one was given.
     if profile.annual_budget < 0:
         errors.append("Budget cannot be negative.")
 
@@ -61,6 +64,7 @@ def validate_profile(profile: StudentProfile) -> list[str]:
     if profile.act is not None and not ACT_MIN <= profile.act <= ACT_MAX:
         errors.append("ACT score must be between 1 and 36.")
 
+    # International applicants must prove English, so TOEFL is mandatory for them only.
     if profile.citizenship == "International" and profile.toefl is None:
         errors.append("TOEFL score is required for international students.")
 
@@ -68,4 +72,5 @@ def validate_profile(profile: StudentProfile) -> list[str]:
 
 
 def is_valid(profile: StudentProfile) -> bool:
+    # Handy yes/no version of validate_profile().
     return validate_profile(profile) == []

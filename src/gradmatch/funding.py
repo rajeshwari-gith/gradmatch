@@ -15,6 +15,7 @@ FUNDING_UNKNOWN = "Funding unknown"
 
 
 def funding_label(program: Program, living_cost: float) -> str:
+    # We compare the stipend with the living cost: a stipend that pays for living = "fully funded".
     if program.stipend is None:
         return FUNDING_UNKNOWN
     if program.stipend <= 0:

@@ -37,6 +37,7 @@ from gradmatch.scholarships import eligible_scholarships  # noqa: E402
 from gradmatch.search import search_programs, tuition_state  # noqa: E402
 from gradmatch.validation import CITIZENSHIP, DEGREES, US_STATES, validate_profile  # noqa: E402
 
+# Where the CSV files live. Everything about students and programs is read from here.
 DATA_DIR = ROOT / "data"
 MAX_CARDS = 60     # show the best matches only; the CSV download has them all
 DEGREE_LABELS = {"BS": "Bachelor's (BS)", "MS": "Master's (MS)", "PhD": "PhD"}
@@ -47,6 +48,8 @@ CITIZENSHIP_LABELS = {
 }
 
 
+# st.cache_data remembers the loaded files, so the big programs file is read only once
+# instead of every time the student clicks a button.
 @st.cache_data
 def load_data(data_dir: str = str(DATA_DIR)):
     programs = load_programs(Path(data_dir) / "programs.csv")
@@ -65,11 +68,13 @@ def get_today() -> date:
 
 
 def optional_int(value):
+    # An empty number box gives None; a filled one gives a float, so we turn it into a whole number.
     return None if value is None else int(value)
 
 
 def show_profile_form(fields: list[str]):
     """Draw the form. Returns a StudentProfile after the student submits, else None."""
+    # A form groups all the inputs so the page only re-runs when the student presses the button.
     with st.form("profile_form"):
         left, right = st.columns(2)
         with left:
@@ -109,6 +114,7 @@ def show_profile_form(fields: list[str]):
 
     if not submitted:
         return None
+    # Pack everything the student typed into one StudentProfile object for the logic code.
     return StudentProfile(
         degree_sought=degree,
         gpa=float(gpa),
@@ -125,6 +131,7 @@ def show_profile_form(fields: list[str]):
     )
 
 
+# Chart 1: each dot is a program. Right = admitted students have higher GPAs, up = more expensive.
 def cost_chart(results, gpa: float):
     """Scatter chart: average admitted GPA (x) against cost per year (y)."""
     values = [{"Program": r.program.university + " – " + r.program.program_name,
@@ -143,6 +150,7 @@ def cost_chart(results, gpa: float):
     return (points + you).properties(height=320).interactive()
 
 
+# Chart 2: the bars show what one year costs: tuition + living costs, minus the stipend.
 def breakdown_chart(breakdown: dict):
     """Bar chart of what makes up one year's cost."""
     values = [{"Part": "Tuition", "Amount ($)": breakdown["tuition"]},
@@ -165,6 +173,8 @@ def show_programs(profile: StudentProfile, results, living_costs, today: date):
         return
 
     st.caption(ESTIMATE_NOTE)
+    # Drawing thousands of cards would make the page slow, so we draw the first MAX_CARDS only.
+    # The download button still gives the student every match.
     all_results, results = results, results[:MAX_CARDS]
     if len(all_results) > len(results):
         st.caption(f"Showing the first {len(results)} of {len(all_results)} matches. "
@@ -229,6 +239,8 @@ def show_deadlines(results, open_matches, today: date):
 
 
 def show_results(profile: StudentProfile, programs, living_costs, scholarships, today: date):
+    # This is where the app calls the real logic in src/gradmatch: search, scholarship
+    # eligibility and deadlines. The app itself only shows the answers.
     results = search_programs(profile, programs, living_costs)
     matches = eligible_scholarships(profile, scholarships)
     open_matches = upcoming(matches, today)
@@ -261,6 +273,7 @@ def _deadline(item) -> date:
 
 
 def main():
+    # Order of the page: title, load data, form, check the form, show results.
     st.set_page_config(page_title="GradMatch", page_icon="🎓", layout="wide")
     st.title("🎓 GradMatch")
     st.caption("Find colleges and graduate programs, funding, scholarships and deadlines that fit you. "
@@ -284,6 +297,8 @@ def main():
             return
         st.session_state["profile"] = submitted
 
+    # st.session_state is the app's memory between clicks. Without it the results would vanish
+    # when the student picked something in a dropdown.
     # The profile stays in the session, so using a dropdown or a download button
     # below does not make the results disappear.
     profile = st.session_state.get("profile")

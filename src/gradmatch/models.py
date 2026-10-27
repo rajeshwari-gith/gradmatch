@@ -6,6 +6,10 @@ from dataclasses import dataclass
 from datetime import date
 
 
+# These three classes are the "shapes" of our data. Every other file imports them, so the whole
+# project talks about students, programs and scholarships in the same way.
+# frozen=True means an object cannot be changed after it is made, which avoids sneaky bugs.
+
 @dataclass(frozen=True)
 class StudentProfile:
     degree_sought: str            # "BS", "MS" or "PhD"
@@ -22,6 +26,8 @@ class StudentProfile:
     act: int | None = None        # 1 - 36 (bachelor's search)
 
 
+# One row of programs.csv. A field that says "| None" may be missing: government data does not
+# publish every number, and None is how we say "not published" without making a value up.
 @dataclass(frozen=True)
 class Program:
     program_id: str
@@ -47,6 +53,8 @@ class Program:
     act_75: int | None = None
 
 
+# One row of scholarships.csv. Several of these fields are tuples (lists that cannot change)
+# because one scholarship can allow many degrees, fields, states or groups.
 @dataclass(frozen=True)
 class Scholarship:
     scholarship_id: str

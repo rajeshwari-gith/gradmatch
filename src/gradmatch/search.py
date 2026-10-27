@@ -39,6 +39,8 @@ def tuition_state(profile: StudentProfile) -> str | None:
 
 
 def matches_filters(profile: StudentProfile, program: Program) -> bool:
+    # The cheap yes/no checks come first. A program must be the same field and degree,
+    # and (if the student picked states) be in one of those states.
     if program.field != profile.field:
         return False
     if program.degree != profile.degree_sought:
@@ -54,10 +56,13 @@ def search_programs(profile: StudentProfile, programs: list[Program],
     for program in programs:
         if not matches_filters(profile, program):
             continue
+        # Every state in the data must have a living cost. Failing loudly beats silently
+        # showing a wrong price.
         if program.state not in living_costs:
             raise ValueError(f"No living cost found for state {program.state}.")
         living = living_costs[program.state]
         cost = yearly_cost(program, tuition_state(profile), living)
+        # Too expensive for this student's yearly budget: leave it out of the results.
         if cost > profile.annual_budget:
             continue
         results.append(ProgramResult(
@@ -68,6 +73,8 @@ def search_programs(profile: StudentProfile, programs: list[Program],
             funding=funding_label(program, living),
         ))
 
+    # Sorting: a PhD student cares about money left after living costs, so best funded first.
+    # Everyone else sees the cheapest first. Ties are broken by university name so the order is stable.
     if profile.degree_sought == "PhD":
         results.sort(key=lambda r: (-(known_stipend(r.program) - living_costs[r.program.state]),
                                     r.program.university))

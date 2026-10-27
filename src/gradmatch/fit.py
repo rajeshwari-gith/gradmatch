@@ -21,12 +21,15 @@ MATCH = "Match"
 SAFETY = "Safety"
 UNKNOWN = "Unknown"
 
-SELECTIVE_RATE = 0.10
-SAFETY_MARGIN = 0.20
-REACH_MARGIN = -0.15
+# The cut-off numbers live here, in one place, so the rules are easy to find and change.
+SELECTIVE_RATE = 0.10     # accepting under 10% of applicants = very hard to get in
+SAFETY_MARGIN = 0.20      # GPA this far above the average = a safe choice
+REACH_MARGIN = -0.15      # GPA this far below the average = a long shot
 
 
 def score_fit(score: int, low: int, high: int) -> str:
+    # low and high are the 25th and 75th percentile test scores of students who enrolled.
+    # At or above the top quarter you are very likely in; below the bottom quarter it is a reach.
     if score >= high:
         return SAFETY
     if score >= low:
@@ -35,15 +38,19 @@ def score_fit(score: int, low: int, high: int) -> str:
 
 
 def classify_fit(gpa: float, program: Program, sat: int | None = None, act: int | None = None) -> str:
+    # Rule 1: a very selective program is a Reach for everybody, even with a perfect GPA.
     if program.acceptance_rate is not None and program.acceptance_rate < SELECTIVE_RATE:
         return REACH
+    # Rule 2: for colleges that publish test-score ranges, use the student's SAT, else ACT.
     if sat is not None and program.sat_25 is not None and program.sat_75 is not None:
         return score_fit(sat, program.sat_25, program.sat_75)
     if act is not None and program.act_25 is not None and program.act_75 is not None:
         return score_fit(act, program.act_25, program.act_75)
+    # Rule 3: no average GPA published (typical for government data) = we honestly don't know.
     if program.avg_gpa is None:
         return UNKNOWN
 
+    # Rule 4: compare GPAs. round() avoids tiny float errors like 0.1999999 sitting on the edge.
     diff = round(gpa - program.avg_gpa, 2)
     if diff >= SAFETY_MARGIN:
         return SAFETY
