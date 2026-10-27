@@ -64,7 +64,7 @@ def search_programs(profile: StudentProfile, programs: list[Program],
             program=program,
             yearly_cost=cost,
             total_cost=total_cost(program, tuition_state(profile), living),
-            fit=classify_fit(profile.gpa, program),
+            fit=classify_fit(profile.gpa, program, profile.sat, profile.act),
             funding=funding_label(program, living),
         ))
 

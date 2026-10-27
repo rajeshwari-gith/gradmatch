@@ -66,3 +66,19 @@ def test_bachelors_cards_show_a_fit_and_no_stipend(bachelors_app):
 def test_a_bachelors_student_can_still_open_the_other_tabs(bachelors_app):
     assert not bachelors_app.exception
     assert len(bachelors_app.tabs) == 3
+
+
+def test_only_the_first_60_matches_are_drawn_but_all_can_be_downloaded(monkeypatch, tmp_path_factory):
+    folder = write_fixture_data(tmp_path_factory.mktemp("many"))
+    rows = [f"UG{i:03d},College {i:03d},BS in Computer Science,Computer Science,BS,MI,{8000 + i},20000,4,3.20,,0.55,0,,2026-12-01,https://example.edu/{i}"
+            for i in range(75)]
+    (folder / "programs.csv").write_text(PROGRAM_HEADER + "\n".join(rows) + "\n")
+    monkeypatch.setenv("GRADMATCH_DATA_DIR", str(folder))
+    at = AppTest.from_file(APP, default_timeout=30)
+    at.run()
+    at.radio(key="degree").set_value("BS")
+    at.button[0].click().run()
+    assert not at.exception
+    assert card_text(at).count('class="gm-card"') == 60
+    assert any("Showing the first 60 of 75 matches" in c.value for c in at.caption)
+    assert at.metric[0].value == "75"            # the summary still counts every match

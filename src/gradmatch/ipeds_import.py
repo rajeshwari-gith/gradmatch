@@ -5,6 +5,7 @@ Three files from https://nces.ed.gov/ipeds/datacenter/DataFiles.aspx are needed:
   HD<year>        institution directory (name, state, website)
   COST1_<year>    undergraduate and graduate tuition and required fees
   C<year>_A       degrees awarded by field (CIP code) and award level
+  ADM<year>       (optional) undergraduate applicants, admits and SAT/ACT percentiles
 
 A school gets a row for a degree and field when it awarded at least
 `min_awards` of those degrees in the year. Values the government does not
@@ -20,7 +21,23 @@ import csv
 import re
 from pathlib import Path
 
-CIP_FIELDS = {"11.0701": "Computer Science", "30.7001": "Data Science"}
+CIP_FIELDS = {      # CIP code -> field name shown in the app
+    "11.0102": "Artificial Intelligence", "11.0103": "Information Technology",
+    "11.0401": "Information Science", "11.0701": "Computer Science",
+    "11.1003": "Cybersecurity", "30.7001": "Data Science",
+    "14.0201": "Aerospace Engineering", "14.0501": "Biomedical Engineering",
+    "14.0701": "Chemical Engineering", "14.0801": "Civil Engineering",
+    "14.0901": "Computer Engineering", "14.1001": "Electrical Engineering",
+    "14.1901": "Mechanical Engineering", "14.3501": "Industrial Engineering",
+    "26.0101": "Biology", "27.0101": "Mathematics", "27.0501": "Statistics",
+    "40.0501": "Chemistry", "40.0801": "Physics", "03.0104": "Environmental Science",
+    "52.0201": "Business Administration", "52.0301": "Accounting", "52.0801": "Finance",
+    "52.1401": "Marketing", "45.0601": "Economics",
+    "42.0101": "Psychology", "51.3801": "Nursing", "13.0101": "Education",
+    "45.1001": "Political Science", "09.0101": "Communication", "23.0101": "English",
+    "51.2201": "Public Health", "44.0701": "Social Work", "04.0201": "Architecture",
+}
+CIP_BY_FIELD = {field: cip for cip, field in CIP_FIELDS.items()}
 AWARD_DEGREES = {"5": "BS", "7": "MS", "17": "PhD"}   # IPEDS award levels: 5 bachelor's, 7 master's, 17 doctor's research
 DEFAULT_YEARS = {"BS": 4.0, "MS": 2.0, "PhD": 5.0}
 # COST1 columns: in-state tuition, out-of-state tuition, in-state fees, out-of-state fees
@@ -33,7 +50,7 @@ SOURCE = "ipeds"
 OUTPUT_COLUMNS = ["program_id", "university", "program_name", "field", "degree", "state",
                   "tuition_in_state", "tuition_out_state", "duration_years", "avg_gpa", "avg_gre",
                   "acceptance_rate", "stipend", "min_toefl", "application_deadline", "website",
-                  "source"]
+                  "source", "sat_25", "sat_75", "act_25", "act_75"]
 
 # Existing rows use common names; IPEDS uses the official ones.
 OFFICIAL_NAMES = {
@@ -55,6 +72,8 @@ REQUIRED_COLUMNS = {
     "directory": ["UNITID", "INSTNM", "STABBR", "WEBADDR"],
     "cost": ["UNITID", "TUITION2", "TUITION3", "FEE2", "FEE3", "TUITION6", "TUITION7", "FEE6", "FEE7"],
     "completions": ["UNITID", "CIPCODE", "AWLEVEL", "CTOTALT"],
+    "admissions": ["UNITID", "APPLCN", "ADMSSN", "SATVR25", "SATVR75", "SATMT25", "SATMT75",
+                   "ACTCM25", "ACTCM75"],
 }
 
 
@@ -132,18 +151,51 @@ def awarded_programs(completion_rows, min_awards) -> dict[tuple[str, str, str], 
     return {key: count for key, count in totals.items() if count >= min_awards}
 
 
+def admissions(admission_rows) -> dict[str, dict]:
+    """{unit id: acceptance rate and SAT/ACT percentiles} for undergraduate admissions.
+
+    A value that is missing or makes no sense stays blank (None). The SAT total is the
+    reading and math percentile added together.
+    """
+    found = {}
+    for row in admission_rows:
+        applicants, admitted = money(row["APPLCN"]), money(row["ADMSSN"])
+        rate = None
+        if applicants and admitted is not None and admitted <= applicants:
+            rate = round(admitted / applicants, 3)
+        found[row["UNITID"]] = {
+            "acceptance_rate": rate,
+            "sat_25": _sum_scores(row["SATVR25"], row["SATMT25"]),
+            "sat_75": _sum_scores(row["SATVR75"], row["SATMT75"]),
+            "act_25": _score(row["ACTCM25"]), "act_75": _score(row["ACTCM75"]),
+        }
+    return found
+
+
+def _score(text) -> int | None:
+    value = money(text)
+    return int(value) if value else None
+
+
+def _sum_scores(first, second) -> int | None:
+    a, b = _score(first), _score(second)
+    return a + b if a and b else None
+
+
 def existing_keys(existing_rows) -> set[tuple[str, str, str]]:
     """(official school name, degree, field) of rows we already have, to avoid duplicates."""
     return {(normalize(OFFICIAL_NAMES.get(r["university"], r["university"])), r["degree"], r["field"])
             for r in existing_rows}
 
 
-def build_rows(schools, tuition, awards, existing_rows) -> list[dict]:
+def build_rows(schools, tuition, awards, existing_rows, admission=None) -> list[dict]:
     """New program rows, sorted by school then degree, skipping what we already have.
 
     tuition is {degree: {unit id: (in-state, out-of-state)}}. Bachelor's rows get a stipend
-    of 0, because there is no stipend for a bachelor's degree.
+    of 0, because there is no stipend for a bachelor's degree. admission is the result of
+    admissions(); it fills the acceptance rate and test-score percentiles of bachelor's rows.
     """
+    admission = admission or {}
     have = existing_keys(existing_rows)
     rows = []
     for (unit, degree, field), _count in sorted(awards.items()):
@@ -151,7 +203,7 @@ def build_rows(schools, tuition, awards, existing_rows) -> list[dict]:
         if not school or not rates or (normalize(school["name"]), degree, field) in have:
             continue
         rows.append({
-            "program_id": f"IPEDS-{unit}-{degree.upper()}-{''.join(w[0] for w in field.split())}",
+            "program_id": f"IPEDS-{unit}-{degree.upper()}-{CIP_BY_FIELD[field]}",
             "university": school["name"],
             "program_name": f"{degree} in {field}",
             "field": field, "degree": degree, "state": school["state"],
@@ -161,8 +213,28 @@ def build_rows(schools, tuition, awards, existing_rows) -> list[dict]:
             "stipend": "0" if degree == "BS" else "",
             "min_toefl": "", "application_deadline": "",
             "website": school["website"], "source": SOURCE,
+            "sat_25": "", "sat_75": "", "act_25": "", "act_75": "",
         })
+        if degree == "BS":
+            _fill_admissions(rows[-1], admission.get(unit, {}))
     return rows
+
+
+def _fill_admissions(row, found) -> None:
+    for name in ("acceptance_rate", "sat_25", "sat_75", "act_25", "act_75"):
+        if found.get(name) is not None:
+            row[name] = found[name]
+
+
+def merge_programs(path, new_rows) -> None:
+    """Add new_rows to the programs file at path. Missing columns are added; old rows keep
+    their values and get blanks in the new columns."""
+    with open(path, newline="", encoding="utf-8") as file:
+        reader = csv.DictReader(file)
+        columns = list(reader.fieldnames or [])
+        old_rows = list(reader)
+    columns += [name for name in OUTPUT_COLUMNS if name not in columns]
+    write_csv(path, [{**{name: "" for name in columns}, **row} for row in old_rows + new_rows], columns)
 
 
 def tuition_check(schools, tuition, existing_rows) -> list[dict]:
@@ -194,7 +266,10 @@ def main(argv=None) -> int:
     parser.add_argument("--cost", required=True, help="COST1_<year> CSV")
     parser.add_argument("--completions", required=True, help="C<year>_A CSV")
     parser.add_argument("--data", default="data", help="folder with programs.csv and living_costs.csv")
+    parser.add_argument("--admissions", help="optional ADM<year> CSV (bachelor's acceptance rate and SAT/ACT)")
     parser.add_argument("--output", default="data/programs_ipeds.csv")
+    parser.add_argument("--merge", action="store_true",
+                        help="also add the new rows to programs.csv in the data folder")
     parser.add_argument("--report", help="optional CSV: our tuition vs the official rates")
     parser.add_argument("--min-awards", type=int, default=DEFAULT_MIN_AWARDS)
     args = parser.parse_args(argv)
@@ -210,9 +285,13 @@ def main(argv=None) -> int:
     tuition = {degree: tuition_rates(cost_rows, degree) for degree in DEFAULT_YEARS}
     awards = awarded_programs(read_csv(args.completions, "completions"), args.min_awards)
 
-    rows = build_rows(schools, tuition, awards, existing)
+    admission = admissions(read_csv(args.admissions, "admissions")) if args.admissions else None
+    rows = build_rows(schools, tuition, awards, existing, admission)
     write_csv(args.output, rows)
     print(f"{len(rows)} new program row(s) written to {args.output}")
+    if args.merge:
+        merge_programs(data / "programs.csv", rows)
+        print(f"{len(rows)} row(s) added to {data / 'programs.csv'}")
     if args.report:
         report = tuition_check(schools, tuition["MS"], existing)
         write_csv(args.report, report, list(report[0]) if report else ["program_id"])

@@ -38,6 +38,8 @@ class ProfileIn(BaseModel):
     preferred_states: list[str] = []
     gre: int | None = None
     toefl: int | None = None
+    sat: int | None = None
+    act: int | None = None
     special: list[str] = []
 
 
@@ -75,6 +77,8 @@ def match(body: ProfileIn):
         gre=body.gre,
         toefl=body.toefl,
         special=tuple(body.special),
+        sat=body.sat,
+        act=body.act,
     )
     errors = validate_profile(profile)
     if errors:

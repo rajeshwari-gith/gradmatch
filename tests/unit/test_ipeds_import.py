@@ -5,11 +5,12 @@ valid), boundary-value analysis on the minimum number of degrees awarded, and
 an end-to-end run on tiny made-up files (never the real government files).
 """
 import csv
+import re
 
 import pytest
 
-from gradmatch.ipeds_import import (DEFAULT_MIN_AWARDS, ImportDataError, awarded_programs,
-                                    build_rows, existing_keys, tuition_rates, institutions, main,
+from gradmatch.ipeds_import import (CIP_BY_FIELD, CIP_FIELDS, DEFAULT_MIN_AWARDS, ImportDataError, admissions, awarded_programs,
+                                    build_rows, existing_keys, tuition_rates, institutions, main, merge_programs,
                                     money, normalize, read_csv, tuition_check, website_of)
 
 pytestmark = pytest.mark.unit
@@ -125,7 +126,7 @@ def test_fields_and_levels_we_cover(cip, level, key):
     assert key in awarded_programs([completion(cip=cip, level=level)], 1)
 
 
-@pytest.mark.parametrize("cip, level, total", [("11.0701", "6", "10"), ("52.0201", "7", "10"),
+@pytest.mark.parametrize("cip, level, total", [("11.0701", "6", "10"), ("01.0101", "7", "10"),
                                                ("11.0701", "7", "0"), ("11.0701", "7", "")])
 def test_other_fields_levels_or_empty_counts_are_ignored(cip, level, total):
     assert awarded_programs([completion(cip=cip, level=level, total=total)], 1) == {}
@@ -147,9 +148,9 @@ AWARDS = {("1", "MS", "Computer Science"): 10, ("1", "PhD", "Data Science"): 6,
 
 def test_a_new_row_has_official_values_and_blanks_for_unpublished_ones():
     [bs, ms, phd] = build_rows(SCHOOLS, TUITION, AWARDS, [])
-    assert (bs["program_id"], bs["duration_years"], bs["stipend"]) == ("IPEDS-1-BS-CS", 4.0, "0")
+    assert (bs["program_id"], bs["duration_years"], bs["stipend"]) == ("IPEDS-1-BS-11.0701", 4.0, "0")
     assert (bs["tuition_in_state"], bs["tuition_out_state"]) == (6300, 15400)
-    assert ms["program_id"] == "IPEDS-1-MS-CS" and phd["program_id"] == "IPEDS-1-PHD-DS"
+    assert ms["program_id"] == "IPEDS-1-MS-11.0701" and phd["program_id"] == "IPEDS-1-PHD-30.7001"
     assert ms["program_name"] == "MS in Computer Science"
     assert (ms["tuition_in_state"], ms["tuition_out_state"]) == (10500, 20700)
     assert (ms["duration_years"], phd["duration_years"]) == (2.0, 5.0)
@@ -161,7 +162,7 @@ def test_a_new_row_has_official_values_and_blanks_for_unpublished_ones():
 def test_a_program_we_already_have_is_not_added_again():
     existing = [{"university": "Test University", "degree": "MS", "field": "Computer Science"}]
     assert [r["program_id"] for r in build_rows(SCHOOLS, TUITION, AWARDS, existing)] == [
-        "IPEDS-1-BS-CS", "IPEDS-1-PHD-DS"]
+        "IPEDS-1-BS-11.0701", "IPEDS-1-PHD-30.7001"]
 
 
 def test_an_existing_row_with_a_common_name_is_matched_to_the_official_name():
@@ -231,7 +232,7 @@ def test_command_writes_only_the_new_programs(folder, capsys):
     assert run(folder) == 0
     with open(folder / "out.csv", newline="") as file:
         rows = list(csv.DictReader(file))
-    assert [r["program_id"] for r in rows] == ["IPEDS-2-MS-CS"]
+    assert [r["program_id"] for r in rows] == ["IPEDS-2-MS-11.0701"]
     assert "1 new program row(s)" in capsys.readouterr().out
 
 
@@ -252,7 +253,7 @@ def test_command_report_is_still_written_when_nothing_matches(folder):
 def test_command_minimum_can_be_lowered(folder):
     run(folder, "--min-awards", "1")
     with open(folder / "out.csv", newline="") as file:
-        assert {r["program_id"] for r in csv.DictReader(file)} == {"IPEDS-2-MS-CS", "IPEDS-2-MS-DS"}
+        assert {r["program_id"] for r in csv.DictReader(file)} == {"IPEDS-2-MS-11.0701", "IPEDS-2-MS-30.7001"}
 
 
 def test_command_adds_bachelors_programs(folder):
@@ -263,3 +264,81 @@ def test_command_adds_bachelors_programs(folder):
     with open(folder / "out.csv", newline="") as file:
         row = next(r for r in csv.DictReader(file) if r["degree"] == "BS")
     assert (row["tuition_in_state"], row["tuition_out_state"], row["duration_years"]) == ("4000", "8000", "4.0")
+
+
+# ---- admissions: acceptance rate and test scores ----
+
+def admission(unit="1", applicants="1000", admitted="250", vr25="550", vr75="650", mt25="560", mt75="700",
+              act25="24", act75="31"):
+    return {"UNITID": unit, "APPLCN": applicants, "ADMSSN": admitted, "SATVR25": vr25, "SATVR75": vr75,
+            "SATMT25": mt25, "SATMT75": mt75, "ACTCM25": act25, "ACTCM75": act75}
+
+
+def test_admissions_gives_the_rate_and_adds_reading_and_math_scores():
+    assert admissions([admission()]) == {"1": {"acceptance_rate": 0.25, "sat_25": 1110, "sat_75": 1350,
+                                              "act_25": 24, "act_75": 31}}
+
+
+@pytest.mark.parametrize("applicants, admitted", [("0", "0"), ("", "5"), ("100", ""), ("100", "101")])
+def test_a_rate_that_makes_no_sense_stays_blank(applicants, admitted):
+    assert admissions([admission(applicants=applicants, admitted=admitted)])["1"]["acceptance_rate"] is None
+
+
+def test_test_scores_that_are_missing_stay_blank():
+    found = admissions([admission(vr25="", act25="")])["1"]
+    assert found["sat_25"] is None and found["act_25"] is None
+    assert found["sat_75"] == 1350 and found["act_75"] == 31
+
+
+def test_bachelors_rows_get_the_admissions_values_and_graduate_rows_do_not():
+    found = admissions([admission()])
+    rows = {r["degree"]: r for r in build_rows(SCHOOLS, TUITION, AWARDS, [], found)}
+    assert (rows["BS"]["acceptance_rate"], rows["BS"]["sat_25"], rows["BS"]["act_75"]) == (0.25, 1110, 31)
+    assert rows["MS"]["acceptance_rate"] == "" and rows["MS"]["sat_25"] == ""
+
+
+def test_a_school_without_admissions_data_keeps_blanks():
+    [bs, *_] = build_rows(SCHOOLS, TUITION, AWARDS, [], {})
+    assert bs["acceptance_rate"] == "" and bs["sat_75"] == ""
+
+
+def test_merge_adds_rows_and_new_columns_and_keeps_old_values(tmp_path):
+    path = tmp_path / "programs.csv"
+    write(path, ["program_id", "university"], [["OLD", "Old U"]], "utf-8")
+    merge_programs(path, [{"program_id": "NEW", "university": "New U", "source": "ipeds", "sat_25": 1000}])
+    with open(path, newline="") as file:
+        rows = list(csv.DictReader(file))
+    assert [r["program_id"] for r in rows] == ["OLD", "NEW"]
+    assert rows[0]["source"] == "" and rows[1]["source"] == "ipeds" and rows[1]["sat_25"] == "1000"
+    assert list(rows[0])[:2] == ["program_id", "university"]
+
+
+def test_command_with_admissions_and_merge(folder):
+    write(folder / "adm.csv", list(admission()), [list(admission(unit="2").values())])
+    rows = list(csv.reader(open(folder / "c.csv", encoding="utf-8-sig")))
+    rows.append(["2", "11.0701", "5", "30"])
+    write(folder / "c.csv", rows[0], rows[1:])
+    run(folder, "--admissions", str(folder / "adm.csv"), "--merge")
+    with open(folder / "programs.csv", newline="") as file:
+        merged = list(csv.DictReader(file))
+    bs = next(r for r in merged if r["degree"] == "BS")
+    assert (bs["acceptance_rate"], bs["sat_25"]) == ("0.25", "1110")
+    assert merged[0]["program_id"] == "P1" and len(merged) == 3
+
+
+def test_every_field_has_its_own_name_and_a_six_digit_cip_code():
+    assert len(CIP_BY_FIELD) == len(CIP_FIELDS)                  # no two codes share a field name
+    assert all(re.fullmatch(r"\d\d\.\d{4}", cip) for cip in CIP_FIELDS)
+
+
+def test_other_fields_are_imported_with_their_own_ids():
+    awards = {("1", "MS", "Mechanical Engineering"): 9, ("1", "BS", "Computer Engineering"): 9,
+              ("1", "BS", "Chemical Engineering"): 9}
+    ids = [r["program_id"] for r in build_rows(SCHOOLS, TUITION, awards, [])]
+    assert len(set(ids)) == 3                                    # fields with the same initials do not clash
+    assert "IPEDS-1-MS-14.1901" in ids
+
+
+def test_a_cip_code_of_another_field_is_imported():
+    result = awarded_programs([completion(cip="14.1901", level="7")], 1)
+    assert result == {("1", "MS", "Mechanical Engineering"): 10}

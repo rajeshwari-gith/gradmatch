@@ -310,3 +310,16 @@ def test_estimate_rows_have_no_source_chip():
 
 def test_the_estimate_note_explains_n_a():
     assert "n/a" in ESTIMATE_NOTE
+
+
+# ---- Test scores on a college card ----
+
+def test_card_shows_the_middle_half_of_sat_and_act_when_published():
+    html = result_card_html(make_result(sat_25=1110, sat_75=1350, act_25=24, act_75=31), TODAY)
+    assert "1110–1350" in html and "SAT mid 50%" in html
+    assert "24–31" in html and "ACT mid 50%" in html
+
+
+def test_card_has_no_test_score_stats_when_not_published():
+    html = result_card_html(make_result(), TODAY)
+    assert "SAT" not in html and "ACT" not in html

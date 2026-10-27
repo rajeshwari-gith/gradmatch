@@ -14,6 +14,8 @@ from gradmatch.models import Program, Scholarship
 DEGREES = ("BS", "MS", "PhD")
 GPA_MIN, GPA_MAX = 0.0, 4.0
 RATE_MIN, RATE_MAX = 0.0, 1.0
+SAT_MIN, SAT_MAX = 400, 1600
+ACT_MIN, ACT_MAX = 1, 36
 DATE_FORMAT = "%Y-%m-%d"
 LIVING_COST_COLUMNS = ["state", "annual_living_cost"]
 SOURCES = ("estimate", "official-page", "ipeds")
@@ -76,6 +78,8 @@ def _to_program(row) -> Program:
     avg_gpa = _optional_in_range(_optional_number(row, "avg_gpa"), GPA_MIN, GPA_MAX, "avg_gpa")
     rate = _optional_in_range(_optional_number(row, "acceptance_rate"), RATE_MIN, RATE_MAX,
                               "acceptance_rate")
+    sat_25, sat_75 = _percentiles(row, "sat", SAT_MIN, SAT_MAX)
+    act_25, act_75 = _percentiles(row, "act", ACT_MIN, ACT_MAX)
     return Program(
         program_id=_text(row, "program_id"),
         university=_text(row, "university"),
@@ -94,6 +98,7 @@ def _to_program(row) -> Program:
         application_deadline=_optional_date(row, "application_deadline"),
         website=_text(row, "website"),
         source=_source(row),
+        sat_25=sat_25, sat_75=sat_75, act_25=act_25, act_75=act_75,
     )
 
 
@@ -177,6 +182,21 @@ def _optional_date(row, name) -> date | None:
     if not _cell(row, name):
         return None             # empty cell = not published
     return _date(row, name)
+
+
+def _percentiles(row, prefix, low, high) -> tuple[int | None, int | None]:
+    """The optional <prefix>_25 and <prefix>_75 test-score columns: both blank or both in range."""
+    names = f"{prefix}_25", f"{prefix}_75"
+    pair = tuple(_optional_int(row, name) for name in names)
+    if pair == (None, None):
+        return pair
+    if None in pair:
+        raise ValueError(f"{names[0]} and {names[1]} must both be filled in or both left blank")
+    for name, value in zip(names, pair):
+        _optional_in_range(value, low, high, name)
+    if pair[0] > pair[1]:
+        raise ValueError(f"{names[0]} cannot be above {names[1]}, got {pair[0]} and {pair[1]}")
+    return pair
 
 
 def _source(row) -> str:

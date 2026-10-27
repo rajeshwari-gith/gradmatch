@@ -113,6 +113,16 @@ def _estimate_stat(value, label, show) -> str:
     return stat(show(value), f"{label} (est.)")
 
 
+def _test_score_stats(program: Program) -> list[str]:
+    """The middle 50% SAT and ACT of enrolled students, for colleges that publish them."""
+    stats = []
+    if program.sat_25 is not None and program.sat_75 is not None:
+        stats.append(stat(f"{program.sat_25}–{program.sat_75}", "SAT mid 50%"))
+    if program.act_25 is not None and program.act_75 is not None:
+        stats.append(stat(f"{program.act_25}–{program.act_75}", "ACT mid 50%"))
+    return stats
+
+
 def result_card_html(result: ProgramResult, today: date, student_toefl: int | None = None) -> str:
     program = result.program
     title = f"{program.university} – {program.program_name}"
@@ -128,7 +138,7 @@ def result_card_html(result: ProgramResult, today: date, student_toefl: int | No
         stat(money(result.total_cost), f"{program.duration_years:g} yr total"),
         _estimate_stat(program.avg_gpa, "avg GPA", lambda v: f"{v:.2f}"),
         _estimate_stat(program.acceptance_rate, "accepted", percent),
-    ])
+    ] + _test_score_stats(program))
     chip_list = [
         chip(result.fit, FIT_COLORS[result.fit]),
         chip(result.funding, FUNDING_COLORS[result.funding]),

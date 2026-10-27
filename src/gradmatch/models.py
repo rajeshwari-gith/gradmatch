@@ -18,6 +18,8 @@ class StudentProfile:
     gre: int | None = None        # 260 - 340
     toefl: int | None = None      # 0 - 120
     special: tuple[str, ...] = () # e.g. ("first_gen", "women_stem")
+    sat: int | None = None        # 400 - 1600 (bachelor's search)
+    act: int | None = None        # 1 - 36 (bachelor's search)
 
 
 @dataclass(frozen=True)
@@ -39,6 +41,10 @@ class Program:
     application_deadline: date | None  # None = not published, check the program page
     website: str
     source: str = "estimate"      # where the row comes from: "estimate", "official-page" or "ipeds"
+    sat_25: int | None = None     # SAT total (reading + math) of the 25th and 75th percentile of enrolled students
+    sat_75: int | None = None
+    act_25: int | None = None     # ACT composite, 25th and 75th percentile
+    act_75: int | None = None
 
 
 @dataclass(frozen=True)

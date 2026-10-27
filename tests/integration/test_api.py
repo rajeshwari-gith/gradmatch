@@ -246,3 +246,16 @@ def test_match_gives_unknown_fit_and_funding_for_unpublished_values(client_with_
     assert program["program_id"] == "IPEDS1"
     assert (program["fit"], program["funding"]) == ("Unknown", "Funding unknown")
     assert program["yearly_cost"] == 22000 + 15000    # Michigan student at an Ohio school: out-of-state tuition + OH living cost; unknown stipend counts as 0
+
+
+def test_match_uses_sat_and_act_from_the_request(tmp_path, monkeypatch):
+    folder = write_fixture_data(tmp_path)
+    lines = (folder / "programs.csv").read_text().strip().split("\n")
+    lines = [lines[0] + ",sat_25,sat_75"] + [line + "," for line in lines[1:]]
+    lines[1] = lines[1] + "1000,1200"            # the CHEAP college
+    (folder / "programs.csv").write_text("\n".join(lines) + "\n")
+    monkeypatch.setenv("GRADMATCH_DATA_DIR", str(folder))
+    client = TestClient(app)
+    fits = {p["program_id"]: p["fit"] for p in client.post("/match", json=profile(sat=1250)).json()["programs"]}
+    assert fits["CHEAP"] == "Safety"
+    assert client.post("/match", json=profile(sat=100)).status_code == 422

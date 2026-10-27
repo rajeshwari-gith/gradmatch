@@ -92,3 +92,45 @@ def test_gpa_difference_is_rounded_to_two_decimals(gpa, expected):
 ])
 def test_fit_with_unpublished_values(rate, avg_gpa, expected):
     assert classify_fit(3.40, make_program(acceptance_rate=rate, avg_gpa=avg_gpa)) == expected
+
+
+# ---- Test scores (SAT / ACT) against a college's 25th and 75th percentile ----
+# Program: SAT 1100 - 1300, ACT 24 - 29, acceptance 0.40, avg GPA 3.40
+
+COLLEGE = dict(sat_25=1100, sat_75=1300, act_25=24, act_75=29)
+
+
+@pytest.mark.parametrize("sat, expected", [
+    (1301, SAFETY), (1300, SAFETY),      # boundary: 75th percentile
+    (1299, MATCH), (1100, MATCH),        # boundary: 25th percentile
+    (1099, REACH),
+])
+def test_sat_against_the_percentiles(sat, expected):
+    assert classify_fit(2.0, make_program(**COLLEGE), sat=sat) == expected
+
+
+@pytest.mark.parametrize("act, expected", [(30, SAFETY), (29, SAFETY), (28, MATCH), (24, MATCH), (23, REACH)])
+def test_act_against_the_percentiles(act, expected):
+    assert classify_fit(2.0, make_program(**COLLEGE), act=act) == expected
+
+
+def test_sat_is_used_before_act():
+    assert classify_fit(2.0, make_program(**COLLEGE), sat=1000, act=35) == REACH
+
+
+def test_act_is_used_when_the_college_publishes_no_sat():
+    program = make_program(act_25=24, act_75=29)
+    assert classify_fit(2.0, program, sat=1500, act=25) == MATCH
+
+
+def test_a_selective_college_is_reach_whatever_the_score():
+    assert classify_fit(4.0, make_program(acceptance_rate=0.05, **COLLEGE), sat=1600) == REACH
+
+
+def test_without_a_score_the_gpa_rule_is_used():
+    assert classify_fit(3.40, make_program(**COLLEGE)) == MATCH
+
+
+def test_a_score_is_ignored_when_the_college_publishes_no_percentiles():
+    assert classify_fit(3.40, make_program(), sat=1600, act=36) == MATCH
+    assert classify_fit(3.40, make_program(avg_gpa=None), sat=1600) == UNKNOWN

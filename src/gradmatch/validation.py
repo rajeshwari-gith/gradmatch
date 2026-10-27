@@ -20,6 +20,8 @@ US_STATES = (
 GPA_MIN, GPA_MAX = 0.0, 4.0
 GRE_MIN, GRE_MAX = 260, 340
 TOEFL_MIN, TOEFL_MAX = 0, 120
+SAT_MIN, SAT_MAX = 400, 1600
+ACT_MIN, ACT_MAX = 1, 36
 
 
 def validate_profile(profile: StudentProfile) -> list[str]:
@@ -52,6 +54,12 @@ def validate_profile(profile: StudentProfile) -> list[str]:
 
     if profile.toefl is not None and not TOEFL_MIN <= profile.toefl <= TOEFL_MAX:
         errors.append("TOEFL score must be between 0 and 120.")
+
+    if profile.sat is not None and not SAT_MIN <= profile.sat <= SAT_MAX:
+        errors.append("SAT score must be between 400 and 1600.")
+
+    if profile.act is not None and not ACT_MIN <= profile.act <= ACT_MAX:
+        errors.append("ACT score must be between 1 and 36.")
 
     if profile.citizenship == "International" and profile.toefl is None:
         errors.append("TOEFL score is required for international students.")

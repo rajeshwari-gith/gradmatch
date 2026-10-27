@@ -123,3 +123,25 @@ def test_domestic_without_toefl_is_valid(citizenship):
 def test_all_errors_are_returned_together():
     profile = make_profile(degree_sought="MBA", gpa=5.0, annual_budget=-10)
     assert len(validate_profile(profile)) == 3
+
+
+# ---- SAT and ACT (optional): boundary-value analysis ----
+
+@pytest.mark.parametrize("sat", [400, 401, 1599, 1600, None])
+def test_valid_sat_scores(sat):
+    assert is_valid(make_profile(sat=sat))
+
+
+@pytest.mark.parametrize("sat", [399, 1601, 0])
+def test_invalid_sat_scores(sat):
+    assert "SAT score must be between 400 and 1600." in validate_profile(make_profile(sat=sat))
+
+
+@pytest.mark.parametrize("act", [1, 2, 35, 36, None])
+def test_valid_act_scores(act):
+    assert is_valid(make_profile(act=act))
+
+
+@pytest.mark.parametrize("act", [0, 37])
+def test_invalid_act_scores(act):
+    assert "ACT score must be between 1 and 36." in validate_profile(make_profile(act=act))

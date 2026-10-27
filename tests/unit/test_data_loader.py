@@ -466,3 +466,44 @@ def test_programs_bad_source_is_rejected_with_file_and_line(tmp_path, value):
     with pytest.raises(DataError, match=rf"data\.csv, line 3: source must be estimate, "
                                         rf"official-page or ipeds, got '{value}'$"):
         load_programs(path)
+
+
+# ---- Test-score percentiles (sat_25, sat_75, act_25, act_75): optional columns ----
+
+def test_programs_without_test_score_columns_have_none(tmp_path):
+    [program] = load_programs(write_csv(tmp_path, [valid_program_row()]))
+    assert (program.sat_25, program.sat_75, program.act_25, program.act_75) == (None, None, None, None)
+
+
+def test_programs_test_score_percentiles_are_loaded(tmp_path):
+    row = valid_program_row(sat_25="1110", sat_75="1350", act_25="24", act_75="31")
+    [program] = load_programs(write_csv(tmp_path, [row]))
+    assert (program.sat_25, program.sat_75, program.act_25, program.act_75) == (1110, 1350, 24, 31)
+
+
+def test_programs_blank_test_score_cells_are_none(tmp_path):
+    row = valid_program_row(sat_25="", sat_75="", act_25="", act_75="")
+    [program] = load_programs(write_csv(tmp_path, [row]))
+    assert program.sat_25 is None and program.act_75 is None
+
+
+@pytest.mark.parametrize("sat_25, sat_75", [("400", "400"), ("1600", "1600"), ("400", "1600")])
+def test_programs_sat_boundaries_are_accepted(tmp_path, sat_25, sat_75):
+    [program] = load_programs(write_csv(tmp_path, [valid_program_row(sat_25=sat_25, sat_75=sat_75)]))
+    assert program.sat_25 == int(sat_25)
+
+
+@pytest.mark.parametrize("changes, message", [
+    (dict(sat_25="399", sat_75="1200"), "sat_25 must be between"),
+    (dict(sat_25="1000", sat_75="1601"), "sat_75 must be between"),
+    (dict(act_25="0", act_75="30"), "act_25 must be between"),
+    (dict(act_25="20", act_75="37"), "act_75 must be between"),
+    (dict(sat_25="1300", sat_75="1200"), "sat_25 cannot be above sat_75"),
+    (dict(act_25="30", act_75="20"), "act_25 cannot be above act_75"),
+    (dict(sat_25="1000", sat_75=""), "must both be filled in or both left blank"),
+    (dict(act_25="", act_75="30"), "must both be filled in or both left blank"),
+    (dict(sat_25="high", sat_75="1200"), "sat_25 must be a whole number"),
+])
+def test_programs_bad_test_scores_are_rejected(tmp_path, changes, message):
+    with pytest.raises(DataError, match=message):
+        load_programs(write_csv(tmp_path, [valid_program_row(**changes)]))

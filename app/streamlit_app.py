@@ -38,6 +38,7 @@ from gradmatch.search import search_programs, tuition_state  # noqa: E402
 from gradmatch.validation import CITIZENSHIP, DEGREES, US_STATES, validate_profile  # noqa: E402
 
 DATA_DIR = ROOT / "data"
+MAX_CARDS = 60     # show the best matches only; the CSV download has them all
 DEGREE_LABELS = {"BS": "Bachelor's (BS)", "MS": "Master's (MS)", "PhD": "PhD"}
 CITIZENSHIP_LABELS = {
     "US": "U.S. citizen",
@@ -84,6 +85,11 @@ def show_profile_form(fields: list[str]):
             toefl = st.number_input("TOEFL score (optional)", min_value=0, max_value=200,
                                     value=None, step=1, key="toefl",
                                     help="Required for international students. Range 0 – 120.")
+            sat = st.number_input("SAT total (optional, bachelor's only)", min_value=0, max_value=2000,
+                                  value=None, step=10, key="sat",
+                                  help="Range 400 – 1600. Used to compare you with a college's enrolled students.")
+            act = st.number_input("ACT composite (optional, bachelor's only)", min_value=0, max_value=50,
+                                  value=None, step=1, key="act", help="Range 1 – 36.")
         with right:
             citizenship = st.selectbox("Citizenship", CITIZENSHIP, key="citizenship",
                                        format_func=CITIZENSHIP_LABELS.get)
@@ -114,6 +120,8 @@ def show_profile_form(fields: list[str]):
         gre=optional_int(gre),
         toefl=optional_int(toefl),
         special=tuple(special),
+        sat=optional_int(sat),
+        act=optional_int(act),
     )
 
 
@@ -157,9 +165,13 @@ def show_programs(profile: StudentProfile, results, living_costs, today: date):
         return
 
     st.caption(ESTIMATE_NOTE)
+    all_results, results = results, results[:MAX_CARDS]
+    if len(all_results) > len(results):
+        st.caption(f"Showing the first {len(results)} of {len(all_results)} matches. "
+                   "Narrow your search with a lower budget or preferred states, or download all of them.")
     st.markdown("".join(result_card_html(r, today, profile.toefl) for r in results),
                 unsafe_allow_html=True)
-    st.download_button("Download these results (.csv)", to_csv(results),
+    st.download_button("Download all results (.csv)", to_csv(all_results),
                        file_name="gradmatch_results.csv", mime="text/csv")
 
     st.subheader("Cost and admission fit")

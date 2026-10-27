@@ -205,3 +205,14 @@ def test_bachelors_search_finds_bachelors_programs_cheapest_first():
     results = search_programs(make_profile(degree_sought="BS", annual_budget=100000), programs, LIVING)
     assert ids(results) == ["MI", "CA"]
     assert results[0].total_cost == (15000 + 12000) * 4
+
+
+# ---- Test scores reach the fit label ----
+
+def test_a_students_sat_decides_the_fit_of_a_college():
+    college = make_program(degree="BS", sat_25=1100, sat_75=1300)
+    results = search_programs(make_profile(degree_sought="BS", sat=1350, annual_budget=100000), [college], LIVING)
+    assert results[0].fit == "Safety"
+    results = search_programs(make_profile(degree_sought="BS", act=20, annual_budget=100000),
+                              [make_program(degree="BS", act_25=24, act_75=29)], LIVING)
+    assert results[0].fit == "Reach"
