@@ -27,6 +27,10 @@ from gradmatch.search import search_programs
 
 pytestmark = pytest.mark.integration
 
+# In plain words: unit tests check one function alone; these check that the pieces still work
+# TOGETHER. Real CSV text goes in, goes through the loader, search, scholarships, cards and
+# exports, and we check what comes out. If two modules disagree about a rule, a test here fails.
+
 TODAY = date(2026, 10, 24)
 
 
@@ -43,6 +47,7 @@ def names(results):
 
 
 # ---- Loading ----
+# Why: if the files cannot be read, nothing else works, so this is checked first.
 
 def test_the_loaders_read_every_row(data):
     programs, living, scholarships = data
@@ -109,6 +114,7 @@ def test_programs_and_scholarships_are_ordered_together_by_deadline(data):
 
 
 # ---- Search results -> cards: two modules must agree ----
+# Why: the card colours come from presentation.py but the deadline status comes from deadlines.py.
 
 def test_card_colors_agree_with_the_deadline_status(data):
     programs, living, _ = data
@@ -156,6 +162,7 @@ def test_calendar_export_has_one_event_per_open_deadline_in_date_order(data):
 
 
 # ---- Broken data stops early with a useful message ----
+# Why: a typo in a CSV should give a clear error, not a strange crash in the middle of the page.
 
 def test_bad_row_is_rejected_by_the_loader_before_any_search(tmp_path):
     folder = write_fixture_data(tmp_path)

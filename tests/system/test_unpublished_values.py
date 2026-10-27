@@ -14,6 +14,9 @@ from gradmatch import data_loader
 
 pytestmark = pytest.mark.system
 
+# In plain words: a program from government data has blanks (no GPA, stipend or deadline). The app
+# must still show it, with "n/a" and "Unknown", instead of crashing.
+
 APP = str(Path(__file__).resolve().parents[2] / "app" / "streamlit_app.py")
 
 

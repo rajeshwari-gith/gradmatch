@@ -13,10 +13,15 @@ from gradmatch.cost import (cost_breakdown, is_affordable, total_cost, tuition_c
 
 pytestmark = pytest.mark.unit
 
+# In plain words: these tests check the money math. A wrong cost would make the app recommend
+# programs a student cannot afford, so every rule (in-state price, stipend, PhD waiver) gets
+# its own small test. Each test builds one tiny program with make_program() and checks one number.
+
 # make_program(): MI, in-state 15,000, out-of-state 30,000, 2 years, no stipend
 
 
 # ---- Decision table: which tuition applies ----
+# Why: public universities charge residents less, so the answer depends on one yes/no question.
 # home state == program state | tuition used
 # yes                         | in-state
 # no                          | out-of-state
@@ -30,6 +35,7 @@ def test_different_state_uses_out_of_state_tuition():
 
 
 # ---- Yearly and total cost ----
+# Why: the number on every card is tuition + living cost - stipend; we test each piece on its own.
 
 def test_yearly_cost_adds_living_cost():
     assert yearly_cost(make_program(), "MI", living_cost=12000) == 27000
@@ -53,6 +59,7 @@ def test_total_cost_multiplies_by_duration():
 
 
 # ---- Boundary-value analysis: budget vs yearly cost (27,000) ----
+# Why: bugs hide at the edge. "Costs exactly the budget" must still count as affordable.
 
 @pytest.mark.parametrize("budget, expected", [
     (26999.99, False),   # just under the cost
@@ -68,6 +75,8 @@ def test_zero_budget_affords_fully_funded_program():
 
 
 # ---- Property-based tests ----
+# Why: instead of picking numbers ourselves, Hypothesis tries hundreds of random ones to check
+# rules that must ALWAYS be true (a cost is never negative; more stipend never costs more).
 
 money = st.floats(min_value=0, max_value=200_000, allow_nan=False)
 
@@ -97,6 +106,7 @@ def test_funded_phd_pays_no_tuition():
     assert yearly_cost(program, "MI", living_cost=29000) == 0
 
 
+# The fix for D-001 is tested below: a PhD with a stipend is not charged tuition.
 # Decision table for tuition_charged():
 # degree | stipend > 0 | tuition charged
 # PhD    | yes         | 0 (waived)
@@ -139,6 +149,7 @@ def test_ms_with_assistantship_still_subtracts_stipend_from_all_costs():
 
 
 # ---- cost_breakdown: the pieces add up to the yearly cost ----
+# Why: the breakdown chart must tell the same story as the number on the card.
 
 def test_cost_breakdown_of_an_ms_program():
     program = make_program(tuition_in_state=15000, stipend=2000, duration_years=2)
@@ -162,6 +173,7 @@ def test_cost_breakdown_pieces_add_up_to_the_yearly_cost(tuition, living, stipen
 
 
 # ---- No state at all (international students) always means the out-of-state rate ----
+# Why: this is the fix for defect D-003. International students are never state residents.
 
 def test_no_home_state_means_out_of_state_tuition():
     assert tuition_for(make_program(state="MI"), None) == 30000
@@ -172,6 +184,8 @@ def test_no_home_state_costs_the_out_of_state_amount():
 
 
 # ---- An unpublished stipend (None) counts as 0 ----
+# Why: government data leaves the stipend blank. Counting it as 0 is the careful choice, because
+# we should not promise a tuition waiver we do not know about.
 
 def test_unpublished_stipend_does_not_waive_phd_tuition():
     program = make_program(degree="PhD", stipend=None)

@@ -10,7 +10,12 @@ from gradmatch.validation import is_valid, validate_profile
 
 pytestmark = pytest.mark.unit
 
+# In plain words: the form lets students type anything. These tests prove that bad input
+# (a GPA of 5.0, a GRE of 500, an empty field) is caught with a clear message, and that good
+# input is never rejected by mistake. For every limit we test just below, on, and just above it.
 
+
+# The starting point: a normal student has no errors at all.
 def test_valid_profile_has_no_errors():
     assert validate_profile(make_profile()) == []
     assert is_valid(make_profile())
@@ -53,6 +58,7 @@ def test_toefl_just_outside_range_is_invalid(toefl):
 
 
 # ---- Budget: boundary at 0 ----
+# Why: a $0 budget is allowed (a fully funded PhD costs nothing), but a negative one makes no sense.
 
 def test_budget_zero_is_valid():
     assert is_valid(make_profile(annual_budget=0))
@@ -120,6 +126,7 @@ def test_domestic_without_toefl_is_valid(citizenship):
     assert is_valid(make_profile(citizenship=citizenship, toefl=None))
 
 
+# Why: the student should see every problem at once, not fix them one by one.
 def test_all_errors_are_returned_together():
     profile = make_profile(degree_sought="MBA", gpa=5.0, annual_budget=-10)
     assert len(validate_profile(profile)) == 3

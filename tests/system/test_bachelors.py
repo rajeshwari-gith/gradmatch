@@ -14,6 +14,10 @@ from data_fixtures import PROGRAM_HEADER, write_fixture_data
 
 pytestmark = pytest.mark.system
 
+# In plain words: this file checks the college (bachelor's) search through the real app: the
+# degree choice, the cheapest-first order, in-state vs out-of-state tuition over 4 years, and
+# that only the first 60 cards are drawn when there are many matches.
+
 APP = str(Path(__file__).resolve().parents[2] / "app" / "streamlit_app.py")
 BS_ROWS = [
     "UGMI,Michigan Public College,BS in Computer Science,Computer Science,BS,MI,8000,20000,4,3.20,,0.55,0,,2026-12-01,https://example.edu/ugmi",

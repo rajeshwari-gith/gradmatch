@@ -20,6 +20,10 @@ from streamlit.testing.v1 import AppTest
 
 pytestmark = pytest.mark.acceptance
 
+# In plain words: acceptance tests ask "does the app do what we promised the professor?". Each test
+# plays one user story from the proposal, step by step, like a real student would, and checks
+# only what that student would see on the screen.
+
 APP = str(Path(__file__).resolve().parents[2] / "app" / "streamlit_app.py")
 PROGRAMS, SCHOLARSHIPS, DEADLINES = 0, 1, 2
 CORAL, YELLOW = "#F0705F", "#F5C469"

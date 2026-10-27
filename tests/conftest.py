@@ -10,6 +10,8 @@ import pytest
 from gradmatch.models import Program, Scholarship, StudentProfile
 
 
+# Why a helper: almost every test needs "a normal program". make_program() gives one, and a test
+# changes only the field it cares about, so the test shows exactly what it is about.
 def make_program(**changes) -> Program:
     """Return a valid Program; pass keyword arguments to change any field."""
     values = dict(
@@ -68,6 +70,7 @@ def make_scholarship(**changes) -> Scholarship:
     return Scholarship(**values)
 
 
+# Fixtures: pytest hands these helpers to a test that asks for them by name.
 @pytest.fixture
 def program_factory():
     return make_program

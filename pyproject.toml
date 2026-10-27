@@ -4,7 +4,10 @@ version = "0.1.0"
 description = "Find graduate programs, funding, scholarships and deadlines."
 requires-python = ">=3.11"
 
+# Project settings in one file. Below: how to run the tests, how to measure coverage, how to run mutation tests.
+
 [tool.pytest.ini_options]
+# pythonpath lets tests write "import gradmatch" and "import freshness" without installing the project.
 pythonpath = ["src", "app"]
 testpaths = ["tests"]
 markers = [
@@ -14,6 +17,7 @@ markers = [
     "acceptance: tests a user story end to end",
 ]
 
+# Coverage = which lines (and which if/else branches) the tests ran. We aim for 100%.
 [tool.coverage.run]
 source = ["src/gradmatch", "app"]
 branch = true
@@ -21,6 +25,8 @@ branch = true
 [tool.coverage.report]
 show_missing = true
 
+# Mutation testing: mutmut makes small deliberate bugs in the code and checks that a test fails.
+# source_paths = the files to break; also_copy = the extra files its copy of the project needs.
 [tool.mutmut]
 source_paths = ["src/gradmatch/cost.py", "src/gradmatch/fit.py", "src/gradmatch/funding.py",
                 "src/gradmatch/validation.py", "src/gradmatch/search.py",

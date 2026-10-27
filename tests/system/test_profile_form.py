@@ -13,6 +13,10 @@ from streamlit.testing.v1 import AppTest
 
 pytestmark = pytest.mark.system
 
+# In plain words: system tests open the whole app (the real Streamlit page) without a browser,
+# fill in the form, press the button and read what the page shows. These ones cover the form:
+# what is accepted, what shows an error, and that every problem is listed at once.
+
 APP = str(Path(__file__).resolve().parents[2] / "app" / "streamlit_app.py")
 
 

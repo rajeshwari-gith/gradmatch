@@ -21,6 +21,10 @@ from gradmatch.search import ProgramResult
 
 pytestmark = pytest.mark.unit
 
+# In plain words: the cards are HTML text, so we test the text directly without opening a browser.
+# We check the wording of deadlines, that colours follow the labels, that website links are safe,
+# and that odd characters in the data can never break out of the page.
+
 TODAY = date(2026, 10, 24)
 
 
@@ -63,6 +67,7 @@ def test_deadline_label(deadline, status, text):
 
 
 # ---- websites: only normal web addresses become links ----
+# Why: a link like "javascript:..." could run code in the page. Only http(s) is allowed.
 
 @pytest.mark.parametrize("url", ["https://example.edu/ms", "http://example.edu", "  https://a.edu  "])
 def test_normal_web_addresses_are_links(url):
@@ -166,6 +171,7 @@ def test_card_without_a_toefl_argument_has_no_toefl_chip():
 
 
 # ---- Estimates are labeled ----
+# Why: our GPA and acceptance numbers are estimates, and the card must say so honestly.
 
 def test_gpa_and_acceptance_rate_are_labeled_as_estimates():
     html = result_card_html(make_result(), TODAY)
@@ -269,6 +275,7 @@ def test_scholarship_card_does_not_claim_the_award_is_per_year():
 
 
 # ---- Values that are not published (rows from official government data) ----
+# Why: a missing number is shown as "n/a" and never as a made-up value.
 
 UNPUBLISHED = dict(avg_gpa=None, acceptance_rate=None, stipend=None, application_deadline=None,
                    source="ipeds")

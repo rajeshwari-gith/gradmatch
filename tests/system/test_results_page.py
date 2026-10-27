@@ -16,6 +16,10 @@ from streamlit.testing.v1 import AppTest
 
 pytestmark = pytest.mark.system
 
+# In plain words: these tests run the whole app on a tiny fixed data set, press "Find programs",
+# and check the page: the cards, the numbers, the sorting, the scholarships and deadlines tabs,
+# the charts and the downloads. Because the data and "today" are fixed, every answer is stable.
+
 APP = str(Path(__file__).resolve().parents[2] / "app" / "streamlit_app.py")
 PROGRAMS, SCHOLARSHIPS, DEADLINES = 0, 1, 2     # tab positions
 
@@ -181,6 +185,7 @@ def test_other_field_shows_only_that_field(app):
 
 
 # ---- Regression tests for defect D-001: funded PhD programs cost $0 ----
+# Why: a regression test makes sure a bug we fixed once can never silently come back.
 
 def test_funded_phd_is_listed_at_zero_cost_even_with_zero_budget(app):
     search_for(app, degree="PhD", budget=0, gpa=3.9)
@@ -198,6 +203,7 @@ def test_phd_results_are_ordered_by_funding_left_after_living_costs(app):
 
 
 # ---- A different "today" ----
+# Why: deadlines depend on the date, so we move "today" (GRADMATCH_TODAY) to test the future.
 
 def test_every_deadline_is_closed_after_the_last_one_has_passed(app, monkeypatch):
     monkeypatch.setenv("GRADMATCH_TODAY", "2027-12-01")

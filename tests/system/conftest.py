@@ -10,6 +10,8 @@ def data_dir(tmp_path_factory):
     return write_fixture_data(tmp_path_factory.mktemp("system_test_data"))
 
 
+# autouse=True: this runs before EVERY test in the folder, pointing the app at the fixed test data
+# and the fixed date, so no test can accidentally read the real data.
 @pytest.fixture(autouse=True)
 def fixed_app_environment(monkeypatch, data_dir):
     monkeypatch.setenv("GRADMATCH_DATA_DIR", str(data_dir))

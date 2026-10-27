@@ -20,6 +20,7 @@ Used by the system tests and the acceptance tests.
 """
 from pathlib import Path
 
+# "Today" is fixed so deadline counts ("12 days left") never change from one test run to the next.
 TODAY = "2026-10-24"
 
 PROGRAM_HEADER = ("program_id,university,program_name,field,degree,state,tuition_in_state,"
@@ -45,6 +46,8 @@ SCHOLARSHIP_ROWS = [
 ]
 
 
+# Writes the three small CSV files above into a folder. The tests then point the app at that folder
+# (GRADMATCH_DATA_DIR) so they never touch the real data.
 def write_fixture_data(folder) -> Path:
     """Write the three CSV files into folder and return it."""
     folder = Path(folder)

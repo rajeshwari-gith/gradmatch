@@ -14,6 +14,10 @@ from gradmatch.search import matches_filters, search_programs, tuition_state
 
 pytestmark = pytest.mark.unit
 
+# In plain words: search is the heart of the app. These tests give it a handful of tiny programs
+# and check three things: the right programs are kept, the wrong ones are dropped, and the
+# order is right (MS cheapest first, PhD best funded first).
+
 LIVING = {"MI": 12000, "CA": 25000, "TX": 14000, "OH": 11000}
 
 
@@ -58,6 +62,7 @@ def test_budget_boundary(budget, found):
 
 
 # ---- Result contents ----
+# Why: each result must carry the cost, the fit label and the funding label the card will show.
 
 def test_result_has_cost_fit_and_funding():
     [result] = search_programs(make_profile(gpa=3.40), [make_program()], LIVING)
@@ -88,6 +93,7 @@ def test_missing_living_cost_raises_clear_error():
 
 
 # ---- Sort order ----
+# Why: students read from the top, so the most useful program must come first.
 
 def test_ms_results_sorted_cheapest_first():
     programs = [
@@ -112,6 +118,7 @@ def test_phd_results_sorted_by_stipend_left_after_living_cost():
 
 
 # ---- Property-based test ----
+# Why: whatever budget and stipends Hypothesis invents, no result may ever cost more than the budget.
 
 @given(budget=st.floats(min_value=0, max_value=100_000, allow_nan=False),
        stipends=st.lists(st.integers(min_value=0, max_value=60_000), max_size=8))
@@ -122,6 +129,7 @@ def test_no_result_is_ever_over_budget(budget, stipends):
 
 
 # ---- A program that does not fit must not stop the search ----
+# (A mutation-testing test: a bug that stopped at the first bad program survived until we added these.)
 # Found by mutation testing: every earlier test listed the matching programs first.
 
 def test_a_program_in_another_field_before_a_matching_one_does_not_stop_the_search():

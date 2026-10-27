@@ -11,6 +11,10 @@ from gradmatch.fit import MATCH, REACH, SAFETY, UNKNOWN, classify_fit
 
 pytestmark = pytest.mark.unit
 
+# In plain words: Safety / Match / Reach is the label students look at first, so the cut-offs must
+# be exactly right. We test the GPA difference right at +0.20 and -0.15, the 10% acceptance rule,
+# and what happens when the data has no GPA or no test scores.
+
 # make_program(): avg_gpa = 3.40, acceptance_rate = 0.40
 
 
@@ -79,6 +83,7 @@ def test_gpa_difference_is_rounded_to_two_decimals(gpa, expected):
 
 
 # ---- Unpublished values (official government data) ----
+# Why: imported rows often have no GPA. Saying "Unknown" is honest; guessing would mislead students.
 # Decision table:  acceptance rate | avg GPA   | fit
 #                  < 10%           | any       | Reach
 #                  unknown         | unknown   | Unknown
@@ -95,6 +100,8 @@ def test_fit_with_unpublished_values(rate, avg_gpa, expected):
 
 
 # ---- Test scores (SAT / ACT) against a college's 25th and 75th percentile ----
+# Why: for colleges, the government publishes the SAT/ACT range of enrolled students, which is a
+# better fit signal than a GPA we do not have. Above the top quarter = Safety, below the bottom = Reach.
 # Program: SAT 1100 - 1300, ACT 24 - 29, acceptance 0.40, avg GPA 3.40
 
 COLLEGE = dict(sat_25=1100, sat_75=1300, act_25=24, act_75=29)
