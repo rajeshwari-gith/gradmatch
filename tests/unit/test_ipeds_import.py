@@ -26,8 +26,8 @@ def write(path, header, rows, encoding="utf-8-sig"):
     return path
 
 
-def directory(unit="1", name="Test University", state="MI", web="www.test.edu"):
-    return {"UNITID": unit, "INSTNM": name, "STABBR": state, "WEBADDR": web}
+def directory(unit="1", name="Test University", state="MI", web="www.test.edu", admin=""):
+    return {"UNITID": unit, "INSTNM": name, "STABBR": state, "WEBADDR": web, "ADMINURL": admin}
 
 
 def cost(unit="1", t6="10000", t7="20000", f6="500", f7="700", t2="6000", t3="15000", f2="300", f3="400"):
@@ -42,10 +42,10 @@ def completion(unit="1", cip="11.0701", level="7", total="10"):
 # ---- reading a file ----
 
 def test_read_csv_handles_a_byte_order_mark_and_trims_cells(tmp_path):
-    path = write(tmp_path / "hd.csv", ["UNITID", "INSTNM", "STABBR", "WEBADDR"],
-                 [[" 1 ", "A", "MI", "a.edu"]])
+    path = write(tmp_path / "hd.csv", ["UNITID", "INSTNM", "STABBR", "WEBADDR", "ADMINURL"],
+                 [[" 1 ", "A", "MI", "a.edu", ""]])
     assert read_csv(path, "directory") == [{"UNITID": "1", "INSTNM": "A", "STABBR": "MI",
-                                            "WEBADDR": "a.edu"}]
+                                            "WEBADDR": "a.edu", "ADMINURL": ""}]
 
 
 def test_read_csv_names_the_missing_columns(tmp_path):
@@ -211,8 +211,8 @@ def folder(tmp_path):
     write(tmp_path / "programs.csv", ["program_id", "university", "program_name", "field", "degree",
                                       "tuition_in_state", "tuition_out_state"],
           [["P1", "Test University", "MS in Computer Science", "Computer Science", "MS", "12000", "24000"]], "utf-8")
-    write(tmp_path / "hd.csv", ["UNITID", "INSTNM", "STABBR", "WEBADDR"],
-          [["1", "Test University", "MI", "test.edu"], ["2", "Other College", "MI", "other.edu"]])
+    write(tmp_path / "hd.csv", ["UNITID", "INSTNM", "STABBR", "WEBADDR", "ADMINURL"],
+          [["1", "Test University", "MI", "test.edu", ""], ["2", "Other College", "MI", "other.edu", ""]])
     write(tmp_path / "cost.csv", ["UNITID", "TUITION6", "TUITION7", "FEE6", "FEE7", "TUITION2", "TUITION3",
                                   "FEE2", "FEE3"],
           [["1", "10000", "20000", "500", "700", "5000", "9000", "0", "0"],
@@ -342,3 +342,25 @@ def test_other_fields_are_imported_with_their_own_ids():
 def test_a_cip_code_of_another_field_is_imported():
     result = awarded_programs([completion(cip="14.1901", level="7")], 1)
     assert result == {("1", "MS", "Mechanical Engineering"): 10}
+
+
+def test_the_admissions_page_is_used_as_the_website_when_there_is_one():
+    rows = [directory("1", web="www.test.edu", admin="www.test.edu/admissions"), directory("2", web="www.b.edu")]
+    found = institutions(rows, STATES)
+    assert found["1"]["website"] == "https://www.test.edu/admissions"
+    assert found["2"]["website"] == "https://www.b.edu"
+
+
+def test_running_the_import_twice_gives_the_same_file(folder):
+    run(folder, "--merge")
+    first = (folder / "programs.csv").read_text()
+    run(folder, "--merge")
+    assert (folder / "programs.csv").read_text() == first
+
+
+def test_imported_rows_from_an_earlier_run_are_replaced_and_other_rows_kept(tmp_path):
+    path = tmp_path / "programs.csv"
+    write(path, ["program_id", "source"], [["HAND", "estimate"], ["OLD", "ipeds"], ["VERIFIED", "official-page"]], "utf-8")
+    merge_programs(path, [{"program_id": "NEW", "source": "ipeds"}])
+    with open(path, newline="") as file:
+        assert [r["program_id"] for r in csv.DictReader(file)] == ["HAND", "VERIFIED", "NEW"]

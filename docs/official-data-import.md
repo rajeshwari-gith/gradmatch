@@ -18,7 +18,9 @@ python -m gradmatch.ipeds_import --hd HD2024.csv --cost cost1_2024.csv \
 Rules
 - A school gets a row for a degree and field when it awarded at least 5 of those degrees in the year (`--min-awards`).
 - Only states that have a row in `living_costs.csv` are used.
-- Programs already in `programs.csv` are skipped (matched by official school name, degree and field).
+- Programs already in `programs.csv` from other sources are skipped (matched by official school name, degree and field).
+- With `--merge`, earlier imported rows (`source=ipeds`) are replaced, so running the import again gives the same file. Hand-entered and verified rows are never touched.
+- The website of each row is the school's admissions page (HD column `ADMINURL`), or its home page when there is none.
 - Tuition is the school-wide graduate rate plus required fees. It is not a per-program price.
 - Admitted GPA, acceptance rate, stipend and deadline are not published. They are left blank and shown as "not published".
 - Duration is a default (MS 2 years, PhD 5 years).

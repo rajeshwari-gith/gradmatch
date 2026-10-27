@@ -34,8 +34,44 @@ CIP_FIELDS = {      # CIP code -> field name shown in the app
     "52.0201": "Business Administration", "52.0301": "Accounting", "52.0801": "Finance",
     "52.1401": "Marketing", "45.0601": "Economics",
     "42.0101": "Psychology", "51.3801": "Nursing", "13.0101": "Education",
-    "45.1001": "Political Science", "09.0101": "Communication", "23.0101": "English",
+    "45.1001": "Political Science", "23.0101": "English",
     "51.2201": "Public Health", "44.0701": "Social Work", "04.0201": "Architecture",
+    # more fields (each has at least 40 schools awarding it)
+     "01.0901": "Animal Sciences", "01.1001": "Food Science", "03.0103": "Environmental Studies",
+     "05.0201": "African American Studies", "09.0100": "Communication",
+     "09.0101": "Speech Communication and Rhetoric", "09.0102": "Mass Communication", "09.0401": "Journalism",
+     "09.0900": "Public Relations and Advertising", "11.0104": "Informatics", "11.0201": "Computer Programming",
+     "11.0801": "Web and Digital Media Design", "11.0901": "Computer Networking",
+     "13.0401": "Educational Leadership", "13.1001": "Special Education", "13.1101": "School Counseling",
+     "13.1202": "Elementary Education", "13.1205": "Secondary Education", "13.1210": "Early Childhood Education",
+     "13.1401": "Teaching English as a Second Language", "14.0101": "General Engineering",
+     "14.0301": "Agricultural Engineering", "14.1201": "Engineering Physics",
+     "14.1401": "Environmental Engineering", "14.1801": "Materials Engineering",
+     "14.2701": "Systems Engineering", "14.4201": "Mechatronics and Robotics", "16.0102": "Linguistics",
+     "16.0901": "French", "16.0905": "Spanish", "19.0501": "Nutrition",
+     "19.0701": "Human Development and Family Studies", "24.0101": "Liberal Arts", "24.0102": "General Studies",
+     "26.0102": "Biomedical Sciences", "26.0202": "Biochemistry", "26.0204": "Molecular Biology",
+     "26.0701": "Zoology", "26.0908": "Exercise Physiology", "26.1201": "Biotechnology", "26.1301": "Ecology",
+     "26.1501": "Neuroscience", "27.0301": "Applied Mathematics", "30.0101": "Biological and Physical Sciences",
+     "30.1701": "Behavioral Sciences", "30.2501": "Cognitive Science",
+     "31.0301": "Parks and Recreation Management", "31.0504": "Sport Management", "31.0505": "Kinesiology",
+     "38.0101": "Philosophy", "38.0201": "Religious Studies", "40.0201": "Astronomy",
+     "40.0401": "Atmospheric Science", "40.0601": "Geology", "42.2801": "Clinical Psychology",
+     "42.2804": "Industrial-Organizational Psychology", "42.2813": "Counseling Psychology",
+     "43.0104": "Criminal Justice", "44.0401": "Public Administration", "44.0501": "Public Policy",
+     "45.0201": "Anthropology", "45.0401": "Criminology", "45.0701": "Geography",
+     "45.0901": "International Relations", "45.1101": "Sociology", "50.0101": "Visual and Performing Arts",
+     "50.0401": "Design", "50.0408": "Interior Design", "50.0409": "Graphic Design", "50.0501": "Theatre",
+     "50.0601": "Film Studies", "50.0605": "Photography", "50.0702": "Fine Arts", "50.0901": "Music",
+     "51.0201": "Communication Sciences and Disorders", "51.0701": "Health Care Administration",
+     "51.0913": "Athletic Training", "51.1005": "Clinical Laboratory Science",
+     "51.2010": "Pharmaceutical Sciences", "51.2706": "Medical Informatics", "51.3101": "Dietetics",
+     "51.3808": "Nursing Science", "52.0101": "General Business", "52.0203": "Supply Chain Management",
+     "52.0211": "Project Management", "52.0213": "Organizational Leadership", "52.0601": "Business Economics",
+     "52.0701": "Entrepreneurship", "52.0901": "Hospitality Management", "52.1001": "Human Resources Management",
+     "52.1101": "International Business", "52.1201": "Management Information Systems",
+     "52.1302": "Business Statistics", "52.1304": "Actuarial Science", "52.1501": "Real Estate",
+     "52.1902": "Fashion Merchandising", "54.0101": "History",
 }
 CIP_BY_FIELD = {field: cip for cip, field in CIP_FIELDS.items()}
 AWARD_DEGREES = {"5": "BS", "7": "MS", "17": "PhD"}   # IPEDS award levels: 5 bachelor's, 7 master's, 17 doctor's research
@@ -69,7 +105,7 @@ OFFICIAL_NAMES = {
 }
 
 REQUIRED_COLUMNS = {
-    "directory": ["UNITID", "INSTNM", "STABBR", "WEBADDR"],
+    "directory": ["UNITID", "INSTNM", "STABBR", "WEBADDR", "ADMINURL"],
     "cost": ["UNITID", "TUITION2", "TUITION3", "FEE2", "FEE3", "TUITION6", "TUITION7", "FEE6", "FEE7"],
     "completions": ["UNITID", "CIPCODE", "AWLEVEL", "CTOTALT"],
     "admissions": ["UNITID", "APPLCN", "ADMSSN", "SATVR25", "SATVR75", "SATMT25", "SATMT75",
@@ -118,7 +154,7 @@ def institutions(directory_rows, states) -> dict[str, dict]:
     """{unit id: name/state/website} for schools in a state we have living costs for."""
     found = {}
     for row in directory_rows:
-        website = website_of(row["WEBADDR"])
+        website = website_of(row["ADMINURL"]) or website_of(row["WEBADDR"])   # admissions page first
         if row["STABBR"] in states and website and row["INSTNM"]:
             found[row["UNITID"]] = {"name": row["INSTNM"], "state": row["STABBR"],
                                     "website": website}
@@ -226,13 +262,21 @@ def _fill_admissions(row, found) -> None:
             row[name] = found[name]
 
 
+def kept_rows(path) -> list[dict]:
+    """The rows of the programs file that did not come from this importer."""
+    with open(path, newline="", encoding="utf-8") as file:
+        return [row for row in csv.DictReader(file) if row.get("source") != SOURCE]
+
+
 def merge_programs(path, new_rows) -> None:
-    """Add new_rows to the programs file at path. Missing columns are added; old rows keep
-    their values and get blanks in the new columns."""
+    """Replace every earlier imported row in the programs file at path with new_rows.
+
+    Running the import again therefore gives the same file. Rows from other sources are
+    untouched; missing columns are added and old rows get blanks in them."""
     with open(path, newline="", encoding="utf-8") as file:
         reader = csv.DictReader(file)
         columns = list(reader.fieldnames or [])
-        old_rows = list(reader)
+    old_rows = kept_rows(path)
     columns += [name for name in OUTPUT_COLUMNS if name not in columns]
     write_csv(path, [{**{name: "" for name in columns}, **row} for row in old_rows + new_rows], columns)
 
@@ -277,8 +321,7 @@ def main(argv=None) -> int:
     data = Path(args.data)
     with open(data / "living_costs.csv", newline="", encoding="utf-8") as file:
         states = {row["state"] for row in csv.DictReader(file)}
-    with open(data / "programs.csv", newline="", encoding="utf-8") as file:
-        existing = list(csv.DictReader(file))
+    existing = kept_rows(data / "programs.csv")      # earlier imported rows are rebuilt, not kept
 
     schools = institutions(read_csv(args.hd, "directory"), states)
     cost_rows = read_csv(args.cost, "cost")
