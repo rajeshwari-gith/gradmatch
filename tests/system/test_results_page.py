@@ -266,6 +266,12 @@ def test_default_student_sees_only_the_open_scholarship_they_qualify_for(app):
         in captions(app, SCHOLARSHIPS)
 
 
+def test_scholarship_amounts_are_not_called_yearly_and_the_note_explains(app):
+    submit(app)
+    assert "per year" not in tab_html(app, SCHOLARSHIPS)
+    assert "may be a yearly amount or a one-time total" in captions(app, SCHOLARSHIPS)
+
+
 def test_expired_scholarships_are_hidden(app):
     submit(app)
     assert "Expired Award" not in tab_html(app, SCHOLARSHIPS)

@@ -181,7 +181,7 @@ def scholarship_card_html(scholarship: Scholarship, today: date) -> str:
         f'<div class="gm-card" style="border-left-color:{_stripe_color(status)}">'
         f'<div class="gm-main">{_title_html(scholarship.name, scholarship.website)}'
         f'<div class="gm-sub">{escape(eligibility_summary(scholarship))}</div></div>'
-        f'<div class="gm-stats">{stat(amount, "award per year")}</div>'
+        f'<div class="gm-stats">{stat(amount, "award")}</div>'
         f'<div class="gm-chips">{chips}</div></div>'
     )
 

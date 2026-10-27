@@ -184,7 +184,8 @@ def show_scholarships(matches, open_matches, today: date):
     note = f"{len(open_matches)} open {noun} you qualify for"
     if hidden:
         note += f" ({hidden} already closed and hidden)"
-    st.caption(note + ". Always check the official page for the exact rules.")
+    st.caption(note + ". Amounts are as listed by each provider and may be a yearly amount or a "
+               "one-time total. Always check the official page for the exact rules.")
     if open_matches:
         st.markdown("".join(scholarship_card_html(s, today) for s in open_matches),
                     unsafe_allow_html=True)
