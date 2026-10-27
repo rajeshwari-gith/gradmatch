@@ -415,7 +415,8 @@ def test_line_break_inside_quoted_notes_and_cells_is_kept(tmp_path, data_dir):
     apply_lookup(write_sheet(tmp_path, [sheet_row(notes="first\r\nsecond")]), data_dir)
 
     assert program(data_dir, "MS1").program_name == "MS in\r\nComputer Science"
-    assert "| first\r\nsecond |" in (data_dir / "SOURCES.md").read_text(newline="")
+    with open(data_dir / "SOURCES.md", newline="", encoding="utf-8") as file:
+        assert "| first\r\nsecond |" in file.read()
 
 
 def test_pipe_in_notes_is_replaced_so_the_table_stays_intact(tmp_path, data_dir):
