@@ -105,11 +105,12 @@ def stat(value: str, label: str) -> str:
             f'<div class="gm-stat-label">{escape(label)}</div></div>')
 
 
-def _estimate_stat(value, label, show, source) -> str:
-    """A stat that is n/a when unpublished, and marked (est.) when it is our own estimate."""
+def _estimate_stat(value, label, show) -> str:
+    """A stat that is n/a when unpublished. A value we hold is always an estimate: no official
+    data set publishes the average admitted GPA or acceptance rate of one program."""
     if value is None:
         return stat(NOT_PUBLISHED, label)
-    return stat(show(value), f"{label} (est.)" if source == "estimate" else label)
+    return stat(show(value), f"{label} (est.)")
 
 
 def result_card_html(result: ProgramResult, today: date, student_toefl: int | None = None) -> str:
@@ -125,8 +126,8 @@ def result_card_html(result: ProgramResult, today: date, student_toefl: int | No
     stats = "".join([
         stat(money(result.yearly_cost), "per year"),
         stat(money(result.total_cost), f"{program.duration_years:g} yr total"),
-        _estimate_stat(program.avg_gpa, "avg GPA", lambda v: f"{v:.2f}", program.source),
-        _estimate_stat(program.acceptance_rate, "accepted", percent, program.source),
+        _estimate_stat(program.avg_gpa, "avg GPA", lambda v: f"{v:.2f}"),
+        _estimate_stat(program.acceptance_rate, "accepted", percent),
     ])
     chip_list = [
         chip(result.fit, FIT_COLORS[result.fit]),

@@ -237,3 +237,12 @@ def test_match_program_items_include_source(client_with_blanks):
 
     assert [(p["program_id"], p["source"]) for p in programs] == [("CHEAP", "estimate"),
                                                                     ("MID", "estimate")]
+
+
+def test_match_gives_unknown_fit_and_funding_for_unpublished_values(client_with_blanks):
+    body = profile(field="Business Analytics", annual_budget=100000)
+    [program] = client_with_blanks.post("/match", json=body).json()["programs"]
+
+    assert program["program_id"] == "IPEDS1"
+    assert (program["fit"], program["funding"]) == ("Unknown", "Funding unknown")
+    assert program["yearly_cost"] == 22000 + 15000    # Michigan student at an Ohio school: out-of-state tuition + OH living cost; unknown stipend counts as 0

@@ -280,10 +280,9 @@ def test_unpublished_values_show_n_a_and_are_not_called_estimates():
     assert "(est.)" not in html
 
 
-def test_published_values_from_official_data_are_not_called_estimates():
+def test_gpa_and_acceptance_rate_stay_estimates_even_on_a_verified_row():
     html = result_card_html(make_result(source="official-page"), TODAY)
-    assert "3.40" in html and "40%" in html
-    assert "(est.)" not in html
+    assert "avg GPA (est.)" in html and "accepted (est.)" in html
 
 
 def test_a_missing_deadline_says_to_check_the_program_page():
