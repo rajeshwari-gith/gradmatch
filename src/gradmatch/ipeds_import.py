@@ -3,7 +3,7 @@
 Three files from https://nces.ed.gov/ipeds/datacenter/DataFiles.aspx are needed:
 
   HD<year>        institution directory (name, state, website)
-  COST1_<year>    graduate tuition and required fees
+  COST1_<year>    undergraduate and graduate tuition and required fees
   C<year>_A       degrees awarded by field (CIP code) and award level
 
 A school gets a row for a degree and field when it awarded at least
@@ -21,8 +21,12 @@ import re
 from pathlib import Path
 
 CIP_FIELDS = {"11.0701": "Computer Science", "30.7001": "Data Science"}
-AWARD_DEGREES = {"7": "MS", "17": "PhD"}     # IPEDS award levels: 7 master's, 17 doctor's research
-DEFAULT_YEARS = {"MS": 2.0, "PhD": 5.0}
+AWARD_DEGREES = {"5": "BS", "7": "MS", "17": "PhD"}   # IPEDS award levels: 5 bachelor's, 7 master's, 17 doctor's research
+DEFAULT_YEARS = {"BS": 4.0, "MS": 2.0, "PhD": 5.0}
+# COST1 columns: in-state tuition, out-of-state tuition, in-state fees, out-of-state fees
+TUITION_COLUMNS = {"BS": ("TUITION2", "TUITION3", "FEE2", "FEE3"),
+                   "MS": ("TUITION6", "TUITION7", "FEE6", "FEE7"),
+                   "PhD": ("TUITION6", "TUITION7", "FEE6", "FEE7")}
 DEFAULT_MIN_AWARDS = 5
 SOURCE = "ipeds"
 
@@ -49,7 +53,7 @@ OFFICIAL_NAMES = {
 
 REQUIRED_COLUMNS = {
     "directory": ["UNITID", "INSTNM", "STABBR", "WEBADDR"],
-    "cost": ["UNITID", "TUITION6", "TUITION7", "FEE6", "FEE7"],
+    "cost": ["UNITID", "TUITION2", "TUITION3", "FEE2", "FEE3", "TUITION6", "TUITION7", "FEE6", "FEE7"],
     "completions": ["UNITID", "CIPCODE", "AWLEVEL", "CTOTALT"],
 }
 
@@ -102,15 +106,16 @@ def institutions(directory_rows, states) -> dict[str, dict]:
     return found
 
 
-def graduate_tuition(cost_rows) -> dict[str, tuple[float, float]]:
-    """{unit id: (in-state, out-of-state)} yearly graduate tuition plus required fees."""
+def tuition_rates(cost_rows, degree) -> dict[str, tuple[float, float]]:
+    """{unit id: (in-state, out-of-state)} yearly tuition plus required fees for a degree level."""
+    in_column, out_column, fee_in_column, fee_out_column = TUITION_COLUMNS[degree]
     rates = {}
     for row in cost_rows:
-        in_state, out_state = money(row["TUITION6"]), money(row["TUITION7"])
+        in_state, out_state = money(row[in_column]), money(row[out_column])
         if in_state is None or out_state is None:
             continue
-        fee_in = money(row["FEE6"]) or 0.0
-        fee_out = money(row["FEE7"]) or 0.0
+        fee_in = money(row[fee_in_column]) or 0.0
+        fee_out = money(row[fee_out_column]) or 0.0
         rates[row["UNITID"]] = (in_state + fee_in, out_state + fee_out)
     return rates
 
@@ -134,11 +139,15 @@ def existing_keys(existing_rows) -> set[tuple[str, str, str]]:
 
 
 def build_rows(schools, tuition, awards, existing_rows) -> list[dict]:
-    """New program rows, sorted by school then degree, skipping what we already have."""
+    """New program rows, sorted by school then degree, skipping what we already have.
+
+    tuition is {degree: {unit id: (in-state, out-of-state)}}. Bachelor's rows get a stipend
+    of 0, because there is no stipend for a bachelor's degree.
+    """
     have = existing_keys(existing_rows)
     rows = []
     for (unit, degree, field), _count in sorted(awards.items()):
-        school, rates = schools.get(unit), tuition.get(unit)
+        school, rates = schools.get(unit), tuition[degree].get(unit)
         if not school or not rates or (normalize(school["name"]), degree, field) in have:
             continue
         rows.append({
@@ -148,7 +157,8 @@ def build_rows(schools, tuition, awards, existing_rows) -> list[dict]:
             "field": field, "degree": degree, "state": school["state"],
             "tuition_in_state": round(rates[0]), "tuition_out_state": round(rates[1]),
             "duration_years": DEFAULT_YEARS[degree],
-            "avg_gpa": "", "avg_gre": "", "acceptance_rate": "", "stipend": "",
+            "avg_gpa": "", "avg_gre": "", "acceptance_rate": "",
+            "stipend": "0" if degree == "BS" else "",
             "min_toefl": "", "application_deadline": "",
             "website": school["website"], "source": SOURCE,
         })
@@ -196,14 +206,15 @@ def main(argv=None) -> int:
         existing = list(csv.DictReader(file))
 
     schools = institutions(read_csv(args.hd, "directory"), states)
-    tuition = graduate_tuition(read_csv(args.cost, "cost"))
+    cost_rows = read_csv(args.cost, "cost")
+    tuition = {degree: tuition_rates(cost_rows, degree) for degree in DEFAULT_YEARS}
     awards = awarded_programs(read_csv(args.completions, "completions"), args.min_awards)
 
     rows = build_rows(schools, tuition, awards, existing)
     write_csv(args.output, rows)
     print(f"{len(rows)} new program row(s) written to {args.output}")
     if args.report:
-        report = tuition_check(schools, tuition, existing)
+        report = tuition_check(schools, tuition["MS"], existing)
         write_csv(args.report, report, list(report[0]) if report else ["program_id"])
         print(f"tuition check for {len(report)} existing row(s) written to {args.report}")
     return 0

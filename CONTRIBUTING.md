@@ -129,3 +129,12 @@ never a guess). The rules:
   `upcoming()`; the program card says to check the program page.
 - **Exports and the API:** a `None` value is written as an empty cell (CSV) or `null` (JSON).
 - **Cards:** an unknown value is shown as "not published", never as 0.
+
+
+## Bachelor's programs (undergraduate search)
+
+- `degree` can be `BS`, `MS` or `PhD`. `BS` rows are colleges for undergraduate applicants.
+- A `BS` row uses undergraduate tuition (in-state and out-of-state), `duration_years` 4 and `stipend` 0.
+- The same cost rule applies: tuition charged + living cost - stipend, in-state only for US/PR students of that state.
+- GRE does not apply to a bachelor's search. The fit uses the same rules as above, so a `BS` row without a published average GPA shows fit Unknown.
+- Undergraduate scholarships go in `scholarships.csv` with `BS` in `degree_levels`. Add one only after checking it on the provider's official page.
