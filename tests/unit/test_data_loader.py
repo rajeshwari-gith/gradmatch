@@ -20,6 +20,7 @@ from gradmatch.data_loader import (
     load_programs,
     load_scholarships,
 )
+from gradmatch.models import Program, Scholarship
 
 pytestmark = pytest.mark.unit
 
@@ -319,3 +320,65 @@ def test_living_costs_text_cost_is_rejected(tmp_path):
 
     with pytest.raises(DataError, match="must be a number"):
         load_living_costs(path)
+
+
+# =====================================================================
+# Tests added after mutation testing (see docs/mutation-testing.md)
+# =====================================================================
+
+def test_programs_every_field_is_loaded(tmp_path):
+    # Compares the whole object, so no field can be dropped or swapped unnoticed.
+    path = write_csv(tmp_path, [valid_program_row(tuition_out_state="31000", duration_years="1.5",
+                                                  stipend="1200", state="OH")])
+
+    [program] = load_programs(path)
+
+    assert program == Program(
+        program_id="P1", university="Test University", program_name="MS in Computer Science",
+        field="Computer Science", degree="MS", state="OH", tuition_in_state=15000.0,
+        tuition_out_state=31000.0, duration_years=1.5, avg_gpa=3.40, avg_gre=315,
+        acceptance_rate=0.40, stipend=1200.0, min_toefl=80,
+        application_deadline=date(2027, 1, 15), website="https://example.edu/ms-cs")
+
+
+def test_scholarships_every_field_is_loaded(tmp_path):
+    path = write_csv(tmp_path, [valid_scholarship_row(states="MI;OH", special="first_gen")])
+
+    [scholarship] = load_scholarships(path)
+
+    assert scholarship == Scholarship(
+        scholarship_id="S1", name="Test Fellowship", type="fellowship", amount=10000.0,
+        degree_levels=("MS", "PhD"), fields=("Any",), min_gpa=3.0, citizenship=("US", "PR"),
+        states=("MI", "OH"), special=("first_gen",), deadline=date(2026, 12, 1),
+        website="https://example.org/fellowship")
+
+
+def test_scholarships_empty_degree_levels_message(tmp_path):
+    path = write_csv(tmp_path, [valid_scholarship_row(degree_levels="")])
+
+    with pytest.raises(DataError, match="line 2: degree_levels is required$"):
+        load_scholarships(path)
+
+
+def test_missing_columns_are_listed_with_comma_and_space(tmp_path):
+    columns = [c for c in valid_program_row() if c not in ("avg_gpa", "acceptance_rate")]
+    path = write_csv(tmp_path, [valid_program_row()], columns=columns)
+
+    with pytest.raises(DataError, match="missing column\\(s\\): avg_gpa, acceptance_rate$"):
+        load_programs(path)
+
+
+def test_living_cost_of_zero_is_accepted(tmp_path):
+    # Boundary value: the rule rejects negative costs only.
+    path = write_csv(tmp_path, [{"state": "MI", "annual_living_cost": "0"},
+                                {"state": "OH", "annual_living_cost": "0.5"}])
+
+    assert load_living_costs(path) == {"MI": 0.0, "OH": 0.5}
+
+
+def test_line_break_inside_a_quoted_cell_is_kept_exactly(tmp_path):
+    # The file is opened with newline="" as the csv module requires, so a
+    # quoted cell keeps its own \r\n instead of having it changed to \n.
+    path = write_csv(tmp_path, [valid_program_row(program_name="MS in\r\nComputer Science")])
+
+    assert load_programs(path)[0].program_name == "MS in\r\nComputer Science"
