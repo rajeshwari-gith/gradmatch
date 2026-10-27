@@ -7,6 +7,11 @@ rounding, every test-score column, extra columns kept by a merge, and the
 tuition report. See docs/mutation-testing.md. The helpers come from
 test_ipeds_import.py; nothing here reads the real government files.
 """
+# In plain words: mutation testing showed that some of the importer's rules and most of its
+# command line were not really checked. These tests close those gaps. They run the importer on
+# tiny made-up files (never the real government files) and reuse the helpers from
+# test_ipeds_import.py, so that file did not have to change.
+
 import csv
 
 import pytest
@@ -20,12 +25,15 @@ from test_ipeds_import import (AWARDS, SCHOOLS, TUITION, admission, cost, existi
 pytestmark = pytest.mark.unit
 
 
+# argparse wraps the help text to the terminal width, so we compare words, not exact line breaks.
 def words(text: str) -> str:
     """Collapse whitespace, because argparse re-wraps the help text."""
     return " ".join(text.split())
 
 
 # ---- value rules ----
+# Why (mutation testing + boundary values): an acceptance rate of exactly 100%, rounding, every score column,
+# extra columns kept by a merge and the tuition report each had a code change no test noticed.
 
 def test_a_school_without_a_rate_does_not_stop_the_others():
     rates = tuition_rates([cost(unit="1", t6=""), cost(unit="2")], "MS")
@@ -87,6 +95,8 @@ def test_tuition_check_zero_in_state_rate_with_a_known_out_of_state_rate():
 
 
 # ---- the command line ----
+# Why: people run the importer from the terminal, so required files, default folders, the printed
+# messages and the --help text are part of what it does.
 
 @pytest.mark.parametrize("left_out", ["--hd", "--cost", "--completions"])
 def test_command_needs_all_three_official_files(folder, left_out, capsys):
