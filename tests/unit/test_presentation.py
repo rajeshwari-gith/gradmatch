@@ -209,7 +209,7 @@ def test_special_labels(tag, label):
 
 def test_scholarship_card_shows_the_important_facts():
     html = scholarship_card_html(make_scholarship(), TODAY)
-    for text in ["Test Fellowship", "$30,000", "award per year", "Fellowship",
+    for text in ["Test Fellowship", "$30,000", "award", "Fellowship",
                  "Dec 5, 2026 · 42 days left", "PhD · Any field"]:
         assert text in html
     assert 'href="https://example.org/fellowship"' in html
@@ -261,3 +261,8 @@ def test_deadline_row_for_a_scholarship():
 def test_deadline_row_escapes_the_name():
     html = deadline_item_html(make_scholarship(name="<b>x</b>"), TODAY)
     assert "<b>" not in html
+
+
+def test_scholarship_card_does_not_claim_the_award_is_per_year():
+    """Some awards are one-time totals, so the card only says 'award'."""
+    assert "per year" not in scholarship_card_html(make_scholarship(), TODAY)

@@ -159,3 +159,13 @@ def test_cost_breakdown_pieces_add_up_to_the_yearly_cost(tuition, living, stipen
     program = make_program(tuition_in_state=tuition, stipend=stipend)
     b = cost_breakdown(program, "MI", living)
     assert b["yearly"] == max(b["tuition"] + b["living"] - b["stipend"], 0.0)
+
+
+# ---- No state at all (international students) always means the out-of-state rate ----
+
+def test_no_home_state_means_out_of_state_tuition():
+    assert tuition_for(make_program(state="MI"), None) == 30000
+
+
+def test_no_home_state_costs_the_out_of_state_amount():
+    assert yearly_cost(make_program(state="MI"), None, living_cost=12000) == 30000 + 12000

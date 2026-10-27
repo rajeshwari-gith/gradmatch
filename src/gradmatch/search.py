@@ -27,6 +27,17 @@ class ProgramResult:
     funding: str
 
 
+def tuition_state(profile: StudentProfile) -> str | None:
+    """The state whose in-state tuition rate applies to this student, or None.
+
+    International students are not residents of any state, so they always pay
+    the out-of-state rate, whatever home state they chose.
+    """
+    if profile.citizenship == "International":
+        return None
+    return profile.home_state
+
+
 def matches_filters(profile: StudentProfile, program: Program) -> bool:
     if program.field != profile.field:
         return False
@@ -46,13 +57,13 @@ def search_programs(profile: StudentProfile, programs: list[Program],
         if program.state not in living_costs:
             raise ValueError(f"No living cost found for state {program.state}.")
         living = living_costs[program.state]
-        cost = yearly_cost(program, profile.home_state, living)
+        cost = yearly_cost(program, tuition_state(profile), living)
         if cost > profile.annual_budget:
             continue
         results.append(ProgramResult(
             program=program,
             yearly_cost=cost,
-            total_cost=total_cost(program, profile.home_state, living),
+            total_cost=total_cost(program, tuition_state(profile), living),
             fit=classify_fit(profile.gpa, program),
             funding=funding_label(program, living),
         ))
