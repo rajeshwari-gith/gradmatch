@@ -7,7 +7,7 @@ from datetime import date
 
 import pytest
 
-from gradmatch.models import Program, StudentProfile
+from gradmatch.models import Program, Scholarship, StudentProfile
 
 
 def make_program(**changes) -> Program:
@@ -46,6 +46,26 @@ def make_profile(**changes) -> StudentProfile:
     )
     values.update(changes)
     return StudentProfile(**values)
+
+
+def make_scholarship(**changes) -> Scholarship:
+    """Return a valid Scholarship; pass keyword arguments to change any field."""
+    values = dict(
+        scholarship_id="S1",
+        name="Test Fellowship",
+        type="fellowship",
+        amount=30000.0,
+        degree_levels=("PhD",),
+        fields=("Any",),
+        min_gpa=3.0,
+        citizenship=("US", "PR"),
+        states=("Any",),
+        special=(),
+        deadline=date(2026, 12, 5),
+        website="https://example.org/fellowship",
+    )
+    values.update(changes)
+    return Scholarship(**values)
 
 
 @pytest.fixture

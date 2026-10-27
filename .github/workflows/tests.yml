@@ -20,6 +20,23 @@ jobs:
       - name: Run tests with coverage
         run: pytest --cov --cov-report=term-missing --cov-report=xml --junitxml=test-results.xml
 
+      - name: Show test results and coverage on the run summary page
+        if: always()
+        run: |
+          {
+            echo "## Test results"
+            python - <<'PY'
+          import xml.etree.ElementTree as ET
+          root = ET.parse("test-results.xml").getroot()
+          suite = root if root.tag == "testsuite" else root.find("testsuite")
+          print(f"**Tests:** {suite.get('tests')} run, {suite.get('failures')} failed, "
+                f"{suite.get('errors')} errors, {suite.get('skipped')} skipped")
+          PY
+            echo
+            echo "## Coverage (line and branch)"
+            coverage report --format=markdown
+          } >> "$GITHUB_STEP_SUMMARY"
+
       - name: Upload test and coverage reports
         if: always()
         uses: actions/upload-artifact@v4

@@ -8,7 +8,8 @@ import pytest
 from hypothesis import given, strategies as st
 
 from conftest import make_program
-from gradmatch.cost import is_affordable, total_cost, tuition_charged, tuition_for, yearly_cost
+from gradmatch.cost import (cost_breakdown, is_affordable, total_cost, tuition_charged,
+                            tuition_for, yearly_cost)
 
 pytestmark = pytest.mark.unit
 
@@ -135,3 +136,26 @@ def test_funded_phd_out_of_state_student_also_pays_no_tuition():
 def test_ms_with_assistantship_still_subtracts_stipend_from_all_costs():
     program = make_program(degree="MS", tuition_in_state=15000, stipend=5000)
     assert yearly_cost(program, "MI", living_cost=12000) == 22000
+
+
+# ---- cost_breakdown: the pieces add up to the yearly cost ----
+
+def test_cost_breakdown_of_an_ms_program():
+    program = make_program(tuition_in_state=15000, stipend=2000, duration_years=2)
+    assert cost_breakdown(program, "MI", living_cost=12000) == {
+        "tuition": 15000, "living": 12000, "stipend": 2000,
+        "yearly": 25000, "total": 50000, "years": 2}
+
+
+def test_cost_breakdown_of_a_funded_phd_has_no_tuition():
+    program = make_program(degree="PhD", tuition_in_state=56000, stipend=48000, duration_years=5)
+    breakdown = cost_breakdown(program, "MI", living_cost=29000)
+    assert breakdown["tuition"] == 0
+    assert breakdown["yearly"] == 0 and breakdown["total"] == 0
+
+
+@given(tuition=money, living=money, stipend=money)
+def test_cost_breakdown_pieces_add_up_to_the_yearly_cost(tuition, living, stipend):
+    program = make_program(tuition_in_state=tuition, stipend=stipend)
+    b = cost_breakdown(program, "MI", living)
+    assert b["yearly"] == max(b["tuition"] + b["living"] - b["stipend"], 0.0)

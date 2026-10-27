@@ -7,16 +7,27 @@ into HTML, and a website is only linked if it starts with http:// or https://.
 from datetime import date
 from html import escape
 
-from gradmatch.deadlines import CLOSED, LATER, SOON, URGENT, deadline_status
+from gradmatch.deadlines import CLOSED, LATER, SOON, URGENT, deadline_of, deadline_status
 from gradmatch.fit import MATCH, REACH, SAFETY
 from gradmatch.funding import FULLY_FUNDED, PARTIALLY_FUNDED, SELF_FUNDED
+from gradmatch.models import Program, Scholarship
 from gradmatch.search import ProgramResult
 
-GREEN, YELLOW, CORAL, GREY = "#1BB89A", "#F5C469", "#F0705F", "#8A94A6"
+GREEN, YELLOW, CORAL, GREY, BLUE = "#1BB89A", "#F5C469", "#F0705F", "#8A94A6", "#5B9BD5"
 
 FIT_COLORS = {SAFETY: GREEN, MATCH: YELLOW, REACH: CORAL}
 FUNDING_COLORS = {FULLY_FUNDED: GREEN, PARTIALLY_FUNDED: YELLOW, SELF_FUNDED: GREY}
 DEADLINE_COLORS = {URGENT: CORAL, SOON: YELLOW, LATER: GREY, CLOSED: GREY}
+
+SPECIAL_LABELS = {
+    "first_gen": "first-generation students",
+    "women_stem": "women in STEM",
+    "new_american": "new Americans",
+    "underrepresented_minority": "underrepresented minorities",
+    "mcnair_scholar": "McNair Scholars",
+}
+CITIZENSHIP_WORDS = {"US": "U.S. citizens", "PR": "permanent residents",
+                     "International": "international students"}
 
 ESTIMATE_NOTE = ("Average GPA, acceptance rate, funding and fit are estimates. "
                  "PhD costs assume a tuition waiver and leave out mandatory student fees. "
@@ -120,5 +131,71 @@ def result_card_html(result: ProgramResult, today: date, student_toefl: int | No
         f'<div class="gm-main">{title_html}'
         f'<div class="gm-sub">{escape(program.degree)} · {escape(program.field)} · {escape(program.state)}</div></div>'
         f'<div class="gm-stats">{stats}</div>'
+        f'<div class="gm-chips">{chips}</div></div>'
+    )
+
+
+# ---- Scholarships and deadlines ----
+
+def special_label(tag: str) -> str:
+    return SPECIAL_LABELS.get(tag, tag.replace("_", " "))
+
+
+def eligibility_summary(scholarship: Scholarship) -> str:
+    """One line describing who can apply, e.g. 'PhD · Any field · GPA 3.00+ · U.S. citizens'."""
+    parts = [", ".join(scholarship.degree_levels)]
+    parts.append("Any field" if "Any" in scholarship.fields else ", ".join(scholarship.fields))
+    if scholarship.min_gpa > 0:
+        parts.append(f"GPA {scholarship.min_gpa:.2f}+")
+    if "Any" in scholarship.citizenship:
+        parts.append("Any citizenship")
+    else:
+        parts.append(" / ".join(CITIZENSHIP_WORDS.get(c, c) for c in scholarship.citizenship))
+    parts.append("Any state" if "Any" in scholarship.states
+                 else "Residents of " + ", ".join(scholarship.states))
+    if scholarship.special:
+        parts.append("For " + ", ".join(special_label(t) for t in scholarship.special))
+    return " · ".join(parts)
+
+
+def _title_html(text: str, website: str) -> str:
+    link = safe_link(website)
+    if link:
+        return (f'<a class="gm-title" href="{escape(link, quote=True)}" '
+                f'target="_blank" rel="noopener noreferrer">{escape(text)}</a>')
+    return f'<span class="gm-title">{escape(text)}</span>'
+
+
+def _stripe_color(status: str) -> str:
+    return BLUE if status == LATER else DEADLINE_COLORS[status]
+
+
+def scholarship_card_html(scholarship: Scholarship, today: date) -> str:
+    status, deadline_text = deadline_label(scholarship.deadline, today)
+    amount = money(scholarship.amount) if scholarship.amount > 0 else "Non-monetary"
+    chips = "".join([
+        chip(scholarship.type.replace("_", " ").title(), BLUE),
+        chip(deadline_text, DEADLINE_COLORS[status]),
+    ])
+    return (
+        f'<div class="gm-card" style="border-left-color:{_stripe_color(status)}">'
+        f'<div class="gm-main">{_title_html(scholarship.name, scholarship.website)}'
+        f'<div class="gm-sub">{escape(eligibility_summary(scholarship))}</div></div>'
+        f'<div class="gm-stats">{stat(amount, "award per year")}</div>'
+        f'<div class="gm-chips">{chips}</div></div>'
+    )
+
+
+def deadline_item_html(item: Program | Scholarship, today: date) -> str:
+    """A compact row for the Deadlines tab: what it is, its name and the countdown."""
+    status, deadline_text = deadline_label(deadline_of(item), today)
+    if isinstance(item, Program):
+        kind, name, website = "Program", f"{item.university} – {item.program_name}", item.website
+    else:
+        kind, name, website = "Scholarship", item.name, item.website
+    chips = chip(kind, BLUE) + chip(deadline_text, DEADLINE_COLORS[status])
+    return (
+        f'<div class="gm-card" style="border-left-color:{_stripe_color(status)}">'
+        f'<div class="gm-main">{_title_html(name, website)}</div>'
         f'<div class="gm-chips">{chips}</div></div>'
     )

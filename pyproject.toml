@@ -15,8 +15,17 @@ markers = [
 ]
 
 [tool.coverage.run]
-source = ["src/gradmatch"]
+source = ["src/gradmatch", "app"]
 branch = true
 
 [tool.coverage.report]
 show_missing = true
+
+[tool.mutmut]
+source_paths = ["src/gradmatch/cost.py", "src/gradmatch/fit.py", "src/gradmatch/funding.py",
+                "src/gradmatch/validation.py", "src/gradmatch/search.py"]
+pytest_add_cli_args_test_selection = ["tests/unit/"]
+also_copy = ["tests/", "src/gradmatch/__init__.py", "src/gradmatch/models.py",
+             "src/gradmatch/deadlines.py", "src/gradmatch/presentation.py",
+             "src/gradmatch/scholarships.py", "src/gradmatch/data_loader.py",
+             "src/gradmatch/exports.py", "src/gradmatch/link_check.py", "pyproject.toml"]
