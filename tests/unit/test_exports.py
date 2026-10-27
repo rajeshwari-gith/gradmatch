@@ -5,6 +5,11 @@ several items) and on the text in names (plain, with commas, quotes,
 semicolons, backslashes and newlines); boundary-value analysis on line
 length (75 bytes is the folding limit) and on the date (leap day 2028-02-29).
 """
+# In plain words: these tests check the two downloads. For the CSV file we read it back with
+# the csv module and check every cell. For the calendar file we check the rules of the
+# calendar standard (RFC 5545) that apps rely on: \r\n line endings, escaped text, stable
+# event ids and lines no longer than 75 bytes.
+
 import csv
 import io
 import time
@@ -47,6 +52,7 @@ def unfold(ics: str) -> list[str]:
 
 # =====================================================================
 # to_csv
+# Why (equivalence classes): empty, one and several results, and names with commas, quotes, ; and line breaks.
 # =====================================================================
 
 def test_csv_empty_list_has_only_the_header():
@@ -86,6 +92,7 @@ def test_csv_special_characters_stay_in_one_cell(name):
 
 # =====================================================================
 # to_ics
+# Why: calendar apps are strict, so we test the file layout, the event ids, the time zone and the escaping one by one.
 # =====================================================================
 
 def test_ics_empty_list_is_a_valid_calendar_with_no_events():
@@ -161,6 +168,7 @@ def test_ics_leap_day_deadline():
 
 
 # ---- Line folding: boundary at 75 bytes ----
+# Why (boundary values): a 75-byte line must stay as it is and a 76-byte line must be folded; é (2 bytes) must never be cut in half.
 
 def raw_lines(ics: str) -> list[str]:
     return ics.split("\r\n")[:-1]
@@ -198,6 +206,7 @@ def test_ics_folding_never_splits_a_multibyte_character():
 
 
 # ---- Tests added after mutation testing (see docs/mutation-testing.md) ----
+# Why (mutation testing): each test below catches a small code change that the earlier tests missed.
 
 def test_ics_calendar_header_and_every_event_is_closed():
     lines = unfold(to_ics([make_program(program_id="P1"), make_program(program_id="P2")], STAMP))
@@ -241,6 +250,7 @@ def test_ics_folded_lines_are_filled_to_75_bytes():
 
 
 # ---- Values that are not published (None) ----
+# Why: a missing value must be an empty cell (not 0), and a program with no deadline gets no calendar event.
 
 def test_csv_unpublished_deadline_is_an_empty_cell():
     rows = read_csv(to_csv([make_result(application_deadline=None)]))

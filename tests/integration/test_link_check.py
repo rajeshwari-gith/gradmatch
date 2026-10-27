@@ -6,6 +6,11 @@ requests but never touch the internet.
 Techniques: equivalence partitioning on the kinds of answer a website can
 give (200, 404, redirect, HEAD refused, server down, bad text).
 """
+# In plain words: the link checker opens every website in the data to find dead links. Testing
+# it on the real internet would be slow and would fail whenever a site is down, so these tests
+# start a tiny fake web server on this computer that answers 200, 404, a redirect or "HEAD not
+# allowed" on purpose. That way every kind of answer is tested, and the result is always the same.
+
 import threading
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
@@ -16,6 +21,7 @@ from gradmatch.link_check import check_url, collect_links, find_broken, main
 pytestmark = pytest.mark.integration
 
 
+# The fake website: each path gives one kind of answer, so each test can ask for the case it needs.
 class Handler(BaseHTTPRequestHandler):
     def _reply(self, status, location=None):
         self.send_response(status)
@@ -40,6 +46,7 @@ class Handler(BaseHTTPRequestHandler):
         pass
 
 
+# Start the fake server once for this file on a free port, and stop it at the end.
 @pytest.fixture(scope="module")
 def site():
     server = ThreadingHTTPServer(("127.0.0.1", 0), Handler)
@@ -50,6 +57,7 @@ def site():
 
 
 # ---- check_url: one test per kind of answer ----
+# Why (equivalence classes): one test per kind of answer a real website can give.
 
 def test_working_page_is_ok(site):
     assert check_url(f"{site}/ok") == (True, "200")
@@ -78,6 +86,7 @@ def test_text_that_is_not_an_http_link_is_broken(text):
 
 
 # ---- collect_links and find_broken with temporary data files ----
+# Why: the checker must find the links in both data files and report only the broken ones.
 
 PROGRAM_HEADER = "program_id,website\n"
 SCHOLARSHIP_HEADER = "scholarship_id,website\n"
@@ -125,6 +134,7 @@ def test_same_link_used_twice_is_checked_once(tmp_path):
 
 
 # ---- main: exit code and printed summary ----
+# Why: exit code 1 lets a script or CI notice broken links; the summary tells a person which ones.
 
 def test_main_returns_0_when_every_link_opens(site, tmp_path, capsys):
     write_data(tmp_path, f"P1,{site}/ok\n", f"S1,{site}/ok\n")

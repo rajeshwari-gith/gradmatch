@@ -10,6 +10,11 @@ calendar apps can import; a program with no published deadline is left out. It f
 lines end in CRLF, text values are escaped, and long lines are folded.
 The DTSTAMP time is passed in by the caller; this module never calls now().
 """
+# In plain words: students want to keep their results. This file makes two downloads: a CSV
+# file of the programs (opens in Excel or Google Sheets) and an .ics file of the deadlines
+# (opens in Google Calendar, Outlook or Apple Calendar). Both are plain text built here, so they
+# can be unit tested without the app.
+
 import csv
 import io
 from datetime import date, datetime, timezone
@@ -18,9 +23,12 @@ from gradmatch.deadlines import deadline_of
 from gradmatch.models import Program, Scholarship
 from gradmatch.search import ProgramResult
 
+# The columns of the CSV download, in the order the student sees them.
 CSV_COLUMNS = ["university", "program", "degree", "state", "yearly_cost", "total_cost",
                "fit", "funding", "deadline", "website"]
 
+# The calendar standard (RFC 5545) says every line ends with \r\n. Some calendar apps
+# may reject a file that uses only \n, so we follow the rule exactly.
 CRLF = "\r\n"
 MAX_LINE_BYTES = 75     # RFC 5545: lines longer than 75 bytes must be folded
 PRODID = "-//GradMatch//Deadlines//EN"
@@ -28,6 +36,8 @@ PRODID = "-//GradMatch//Deadlines//EN"
 
 # ---- CSV ----
 
+# Build the CSV text. The csv module adds quotes when a name has a comma or a quote in it,
+# so "Computer Science, Data Track" stays in one cell instead of shifting every column.
 def to_csv(results: list[ProgramResult]) -> str:
     buffer = io.StringIO()
     writer = csv.writer(buffer)
@@ -49,16 +59,20 @@ def to_csv(results: list[ProgramResult]) -> str:
     return buffer.getvalue()
 
 
+# A money cell: two decimals, or an empty cell when the value is not published (never 0).
 def _money_cell(amount: float | None) -> str:
     return "" if amount is None else f"{amount:.2f}"
 
 
+# A date cell as YYYY-MM-DD, which spreadsheets sort correctly; empty when not published.
 def _date_cell(day: date | None) -> str:
     return "" if day is None else day.isoformat()
 
 
 # ---- iCalendar ----
 
+# Build the calendar text. `stamp` (the time the file was made) is passed in for the same
+# reason as `today` in deadlines.py: the tests can use a fixed time and get the same file every run.
 def to_ics(items: list[Program | Scholarship], stamp: datetime) -> str:
     """Return a calendar with one all-day event per deadline."""
     lines = ["BEGIN:VCALENDAR", "VERSION:2.0", f"PRODID:{PRODID}", "CALSCALE:GREGORIAN"]
@@ -70,6 +84,9 @@ def to_ics(items: list[Program | Scholarship], stamp: datetime) -> str:
     return "".join(_fold(line) + CRLF for line in lines)
 
 
+# One all-day calendar event for one deadline. The UID stays the same every time the file
+# is made, so importing it again updates the event instead of adding a copy. The "program-"
+# and "scholarship-" prefixes stop a program and a scholarship with the same id from clashing.
 def _event_lines(item: Program | Scholarship, stamp: datetime) -> list[str]:
     if isinstance(item, Program):
         uid = f"program-{item.program_id}@gradmatch"
@@ -88,6 +105,8 @@ def _event_lines(item: Program | Scholarship, stamp: datetime) -> list[str]:
     ]
 
 
+# Calendar times must say their time zone. We always write UTC (the Z at the end), so the
+# file is the same whichever time zone the server runs in.
 def _utc_stamp(stamp: datetime) -> str:
     """Format as UTC, e.g. 20261024T150000Z. A time without a zone is taken as UTC."""
     if stamp.tzinfo is not None:
@@ -95,6 +114,9 @@ def _utc_stamp(stamp: datetime) -> str:
     return stamp.strftime("%Y%m%dT%H%M%SZ")
 
 
+# In a calendar file ; and , are separators and a real line break would end the line, so
+# they get a backslash in front. The backslash itself is escaped first; doing it last would
+# double the backslashes we just added.
 def _escape_text(text: str) -> str:
     """Escape a TEXT value: backslash first, then ; , and newlines."""
     text = text.replace("\\", "\\\\")
@@ -102,6 +124,10 @@ def _escape_text(text: str) -> str:
     return text.replace("\r\n", "\\n").replace("\n", "\\n")
 
 
+# Why fold: the calendar standard says no line may be longer than 75 bytes, and some apps may
+# cut or reject longer ones. A long program name is split, and each extra piece starts with a space,
+# which tells the calendar app to glue the pieces back together. We count bytes, not letters,
+# because letters like é take 2 bytes, and we never cut one of those in half.
 def _fold(line: str) -> str:
     """Split a line longer than 75 bytes; each extra part starts with a space.
 

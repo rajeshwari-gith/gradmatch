@@ -16,6 +16,11 @@ one condition false, so each condition is shown to matter on its own.
 Extra tests cover the different ways a condition can be true ("Any",
 GPA exactly equal, no special requirement) and the sort order.
 """
+# In plain words: these tests prove a student sees exactly the scholarships they qualify for,
+# in the right order. The main technique is a decision table: one row where every rule is met,
+# then one row per rule where only that rule fails. If any rule were forgotten in the code,
+# its row would wrongly say "eligible" and the test would fail.
+
 from datetime import date
 
 import pytest
@@ -29,6 +34,7 @@ pytestmark = pytest.mark.unit
 # make_profile(): MS, gpa 3.50, Computer Science, home_state MI, citizenship US, special ()
 
 
+# A scholarship the default student qualifies for. Tests change one field to break one rule.
 def make_scholarship(**changes) -> Scholarship:
     """A scholarship that make_profile() is eligible for, with no "Any" values.
 
@@ -54,6 +60,7 @@ def make_scholarship(**changes) -> Scholarship:
 
 
 # ---- Decision table R1-R7 ----
+# Why (decision table): R1 has every rule true; R2-R7 each make exactly one rule false.
 
 @pytest.mark.parametrize("rule, profile_changes, scholarship_changes, expected", [
     ("R1 all true",         {},                               {},                              True),
@@ -72,6 +79,7 @@ def test_decision_table(rule, profile_changes, scholarship_changes, expected):
 
 
 # ---- Other ways each condition can be true ----
+# Why: "Any", a GPA exactly at the minimum (boundary value) and extra special groups must all still pass.
 
 def test_c1_degree_in_a_list_of_two_levels():
     assert is_eligible(make_profile(degree_sought="PhD"),
@@ -117,6 +125,7 @@ def test_c6_every_listed_special_item_is_required():
 
 
 # ---- eligible_scholarships(): filtering and sort order ----
+# Why: students act on the soonest deadline first, and on the bigger award when two close the same day.
 
 def test_only_eligible_scholarships_are_returned():
     good = make_scholarship(scholarship_id="GOOD")

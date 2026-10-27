@@ -9,19 +9,30 @@ Rule (CONTRIBUTING.md): days_left = (deadline - today).days
 `today` is always passed in by the caller; this module never calls
 date.today(), so tests can use any fixed date.
 """
+# In plain words: students miss deadlines, so the app labels each one as closed, urgent
+# (two weeks or less), soon (one month or less) or later, and lists the open ones in date order.
+# Why `today` is passed in instead of read inside: if the code called date.today() itself, a
+# test written today would give a different answer next week. Passing the date in lets every
+# test use a fixed day, and lets the app show "as of" any date for a demo.
+
 from datetime import date
 
 from gradmatch.models import Program, Scholarship
 
+# The four labels the app shows, kept as constants so a typo cannot create a fifth one.
 CLOSED = "closed"
 URGENT = "urgent"
 SOON = "soon"
 LATER = "later"
 
+# The cut-offs in days. Day 14 is still urgent and day 30 is still soon; the boundary tests
+# check -1, 0, 14, 15, 30 and 31 days so an off-by-one mistake would be caught.
 URGENT_MAX_DAYS = 14
 SOON_MAX_DAYS = 30
 
 
+# Count the days left and pick the label. Due today (0 days) is urgent, not closed, because
+# the student can still apply. Counting whole days with dates (not hours) also gets leap years right.
 def deadline_status(deadline: date, today: date) -> str:
     days_left = (deadline - today).days
     if days_left < 0:
@@ -33,6 +44,8 @@ def deadline_status(deadline: date, today: date) -> str:
     return LATER
 
 
+# The list for the Deadlines tab and the calendar: drop programs with no published deadline
+# (None cannot be compared to a date), drop closed ones, and sort the rest soonest first.
 def upcoming(items: list[Program | Scholarship], today: date) -> list[Program | Scholarship]:
     """Return the items that are not closed, earliest deadline first.
 
@@ -44,6 +57,8 @@ def upcoming(items: list[Program | Scholarship], today: date) -> list[Program | 
     return sorted(still_open, key=deadline_of)
 
 
+# Programs and scholarships name their deadline field differently. This one helper hides
+# that, so the code above can treat both the same way.
 def deadline_of(item: Program | Scholarship) -> date | None:
     """Programs call their deadline application_deadline; scholarships call it deadline.
 

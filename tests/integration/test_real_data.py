@@ -6,12 +6,21 @@ across files, and works with the modules that use it. When a data row is
 added or changed, these tests catch mistakes the loader cannot see on its
 own (a state with no living cost, a duplicate id, a misspelled field).
 """
+# In plain words: the other tests use tiny made-up data. These tests read the REAL files in
+# data/ (45,000+ programs) and check that every row follows the rules: unique ids, a living
+# cost for every state, https links, allowed fields and degrees, score ranges in order. They
+# also run the search and the API on the real data, so a bad row added later is caught here.
+
+import time
+from collections import Counter
 from datetime import date
 from pathlib import Path
 
 import pytest
+from fastapi.testclient import TestClient
 
 from conftest import make_profile
+from gradmatch.api import app
 from gradmatch.cost import yearly_cost
 from gradmatch.data_loader import load_living_costs, load_programs, load_scholarships
 from gradmatch.deadlines import upcoming
@@ -47,6 +56,7 @@ def living_costs():
 
 
 # ---- The files load ----
+# Why: if any row breaks a loader rule, nothing else can work, so this is checked first.
 
 def test_all_three_files_load_without_data_error(programs, scholarships, living_costs):
     assert programs
@@ -55,6 +65,7 @@ def test_all_three_files_load_without_data_error(programs, scholarships, living_
 
 
 # ---- The files agree with each other ----
+# Why: each file can be fine on its own but disagree with another (a program in a state with no living cost).
 
 def test_every_program_state_has_a_living_cost(programs, living_costs):
     missing = sorted({p.state for p in programs if p.state not in living_costs})
@@ -62,18 +73,19 @@ def test_every_program_state_has_a_living_cost(programs, living_costs):
 
 
 def test_program_ids_are_unique(programs):
-    ids = [p.program_id for p in programs]
-    duplicates = sorted({i for i in ids if ids.count(i) > 1})
+    counts = Counter(p.program_id for p in programs)       # Counter: fast on 22,000+ rows
+    duplicates = sorted(i for i, n in counts.items() if n > 1)
     assert duplicates == []
 
 
 def test_scholarship_ids_are_unique(scholarships):
-    ids = [s.scholarship_id for s in scholarships]
-    duplicates = sorted({i for i in ids if ids.count(i) > 1})
+    counts = Counter(s.scholarship_id for s in scholarships)
+    duplicates = sorted(i for i, n in counts.items() if n > 1)
     assert duplicates == []
 
 
 # ---- Every row follows the data rules ----
+# Why: the loader checks one row at a time; these check rules across the whole file.
 
 def test_every_website_uses_https(programs, scholarships):
     bad = [p.program_id for p in programs if not p.website.startswith("https://")]
@@ -132,6 +144,7 @@ def test_imported_program_ids_are_unique(programs):
 
 
 # ---- The modules run on the real data ----
+# Why: real data has cases our small tests may not think of; the code must not crash on any of them.
 
 @pytest.mark.parametrize("profile", [
     make_profile(),
@@ -150,6 +163,7 @@ def test_upcoming_runs_on_real_programs_and_scholarships(programs, scholarships)
 
 
 # ---- Guard against defect D-001 coming back ----
+# Why: D-001 was a real bug (funded PhDs showed a cost). This test keeps it from coming back unnoticed.
 
 def test_fully_funded_phd_costs_nothing_in_or_out_of_state(programs, living_costs):
     # For every PhD whose stipend covers living costs, an in-state and an
@@ -168,3 +182,66 @@ def test_fully_funded_phd_costs_nothing_in_or_out_of_state(programs, living_cost
             if cost != 0:
                 wrong.append((program.program_id, home_state, cost))
     assert wrong == []
+
+
+# ---- Test scores and bachelor's rows (official data import) ----
+# Why: a reversed SAT range or a bachelor's row with a stipend would give wrong labels and costs.
+
+def test_sat_and_act_ranges_are_in_order(programs):
+    bad = [p.program_id for p in programs
+           if (p.sat_25 is not None and p.sat_75 is not None and p.sat_25 > p.sat_75)
+           or (p.act_25 is not None and p.act_75 is not None and p.act_25 > p.act_75)]
+    assert bad == []
+
+
+def test_score_ranges_have_both_ends_or_neither(programs):
+    bad = [p.program_id for p in programs
+           if (p.sat_25 is None) != (p.sat_75 is None) or (p.act_25 is None) != (p.act_75 is None)]
+    assert bad == []
+
+
+def test_bachelors_rows_are_four_years_with_no_stipend(programs):
+    bad = [(p.program_id, p.duration_years, p.stipend) for p in programs
+           if p.degree == "BS" and (p.duration_years != 4 or p.stipend != 0)]
+    assert bad == []
+
+
+# ---- The API on the real data (22,000+ rows) ----
+# Why: the API must stay fast with the full file; 5 seconds is a generous limit for a request.
+
+MATCH_SECONDS = 5.0      # generous: about 0.5 s on a laptop, mostly loading the CSV
+
+
+@pytest.mark.parametrize("body", [
+    dict(degree_sought="BS", gpa=3.6, field="Computer Science", home_state="MI",
+         citizenship="US", annual_budget=40000, sat=1300, act=28),
+    dict(degree_sought="MS", gpa=3.5, field="Computer Science", home_state="MI",
+         citizenship="International", annual_budget=60000, toefl=95),
+    dict(degree_sought="PhD", gpa=3.8, field="Computer Science", home_state="OH",
+         citizenship="PR", annual_budget=0),
+], ids=["bs", "ms", "phd"])
+def test_match_on_real_data_is_fast_and_does_not_crash(monkeypatch, body):
+    monkeypatch.delenv("GRADMATCH_DATA_DIR", raising=False)      # use the real data/ folder
+    client = TestClient(app)
+
+    start = time.perf_counter()
+    response = client.post("/match", json=body)
+    seconds = time.perf_counter() - start
+
+    assert response.status_code == 200
+    answer = response.json()
+    assert answer["total_programs"] > 0
+    assert len(answer["programs"]) == min(answer["total_programs"], 50)
+    assert all(p["degree"] == body["degree_sought"] for p in answer["programs"])
+    assert seconds < MATCH_SECONDS
+
+
+def test_programs_on_real_data_is_paged(monkeypatch):
+    monkeypatch.delenv("GRADMATCH_DATA_DIR", raising=False)
+    client = TestClient(app)
+
+    first = client.get("/programs").json()
+    last = client.get("/programs?limit=1000&offset=22000").json()
+
+    assert len(first) == 100
+    assert 0 < len(last) <= 1000

@@ -5,6 +5,11 @@ each kind of bad value, unknown program_id, unchecked row) and a decision
 table for the PhD tuition-waiver rule. Every test works on copies of tiny
 data files in tmp_path, never on the real data/ folder.
 """
+# In plain words: these tests run the lookup-sheet tool on tiny copies of programs.csv and
+# SOURCES.md in a temporary folder. They prove that checked values are copied, blank cells
+# keep the old value, every kind of mistake is reported with its line number, and that one
+# bad row means nothing at all is written (all or nothing).
+
 import csv
 
 import pytest
@@ -14,6 +19,7 @@ from gradmatch.data_loader import load_programs
 
 pytestmark = pytest.mark.unit
 
+# Two tiny programs (one MS, one PhD) and the matching SOURCES.md table, written fresh for every test.
 PROGRAMS = """program_id,university,program_name,field,degree,state,tuition_in_state,tuition_out_state,duration_years,avg_gpa,avg_gre,acceptance_rate,stipend,min_toefl,application_deadline,website
 MS1,Test University,MS in Computer Science,Computer Science,MS,MI,15000,30000,2,3.40,,0.40,0,80,2027-01-15,https://example.edu/dept
 PHD1,Test University,PhD in Computer Science,Computer Science,PhD,MI,30000,60000,5,3.80,,0.10,40000,90,2026-12-15,https://example.edu/dept
@@ -39,6 +45,7 @@ def data_dir(tmp_path):
     return folder
 
 
+# A fully filled, valid sheet row for MS1. A test changes one cell to make one mistake.
 def sheet_row(**values) -> dict:
     """A checked sheet row for MS1 with every value filled in."""
     row = dict(program_id="MS1", university="Test University",
@@ -64,11 +71,13 @@ def program(data_dir, program_id):
     return next(p for p in load_programs(data_dir / "programs.csv") if p.program_id == program_id)
 
 
+# Both files as text, so a test can check that nothing changed at all.
 def files(data_dir):
     return (data_dir / "programs.csv").read_text(), (data_dir / "SOURCES.md").read_text()
 
 
 # ---- Valid class: a good row ----
+# Why: the normal case first. Values are copied, the status and the count are updated, blanks keep old values.
 
 def test_good_row_updates_program_and_sources(tmp_path, data_dir):
     sheet = write_sheet(tmp_path, [sheet_row(notes="Fees not included")])
@@ -129,6 +138,7 @@ def test_other_columns_and_rows_are_left_alone(tmp_path, data_dir):
 
 
 # ---- Invalid classes: each kind of bad value ----
+# Why (equivalence classes): one test per kind of mistake a person can make while typing the sheet.
 
 @pytest.mark.parametrize("changes, message", [
     ({"program_id": "NOPE"}, "unknown program_id 'NOPE'"),
@@ -194,6 +204,7 @@ def test_program_missing_from_sources_is_rejected(tmp_path, data_dir):
 
 
 # ---- Decision table: PhD tuition waiver ----
+# Why (decision table): waiver yes/no/blank x stipend given/not given; every row of the table has a test.
 # waiver | stipend in sheet | result
 # yes    | > 0              | stipend copied
 # yes    | blank or 0       | error (a waiver needs a stipend)
@@ -238,6 +249,7 @@ def test_waiver_blank_keeps_the_stipend(tmp_path, data_dir):
 
 
 # ---- The command ----
+# Why: people run this from the terminal, so the exit codes and the printed lines are part of the job.
 
 def test_command_prints_summary(tmp_path, data_dir, capsys):
     code = main(["apply_lookup", str(write_sheet(tmp_path, [sheet_row()])), str(data_dir)])
@@ -275,6 +287,7 @@ def test_existing_bad_row_stops_the_update_and_writes_nothing(tmp_path, data_dir
 
 
 # ---- The `source` column ----
+# Why: a checked row must be marked official-page, and older files without the column must get it.
 
 def test_source_column_is_added_when_missing(tmp_path, data_dir):
     # The fixture programs.csv has no source column.
@@ -325,6 +338,7 @@ def test_waiver_yes_fills_an_unpublished_stipend(tmp_path, data_dir):
 
 
 # ---- Tests added after mutation testing (see docs/mutation-testing.md) ----
+# Why (mutation testing): each test below catches a small code change that the tests above did not notice.
 
 def test_error_message_is_exact_for_a_row_with_several_problems(tmp_path, data_dir):
     row = sheet_row(official_url="http://x", application_deadline="soon", checked_on="today",
@@ -514,3 +528,17 @@ def test_an_unchecked_imported_row_is_still_skipped(tmp_path, imported_dir):
     summary = apply_lookup(write_sheet(tmp_path, [imported_row(checked_by="")]), imported_dir)
 
     assert summary == ["0 row(s) applied, 0 value(s) changed"]
+
+
+# ---- Imported rows are not part of the hand-entered verification count ----
+# Why: this was a real bug. With 45,000 imported rows the count would have said "of 45,424" instead of "of 24".
+
+def test_status_line_counts_only_rows_listed_in_sources(tmp_path, data_dir):
+    # An imported row is in programs.csv but has no row in SOURCES.md.
+    imported = ("IPEDS-1-BS-11.0701,Imported U,BS in Computer Science,Computer Science,BS,MI,"
+                "9000,20000,4,,,,0,,,https://example.edu/imported")
+    (data_dir / "programs.csv").write_text(PROGRAMS + imported + "\n")
+
+    apply_lookup(write_sheet(tmp_path, [sheet_row()]), data_dir)
+
+    assert "**Verified: 1 of 2 rows (programs)" in (data_dir / "SOURCES.md").read_text()
