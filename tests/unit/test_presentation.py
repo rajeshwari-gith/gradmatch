@@ -12,9 +12,9 @@ from conftest import make_program
 from gradmatch.deadlines import CLOSED, LATER, SOON, URGENT
 from gradmatch.fit import MATCH, REACH, SAFETY
 from gradmatch.funding import FULLY_FUNDED, PARTIALLY_FUNDED, SELF_FUNDED
-from gradmatch.presentation import (DEADLINE_COLORS, FIT_COLORS, FUNDING_COLORS, GREEN,
-                                    chip, deadline_label, format_date, money, percent,
-                                    result_card_html, safe_link)
+from gradmatch.presentation import (DEADLINE_COLORS, ESTIMATE_NOTE, FIT_COLORS, FUNDING_COLORS,
+                                    GREEN, YELLOW, chip, deadline_label, format_date, money,
+                                    percent, result_card_html, safe_link, toefl_warning)
 from gradmatch.search import ProgramResult
 
 pytestmark = pytest.mark.unit
@@ -124,3 +124,53 @@ def test_quote_in_a_website_cannot_break_out_of_the_link():
 
 def test_chip_escapes_its_text():
     assert chip("<b>", GREEN) == f'<span class="gm-chip" style="--chip:{GREEN}">&lt;b&gt;</span>'
+
+
+# ---- TOEFL warning: boundary-value analysis around the program's minimum ----
+
+@pytest.mark.parametrize("student, text", [
+    (84, "TOEFL min 85 · you 84"),    # one point below the minimum
+    (0, "TOEFL min 85 · you 0"),
+])
+def test_toefl_below_the_minimum_gives_a_warning(student, text):
+    assert toefl_warning(85, student) == text
+
+
+@pytest.mark.parametrize("student", [85, 86, 120])
+def test_toefl_at_or_above_the_minimum_gives_no_warning(student):
+    assert toefl_warning(85, student) is None
+
+
+def test_no_warning_when_the_student_has_no_toefl_score():
+    assert toefl_warning(85, None) is None
+
+
+def test_no_warning_when_the_program_has_no_minimum():
+    assert toefl_warning(None, 60) is None
+
+
+def test_card_shows_the_toefl_warning_chip_in_yellow():
+    html = result_card_html(make_result(min_toefl=85), TODAY, student_toefl=80)
+    assert chip("TOEFL min 85 · you 80", YELLOW) in html
+
+
+@pytest.mark.parametrize("toefl", [None, 85, 100])
+def test_card_has_no_toefl_chip_when_there_is_nothing_to_warn_about(toefl):
+    assert "TOEFL" not in result_card_html(make_result(min_toefl=85), TODAY, student_toefl=toefl)
+
+
+def test_card_without_a_toefl_argument_has_no_toefl_chip():
+    assert "TOEFL" not in result_card_html(make_result(min_toefl=85), TODAY)
+
+
+# ---- Estimates are labeled ----
+
+def test_gpa_and_acceptance_rate_are_labeled_as_estimates():
+    html = result_card_html(make_result(), TODAY)
+    assert "avg GPA (est.)" in html
+    assert "accepted (est.)" in html
+
+
+def test_the_estimate_note_mentions_estimates_and_mandatory_fees():
+    assert "estimates" in ESTIMATE_NOTE
+    assert "mandatory student fees" in ESTIMATE_NOTE

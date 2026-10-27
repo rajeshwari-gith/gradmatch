@@ -186,3 +186,33 @@ def test_invalid_profile_shows_errors_and_no_results(app):
     submit(app)
     assert app.error and not app.metric
     assert cards(app) == ""
+
+
+# ---- Notes and warnings added after review ----
+
+def test_a_note_explains_that_the_numbers_are_estimates_and_fees_are_left_out(app):
+    submit(app)
+    notes = " ".join(c.value for c in app.caption)
+    assert "estimates" in notes
+    assert "mandatory student fees" in notes
+
+
+def test_cards_label_gpa_and_acceptance_rate_as_estimates(app):
+    submit(app)
+    assert cards(app).count("avg GPA (est.)") == 2
+    assert cards(app).count("accepted (est.)") == 2
+
+
+def test_international_student_with_a_low_toefl_sees_a_warning_on_programs_that_need_more(app):
+    app.selectbox(key="citizenship").set_value("International")
+    app.number_input(key="toefl").set_value(80)
+    search_for(app, budget=100_000)
+    html = cards(app)
+    assert "TOEFL min 85 · you 80" in html      # Middle University needs 85
+    assert "TOEFL min 100 · you 80" in html     # Pricey Tech needs 100
+    assert html.count("TOEFL min") == 2         # Cheap State needs exactly 80: no warning
+
+
+def test_us_student_without_a_toefl_score_sees_no_toefl_warning(app):
+    search_for(app, budget=100_000)
+    assert "TOEFL" not in cards(app)
