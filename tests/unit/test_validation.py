@@ -71,7 +71,7 @@ def test_valid_degrees(degree):
 
 @pytest.mark.parametrize("degree", ["", "BS", "ms", "MBA"])
 def test_invalid_degrees(degree):
-    assert "Degree must be MS or PhD." in validate_profile(make_profile(degree_sought=degree))
+    assert "Degree must be BS, MS or PhD." in validate_profile(make_profile(degree_sought=degree))
 
 
 @pytest.mark.parametrize("field", ["", "   "])

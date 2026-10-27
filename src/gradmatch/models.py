@@ -8,7 +8,7 @@ from datetime import date
 
 @dataclass(frozen=True)
 class StudentProfile:
-    degree_sought: str            # "MS" or "PhD"
+    degree_sought: str            # "BS", "MS" or "PhD"
     gpa: float                    # 0.0 - 4.0
     field: str                    # e.g. "Computer Science"
     home_state: str               # 2-letter code, e.g. "MI"
@@ -26,7 +26,7 @@ class Program:
     university: str
     program_name: str
     field: str
-    degree: str                   # "MS" or "PhD"
+    degree: str                   # "BS", "MS" or "PhD"
     state: str
     tuition_in_state: float       # USD per year
     tuition_out_state: float
@@ -47,7 +47,7 @@ class Scholarship:
     name: str
     type: str                     # scholarship | fellowship | assistantship | research | fee_waiver
     amount: float                 # USD (0 if non-monetary)
-    degree_levels: tuple[str, ...]  # ("MS",), ("PhD",) or ("MS", "PhD")
+    degree_levels: tuple[str, ...]  # any of "BS", "MS", "PhD"
     fields: tuple[str, ...]       # ("Any",) or list of fields
     min_gpa: float
     citizenship: tuple[str, ...]  # ("Any",) or subset of US/PR/International

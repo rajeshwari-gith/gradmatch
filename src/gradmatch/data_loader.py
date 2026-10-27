@@ -11,7 +11,7 @@ from datetime import date, datetime
 
 from gradmatch.models import Program, Scholarship
 
-DEGREES = ("MS", "PhD")
+DEGREES = ("BS", "MS", "PhD")
 GPA_MIN, GPA_MAX = 0.0, 4.0
 RATE_MIN, RATE_MAX = 0.0, 1.0
 DATE_FORMAT = "%Y-%m-%d"
@@ -166,7 +166,7 @@ def _list(row, name) -> tuple[str, ...]:
 
 def _degree(value) -> str:
     if value not in DEGREES:
-        raise ValueError(f"degree must be MS or PhD, got '{value}'")
+        raise ValueError(f"degree must be BS, MS or PhD, got '{value}'")
     return value
 
 
