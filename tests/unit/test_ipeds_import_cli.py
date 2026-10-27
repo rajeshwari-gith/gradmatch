@@ -54,8 +54,8 @@ def test_rows_without_test_scores_have_empty_score_cells():
 
 
 def test_read_csv_keeps_a_line_break_inside_a_quoted_cell(tmp_path):
-    path = write(tmp_path / "hd.csv", ["UNITID", "INSTNM", "STABBR", "WEBADDR"],
-                 [["1", "Line one\r\nLine two", "MI", "a.edu"]])
+    path = write(tmp_path / "hd.csv", ["UNITID", "INSTNM", "STABBR", "WEBADDR", "ADMINURL"],
+                 [["1", "Line one\r\nLine two", "MI", "a.edu", "a.edu/apply"]])
     assert read_csv(path, "directory")[0]["INSTNM"] == "Line one\r\nLine two"
 
 
