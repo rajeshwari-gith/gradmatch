@@ -169,3 +169,15 @@ def test_no_home_state_means_out_of_state_tuition():
 
 def test_no_home_state_costs_the_out_of_state_amount():
     assert yearly_cost(make_program(state="MI"), None, living_cost=12000) == 30000 + 12000
+
+
+# ---- An unpublished stipend (None) counts as 0 ----
+
+def test_unpublished_stipend_does_not_waive_phd_tuition():
+    program = make_program(degree="PhD", stipend=None)
+    assert tuition_charged(program, "MI") == 15000
+    assert yearly_cost(program, "MI", 12000) == 27000
+
+
+def test_cost_breakdown_shows_an_unpublished_stipend_as_zero():
+    assert cost_breakdown(make_program(stipend=None), "MI", 12000)["stipend"] == 0.0

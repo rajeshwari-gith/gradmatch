@@ -21,6 +21,7 @@ from gradmatch.data_loader import (DataError, load_living_costs, load_programs, 
                                    load_scholarships)
 from gradmatch.deadlines import upcoming  # noqa: E402
 from gradmatch.exports import to_csv, to_ics  # noqa: E402
+from gradmatch.cost import known_stipend  # noqa: E402
 from gradmatch.fit import MATCH, REACH, SAFETY  # noqa: E402
 from gradmatch.models import StudentProfile  # noqa: E402
 from gradmatch.presentation import (CARD_CSS, ESTIMATE_NOTE, FIT_COLORS,  # noqa: E402
@@ -111,7 +112,7 @@ def cost_chart(results, gpa: float):
     """Scatter chart: average admitted GPA (x) against cost per year (y)."""
     values = [{"Program": r.program.university + " – " + r.program.program_name,
                "Average GPA": r.program.avg_gpa, "Cost per year ($)": r.yearly_cost,
-               "Fit": r.fit} for r in results]
+               "Fit": r.fit} for r in results if r.program.avg_gpa is not None]
     points = alt.Chart(alt.Data(values=values)).mark_circle(size=160, opacity=0.85).encode(
         x=alt.X("Average GPA:Q", scale=alt.Scale(zero=False)),
         y=alt.Y("Cost per year ($):Q", scale=alt.Scale(zero=True)),
@@ -153,9 +154,12 @@ def show_programs(profile: StudentProfile, results, living_costs, today: date):
                        file_name="gradmatch_results.csv", mime="text/csv")
 
     st.subheader("Cost and admission fit")
-    st.altair_chart(cost_chart(results, profile.gpa), width="stretch")
-    st.caption("Dots to the right are programs whose admitted students have higher GPAs. "
-               "The dashed line is your GPA.")
+    if any(r.program.avg_gpa is not None for r in results):
+        st.altair_chart(cost_chart(results, profile.gpa), width="stretch")
+        st.caption("Dots to the right are programs whose admitted students have higher GPAs. "
+                   "The dashed line is your GPA. Programs that do not publish an average GPA are not drawn.")
+    else:
+        st.info("None of these programs publish an average admitted GPA, so there is nothing to chart.")
 
     st.subheader("Cost breakdown")
     labels = [f"{r.program.university} – {r.program.program_name}" for r in results]
@@ -169,7 +173,7 @@ def show_programs(profile: StudentProfile, results, living_costs, today: date):
     cols[2].metric("Stipend per year", money(parts["stipend"]))
     cols[3].metric(f"Total for {parts['years']:g} years", money(parts["total"]))
     st.altair_chart(breakdown_chart(parts), width="stretch")
-    if result.program.degree == "PhD" and result.program.stipend > 0:
+    if result.program.degree == "PhD" and known_stipend(result.program) > 0:
         st.caption("This PhD program pays a stipend, so tuition is assumed to be waived. "
                    "Mandatory student fees are not included.")
 

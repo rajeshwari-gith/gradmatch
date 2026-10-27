@@ -7,7 +7,7 @@ table showing the acceptance-rate rule overrides the GPA rule.
 import pytest
 
 from conftest import make_program
-from gradmatch.fit import MATCH, REACH, SAFETY, classify_fit
+from gradmatch.fit import MATCH, REACH, SAFETY, UNKNOWN, classify_fit
 
 pytestmark = pytest.mark.unit
 
@@ -76,3 +76,19 @@ def test_fit_decision_table(rate, gpa, expected):
 ])
 def test_gpa_difference_is_rounded_to_two_decimals(gpa, expected):
     assert classify_fit(gpa, make_program(avg_gpa=3.40)) == expected
+
+
+# ---- Unpublished values (official government data) ----
+# Decision table:  acceptance rate | avg GPA   | fit
+#                  < 10%           | any       | Reach
+#                  unknown         | unknown   | Unknown
+#                  unknown         | known     | by GPA
+#                  >= 10%          | unknown   | Unknown
+
+@pytest.mark.parametrize("rate, avg_gpa, expected", [
+    (0.09, None, REACH), (0.09, 3.40, REACH),
+    (None, None, UNKNOWN), (0.10, None, UNKNOWN), (0.40, None, UNKNOWN),
+    (None, 3.40, MATCH),
+])
+def test_fit_with_unpublished_values(rate, avg_gpa, expected):
+    assert classify_fit(3.40, make_program(acceptance_rate=rate, avg_gpa=avg_gpa)) == expected

@@ -8,15 +8,16 @@ from datetime import date
 from html import escape
 
 from gradmatch.deadlines import CLOSED, LATER, SOON, URGENT, deadline_of, deadline_status
-from gradmatch.fit import MATCH, REACH, SAFETY
-from gradmatch.funding import FULLY_FUNDED, PARTIALLY_FUNDED, SELF_FUNDED
+from gradmatch.fit import MATCH, REACH, SAFETY, UNKNOWN
+from gradmatch.funding import FULLY_FUNDED, FUNDING_UNKNOWN, PARTIALLY_FUNDED, SELF_FUNDED
 from gradmatch.models import Program, Scholarship
 from gradmatch.search import ProgramResult
 
 GREEN, YELLOW, CORAL, GREY, BLUE = "#1BB89A", "#F5C469", "#F0705F", "#8A94A6", "#5B9BD5"
 
-FIT_COLORS = {SAFETY: GREEN, MATCH: YELLOW, REACH: CORAL}
-FUNDING_COLORS = {FULLY_FUNDED: GREEN, PARTIALLY_FUNDED: YELLOW, SELF_FUNDED: GREY}
+FIT_COLORS = {SAFETY: GREEN, MATCH: YELLOW, REACH: CORAL, UNKNOWN: GREY}
+FUNDING_COLORS = {FULLY_FUNDED: GREEN, PARTIALLY_FUNDED: YELLOW, SELF_FUNDED: GREY,
+                  FUNDING_UNKNOWN: GREY}
 DEADLINE_COLORS = {URGENT: CORAL, SOON: YELLOW, LATER: GREY, CLOSED: GREY}
 
 SPECIAL_LABELS = {
@@ -29,9 +30,13 @@ SPECIAL_LABELS = {
 CITIZENSHIP_WORDS = {"US": "U.S. citizens", "PR": "permanent residents",
                      "International": "international students"}
 
+NOT_PUBLISHED = "n/a"
+SOURCE_CHIPS = {"ipeds": ("Official school data", BLUE), "official-page": ("Verified on official page", GREEN)}
+
 ESTIMATE_NOTE = ("Average GPA, acceptance rate, funding and fit are estimates. "
                  "PhD costs assume a tuition waiver and leave out mandatory student fees. "
-                 "Always check the official program page.")
+                 "Where a value is shown as n/a, the school does not publish it in official "
+                 "data. Always check the official program page.")
 
 CARD_CSS = """
 <style>
@@ -100,6 +105,13 @@ def stat(value: str, label: str) -> str:
             f'<div class="gm-stat-label">{escape(label)}</div></div>')
 
 
+def _estimate_stat(value, label, show, source) -> str:
+    """A stat that is n/a when unpublished, and marked (est.) when it is our own estimate."""
+    if value is None:
+        return stat(NOT_PUBLISHED, label)
+    return stat(show(value), f"{label} (est.)" if source == "estimate" else label)
+
+
 def result_card_html(result: ProgramResult, today: date, student_toefl: int | None = None) -> str:
     program = result.program
     title = f"{program.university} – {program.program_name}"
@@ -110,18 +122,23 @@ def result_card_html(result: ProgramResult, today: date, student_toefl: int | No
     else:
         title_html = f'<span class="gm-title">{escape(title)}</span>'
 
-    status, deadline_text = deadline_label(program.application_deadline, today)
     stats = "".join([
         stat(money(result.yearly_cost), "per year"),
         stat(money(result.total_cost), f"{program.duration_years:g} yr total"),
-        stat(f"{program.avg_gpa:.2f}", "avg GPA (est.)"),
-        stat(percent(program.acceptance_rate), "accepted (est.)"),
+        _estimate_stat(program.avg_gpa, "avg GPA", lambda v: f"{v:.2f}", program.source),
+        _estimate_stat(program.acceptance_rate, "accepted", percent, program.source),
     ])
     chip_list = [
         chip(result.fit, FIT_COLORS[result.fit]),
         chip(result.funding, FUNDING_COLORS[result.funding]),
-        chip(deadline_text, DEADLINE_COLORS[status]),
     ]
+    if program.application_deadline is None:
+        chip_list.append(chip("Deadline: check program page", GREY))
+    else:
+        status, deadline_text = deadline_label(program.application_deadline, today)
+        chip_list.append(chip(deadline_text, DEADLINE_COLORS[status]))
+    if program.source in SOURCE_CHIPS:
+        chip_list.append(chip(*SOURCE_CHIPS[program.source]))
     warning = toefl_warning(program.min_toefl, student_toefl)
     if warning:
         chip_list.append(chip(warning, YELLOW))

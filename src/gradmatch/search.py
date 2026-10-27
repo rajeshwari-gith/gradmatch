@@ -12,7 +12,7 @@ the stipend is left after living costs (best funded first).
 """
 from dataclasses import dataclass
 
-from gradmatch.cost import total_cost, yearly_cost
+from gradmatch.cost import known_stipend, total_cost, yearly_cost
 from gradmatch.fit import classify_fit
 from gradmatch.funding import funding_label
 from gradmatch.models import Program, StudentProfile
@@ -69,7 +69,7 @@ def search_programs(profile: StudentProfile, programs: list[Program],
         ))
 
     if profile.degree_sought == "PhD":
-        results.sort(key=lambda r: (-(r.program.stipend - living_costs[r.program.state]),
+        results.sort(key=lambda r: (-(known_stipend(r.program) - living_costs[r.program.state]),
                                     r.program.university))
     else:
         results.sort(key=lambda r: (r.yearly_cost, r.program.university))
