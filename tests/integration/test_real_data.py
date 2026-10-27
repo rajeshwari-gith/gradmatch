@@ -20,9 +20,11 @@ from gradmatch.scholarships import eligible_scholarships
 pytestmark = pytest.mark.integration
 
 DATA_DIR = Path(__file__).resolve().parents[2] / "data"
-FIELDS = ("Computer Science", "Data Science", "Electrical and Computer Engineering",
-          "Business Analytics")
-DEGREES = ("MS", "PhD")
+from gradmatch.ipeds_import import CIP_FIELDS
+
+# The hand-entered programs use four fields; rows imported from official data use the CIP_FIELDS names.
+FIELDS = {"Electrical and Computer Engineering", "Business Analytics", *CIP_FIELDS.values()}
+DEGREES = ("BS", "MS", "PhD")
 TODAY = date(2026, 10, 24)
 
 
@@ -84,7 +86,7 @@ def test_every_field_is_an_allowed_value(programs):
     assert bad == []
 
 
-def test_every_degree_is_ms_or_phd(programs):
+def test_every_degree_is_bs_ms_or_phd(programs):
     bad = [(p.program_id, p.degree) for p in programs if p.degree not in DEGREES]
     assert bad == []
 
@@ -111,7 +113,22 @@ def test_programs_without_deadline_are_left_out_of_upcoming(programs):
 
 def test_at_least_one_ms_and_one_phd_program(programs):
     degrees = {p.degree for p in programs}
-    assert degrees == {"MS", "PhD"}
+    assert degrees == {"BS", "MS", "PhD"}
+
+
+def test_imported_rows_follow_the_official_data_rules(programs):
+    imported = [p for p in programs if p.source == "ipeds"]
+    assert len(imported) > 1000
+    bad = [p.program_id for p in imported
+           if p.application_deadline is not None or p.avg_gpa is not None
+           or (p.degree == "BS") != (p.stipend == 0) and p.stipend is not None
+           or (p.degree == "BS") != (p.duration_years == 4)]
+    assert bad == []
+
+
+def test_imported_program_ids_are_unique(programs):
+    ids = [p.program_id for p in programs]
+    assert len(ids) == len(set(ids))
 
 
 # ---- The modules run on the real data ----
