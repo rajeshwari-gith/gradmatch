@@ -12,7 +12,7 @@ from dataclasses import asdict
 from datetime import date
 from pathlib import Path
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Query
 from pydantic import BaseModel
 
 from gradmatch.data_loader import load_living_costs, load_programs, load_scholarships
@@ -23,6 +23,9 @@ from gradmatch.search import ProgramResult, search_programs
 from gradmatch.validation import validate_profile
 
 DEFAULT_DATA_DIR = Path(__file__).resolve().parents[2] / "data"
+
+# programs.csv has over 22,000 rows, so list answers are paged.
+PROGRAMS_LIMIT, MATCH_LIMIT, MAX_LIMIT = 100, 50, 1000
 
 app = FastAPI(title="GradMatch", description="Graduate programs, scholarships and deadlines.")
 
@@ -51,8 +54,14 @@ def health():
 
 
 @app.get("/programs")
-def programs(field: str | None = None, degree: str | None = None, state: str | None = None):
-    """All programs, optionally filtered by exact field, degree and state."""
+def programs(field: str | None = None, degree: str | None = None, state: str | None = None,
+             limit: int = Query(PROGRAMS_LIMIT, ge=1, le=MAX_LIMIT),
+             offset: int = Query(0, ge=0)):
+    """Programs in file order, optionally filtered by exact field, degree and state.
+
+    Returns at most `limit` programs (1-1000, default 100), starting after the first
+    `offset` matches. FastAPI answers 422 for a limit or offset outside those ranges.
+    """
     result = load_programs(data_dir() / "programs.csv")
     if field is not None:
         result = [p for p in result if p.field == field]
@@ -60,12 +69,16 @@ def programs(field: str | None = None, degree: str | None = None, state: str | N
         result = [p for p in result if p.degree == degree]
     if state is not None:
         result = [p for p in result if p.state == state]
-    return [asdict(p) for p in result]
+    return [asdict(p) for p in result[offset:offset + limit]]
 
 
 @app.post("/match")
-def match(body: ProfileIn):
-    """Programs and scholarships for a student; 422 with the validation messages if invalid."""
+def match(body: ProfileIn, limit: int = Query(MATCH_LIMIT, ge=1, le=MAX_LIMIT)):
+    """Programs and scholarships for a student; 422 with the validation messages if invalid.
+
+    `programs` holds the first `limit` results in the search's order (default 50) and
+    `total_programs` says how many matched in all.
+    """
     profile = StudentProfile(
         degree_sought=body.degree_sought,
         gpa=body.gpa,
@@ -88,7 +101,8 @@ def match(body: ProfileIn):
     results = search_programs(profile, load_programs(folder / "programs.csv"),
                               load_living_costs(folder / "living_costs.csv"))
     scholarships = eligible_scholarships(profile, load_scholarships(folder / "scholarships.csv"))
-    return {"programs": [program_result_json(r) for r in results],
+    return {"total_programs": len(results),
+            "programs": [program_result_json(r) for r in results[:limit]],
             "scholarships": [asdict(s) for s in scholarships]}
 
 
