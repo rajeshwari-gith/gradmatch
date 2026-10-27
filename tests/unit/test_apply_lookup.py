@@ -445,3 +445,16 @@ def test_command_usage_text_is_exact(capsys):
     main(["apply_lookup", "a", "b", "c"])
 
     assert capsys.readouterr().out == "usage: python -m gradmatch.apply_lookup <sheet.csv> [data_dir]\n"
+
+
+# ---- Imported rows are not part of the hand-entered verification count ----
+
+def test_status_line_counts_only_rows_listed_in_sources(tmp_path, data_dir):
+    # An imported row is in programs.csv but has no row in SOURCES.md.
+    imported = ("IPEDS-1-BS-11.0701,Imported U,BS in Computer Science,Computer Science,BS,MI,"
+                "9000,20000,4,,,,0,,,https://example.edu/imported")
+    (data_dir / "programs.csv").write_text(PROGRAMS + imported + "\n")
+
+    apply_lookup(write_sheet(tmp_path, [sheet_row()]), data_dir)
+
+    assert "**Verified: 1 of 2 rows (programs)" in (data_dir / "SOURCES.md").read_text()

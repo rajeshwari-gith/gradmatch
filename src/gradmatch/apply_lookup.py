@@ -238,12 +238,19 @@ def _set_status(sources: str, sheet_row: dict) -> str:
 
 
 def _count_verified(sources: str, program_ids: list[str]) -> str:
-    verified = 0
+    """Count the programs listed in SOURCES.md (the hand-entered rows) and how many are verified.
+
+    Imported rows are in programs.csv but not in SOURCES.md, so they are not counted.
+    """
+    known = set(program_ids)
+    listed = verified = 0
     for line in sources.split("\n"):
         cells = [cell.strip() for cell in line.strip("|").split("|")]
-        if len(cells) == 6 and cells[0] in program_ids and cells[3].startswith("verified by"):
-            verified += 1
-    return STATUS_LINE.sub(f"Verified: {verified} of {len(program_ids)} rows (programs)", sources)
+        if len(cells) == 6 and cells[0] in known:
+            listed += 1
+            if cells[3].startswith("verified by"):
+                verified += 1
+    return STATUS_LINE.sub(f"Verified: {verified} of {listed} rows (programs)", sources)
 
 
 if __name__ == "__main__":  # pragma: no cover
