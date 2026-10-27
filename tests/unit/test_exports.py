@@ -7,6 +7,7 @@ length (75 bytes is the folding limit) and on the date (leap day 2028-02-29).
 """
 import csv
 import io
+import time
 from datetime import date, datetime, timedelta, timezone
 
 import pytest
@@ -194,3 +195,46 @@ def test_ics_folding_never_splits_a_multibyte_character():
         assert len(line.encode("utf-8")) <= 75
         line.encode("utf-8").decode("utf-8")     # would fail if a character were cut
     assert f"SUMMARY:Scholarship deadline: {name}" in unfold(ics)
+
+
+# ---- Tests added after mutation testing (see docs/mutation-testing.md) ----
+
+def test_ics_calendar_header_and_every_event_is_closed():
+    lines = unfold(to_ics([make_program(program_id="P1"), make_program(program_id="P2")], STAMP))
+
+    assert lines[3] == "CALSCALE:GREGORIAN"
+    assert lines.count("BEGIN:VEVENT") == lines.count("END:VEVENT") == 2
+
+
+def test_ics_windows_line_break_in_a_name_is_escaped_once():
+    lines = unfold(to_ics([make_scholarship(name="Line one\r\nLine two")], STAMP))
+
+    assert "SUMMARY:Scholarship deadline: Line one\\nLine two" in lines
+
+
+def test_ics_stamp_is_utc_whatever_the_server_time_zone(monkeypatch):
+    # The result must not depend on the computer's time zone setting.
+    monkeypatch.setenv("TZ", "America/Los_Angeles")
+    time.tzset()
+    try:
+        eastern = timezone(timedelta(hours=-4))
+        lines = unfold(to_ics([make_program()], datetime(2026, 10, 24, 11, 0, tzinfo=eastern)))
+    finally:
+        monkeypatch.undo()
+        time.tzset()
+
+    assert "DTSTAMP:20261024T150000Z" in lines
+
+
+def test_ics_folded_lines_are_filled_to_75_bytes():
+    name = "x" * 200
+    lines = raw_lines(to_ics([make_scholarship(name=name)], STAMP))
+
+    start = next(i for i, line in enumerate(lines) if line.startswith("SUMMARY:"))
+    summary_lines = [lines[start]]
+    for line in lines[start + 1:]:
+        if not line.startswith(" "):
+            break
+        summary_lines.append(line)
+    # Every part except the last is full: 75 bytes, counting the leading space.
+    assert [len(line) for line in summary_lines[:-1]] == [75] * (len(summary_lines) - 1)
