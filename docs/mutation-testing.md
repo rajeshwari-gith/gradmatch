@@ -131,9 +131,12 @@ The new tests are in `tests/unit/test_ipeds_import_cli.py` (a new file, so Rajes
 |---|---:|---:|---:|---:|---:|
 | `fit.py` (incl. SAT/ACT score rules) | 37 | 37 | 0 | 37 | 0 |
 | `data_loader.py` (incl. `_percentiles`) | 479 | 474 | 5 | 476 | 3 (equivalent, as before) |
-| `ipeds_import.py` | 644 | 550 | 94 | 625 | **19** (equivalent, see below) |
+| `ipeds_import.py` | 644 | 550 | 94 | 633 of 652 | **19** (equivalent, see below) |
 
-The other modules are unchanged: `apply_lookup.py` 402/424 (22 equivalent, see above),
+The importer's first run was on the code at `325d1b6`; the "after" run is on the code at
+`fd69f15` (130 fields, admissions-page links, `kept_rows()` for a repeatable merge), which has
+8 more mutants. The other modules: `apply_lookup.py` 406/428 (22 equivalent, see above; 4 new
+mutants from the fix that counts only hand-entered rows, all killed),
 `exports.py` 105/105, `deadlines.py` 20/20, `scholarships.py` 35/35, and Rajeshwari's `cost.py`,
 `funding.py`, `search.py` and `validation.py` 235/235.
 
@@ -154,12 +157,13 @@ The other modules are unchanged: `apply_lookup.py` 402/424 (22 equivalent, see a
 
 ### Equivalent mutants in `ipeds_import.py` (19, not killed on purpose)
 - **`encoding` (13).** `encoding=None`, no argument, `"UTF-8"` or `"UTF-8-SIG"` instead of the
-  lower-case names. Python runs in UTF-8 mode here and the names are the same codec.
+  lower-case names, in `read_csv`, `kept_rows`, `merge_programs`, `write_csv` and `main`. Python
+  runs in UTF-8 mode here and the names are the same codec.
 - **`newline` when writing (2, `write_csv`).** With `newline=None` Python changes `\n` to the
   system line ending when writing; on Linux and macOS that is `\n`, so the file is identical. (On
   Windows it would not be, which is why `newline=""` stays.)
-- **`newline` when `main` reads `living_costs.csv` and `programs.csv` (4).** Only a line break
-  inside a quoted cell would change. From `living_costs.csv` only the state codes are used, and the
-  `programs.csv` values `main` uses (school name, degree, field, tuition) never contain one; the
-  school name also goes through `normalize()`, which drops line breaks. So these are equivalent for
-  every file the importer is used with, and a test would only test a made-up file.
+- **`newline` when `merge_programs` reads the header (2).** That `open()` only reads the column
+  names; the rows are read by `kept_rows()`, whose `newline` mutants are killed by the
+  line-break test. Column names never contain a line break.
+- **`newline` when `main` reads `living_costs.csv` (2).** Only a line break inside a quoted cell
+  would change, and only the two-letter state codes are used from that file.
