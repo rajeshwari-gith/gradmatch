@@ -150,7 +150,7 @@ The other modules are unchanged: `apply_lookup.py` 402/424 (22 equivalent, see a
 | 9 | `required=True` removed or changed for `--hd`, `--cost`, `--completions` | leaving out each file stops with exit code 2 and names it |
 | 8 | the `--data` and `--output` defaults | run without them from a folder with a `data/` subfolder |
 | 3 | the "row(s) added to …" message | exact message after `--merge` |
-| 54 | the description and help texts | `--help` shows the first docstring paragraph only, every help text exactly, and nothing added |
+| 37 | the description and help texts | `--help` shows the first docstring paragraph only, every help text exactly, and nothing added |
 
 ### Equivalent mutants in `ipeds_import.py` (19, not killed on purpose)
 - **`encoding` (13).** `encoding=None`, no argument, `"UTF-8"` or `"UTF-8-SIG"` instead of the
