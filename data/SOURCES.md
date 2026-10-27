@@ -1,7 +1,7 @@
 # Program data sources
 
 **Verified: 3 of 24 rows (programs) · Scholarships verified: 0 of 13**
-(This count covers only the **24 hand-entered rows** listed below. The 22,723 rows imported from
+(This count covers only the **24 hand-entered rows** listed below. The 45,400 rows imported from
 official government data are not checked by hand and are not part of it; see
 [Imported rows](#imported-rows-ipeds-2024). 25 more programs are listed below but not yet in
 `programs.csv`.)
@@ -95,11 +95,11 @@ Notes for the lookup:
 
 ## Imported rows (IPEDS 2024)
 
-`programs.csv` also has **22,723 rows with `source=ipeds`**, built by
+`programs.csv` also has **45,400 rows with `source=ipeds`**, built by
 `src/gradmatch/ipeds_import.py` from the US Department of Education's 2024 IPEDS files
 (https://nces.ed.gov/ipeds/datacenter/DataFiles.aspx):
 
-- **HD2024** (institution directory): school name, state and main website.
+- **HD2024** (institution directory): school name, state, main website and admissions page.
 - **COST1_2024** (cost): yearly tuition plus required fees, undergraduate rates for `BS` and
   graduate rates for `MS` and `PhD`. This is a **school-wide rate**, not a price for one program.
 - **C2024_A** (completions): degrees awarded per school, field (CIP code) and award level; a row is
@@ -109,8 +109,8 @@ Notes for the lookup:
 
 A blank cell in these rows means **"not published"**: the government data has no admitted GPA,
 GRE, TOEFL minimum or application deadline, no stipend for graduate programs, and no admissions
-numbers for some schools. Blanks are never guesses. The `website` is the school's main site, not
-the program page. Column by column: `data/README.md`; how to run the import:
+numbers for some schools. Blanks are never guesses. The `website` is the school's admissions page (or its
+main site when there is none), not the program page. Column by column: `data/README.md`; how to run the import:
 `docs/official-data-import.md`.
 
 These rows are official data, so they are not listed one by one here and are not counted in the

@@ -1,7 +1,7 @@
 # GradMatch
 
 GradMatch helps students plan for college and graduate school. A student enters the degree
-they want (**BS**, **MS** or **PhD**), one of **34 fields**, GPA, test scores (GRE and TOEFL for
+they want (**BS**, **MS** or **PhD**), one of **130 fields**, GPA, test scores (GRE and TOEFL for
 graduate programs; **SAT** and **ACT** for bachelor's programs), home state, citizenship and
 yearly budget. The app then shows:
 
@@ -21,21 +21,16 @@ nobody has opened it for a while).
 
 ## The data
 
-`data/programs.csv` has **22,747 programs**:
+`data/programs.csv` has **45,424 programs**:
 
 - **24 hand-entered** Computer Science and Data Science MS/PhD rows (`source` blank or `estimate`,
   or `official-page` once a person has checked them). `data/SOURCES.md` tracks how many of these
   24 have been checked on the official program page.
-- **22,723 imported** rows from the official 2024 US Department of Education data (IPEDS,
-  `source=ipeds`): 15,207 bachelor's, 5,830 master's and 1,686 PhD programs at 1,853 schools.
+- **45,400 imported** rows from the official 2024 US Department of Education data (IPEDS,
+  `source=ipeds`): 29,829 bachelor's, 12,426 master's and 3,145 PhD programs at 2,023 schools.
 
-The 34 fields: Accounting, Aerospace Engineering, Architecture, Artificial Intelligence, Biology,
-Biomedical Engineering, Business Administration, Chemical Engineering, Chemistry, Civil
-Engineering, Communication, Computer Engineering, Computer Science, Cybersecurity, Data Science,
-Economics, Education, Electrical Engineering, English, Environmental Science, Finance, Industrial
-Engineering, Information Science, Information Technology, Marketing, Mathematics, Mechanical
-Engineering, Nursing, Physics, Political Science, Psychology, Public Health, Social Work,
-Statistics.
+The 130 fields are listed in `data/README.md` (they are the `CIP_FIELDS` in
+`src/gradmatch/ipeds_import.py`).
 
 **Read the numbers with care.** In the imported rows, tuition is the school-wide yearly rate plus
 required fees (not a per-program price), and a blank cell means "not published" (admitted GPA,
@@ -110,7 +105,8 @@ PYTHONPATH=src python -m gradmatch.ipeds_import --hd HD2024.csv --cost cost1_202
     --output data/programs_ipeds.csv --report data/tuition_check.csv
 ```
 
-Add `--merge` to also append the new rows to `data/programs.csv`.
+Add `--merge` to also put the new rows into `data/programs.csv`; it replaces the rows of an
+earlier import, so running it again gives the same file, and never touches hand-entered rows.
 
 ## Run the tests
 
