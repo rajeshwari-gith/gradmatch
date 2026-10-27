@@ -382,3 +382,87 @@ def test_line_break_inside_a_quoted_cell_is_kept_exactly(tmp_path):
     path = write_csv(tmp_path, [valid_program_row(program_name="MS in\r\nComputer Science")])
 
     assert load_programs(path)[0].program_name == "MS in\r\nComputer Science"
+
+
+# =====================================================================
+# Values that are not published (CONTRIBUTING.md): blank -> None
+# =====================================================================
+
+@pytest.mark.parametrize("column", ["avg_gpa", "acceptance_rate", "stipend",
+                                    "application_deadline"])
+@pytest.mark.parametrize("blank", ["", "   "])
+def test_programs_blank_optional_value_becomes_none(tmp_path, column, blank):
+    path = write_csv(tmp_path, [valid_program_row(**{column: blank})])
+
+    assert getattr(load_programs(path)[0], column) is None
+
+
+@pytest.mark.parametrize("column", ["avg_gpa", "acceptance_rate", "stipend"])
+def test_programs_zero_is_a_value_not_blank(tmp_path, column):
+    # Boundary between "not published" (blank) and a real value of 0.
+    path = write_csv(tmp_path, [valid_program_row(**{column: "0"})])
+
+    assert getattr(load_programs(path)[0], column) == 0.0
+
+
+def test_programs_all_unpublished_values_blank_in_one_row(tmp_path):
+    row = valid_program_row(avg_gpa="", avg_gre="", acceptance_rate="", stipend="", min_toefl="",
+                            application_deadline="")
+
+    [program] = load_programs(write_csv(tmp_path, [row]))
+
+    assert (program.avg_gpa, program.avg_gre, program.acceptance_rate, program.stipend,
+            program.min_toefl, program.application_deadline) == (None,) * 6
+
+
+@pytest.mark.parametrize("column, value, message", [
+    ("avg_gpa", "4.01", "avg_gpa must be between 0.0 and 4.0"),
+    ("acceptance_rate", "1.5", "acceptance_rate must be between 0.0 and 1.0"),
+    ("stipend", "some", "stipend must be a number, got 'some'"),
+    ("application_deadline", "2027-02-29", "application_deadline must be a real date"),
+])
+def test_programs_present_optional_value_is_still_checked(tmp_path, column, value, message):
+    path = write_csv(tmp_path, [valid_program_row(**{column: value})])
+
+    with pytest.raises(DataError, match=message):
+        load_programs(path)
+
+
+@pytest.mark.parametrize("column", ["tuition_in_state", "tuition_out_state", "state", "field",
+                                    "degree", "website", "duration_years"])
+def test_programs_required_columns_still_cannot_be_blank(tmp_path, column):
+    path = write_csv(tmp_path, [valid_program_row(**{column: ""})])
+
+    with pytest.raises(DataError, match=f"{column} is required|degree must be MS or PhD"):
+        load_programs(path)
+
+
+# ---- The optional `source` column ----
+
+def test_programs_without_source_column_are_estimates(tmp_path):
+    path = write_csv(tmp_path, [valid_program_row()])      # no source column at all
+
+    assert load_programs(path)[0].source == "estimate"
+
+
+@pytest.mark.parametrize("value, expected", [
+    ("", "estimate"),
+    ("estimate", "estimate"),
+    ("official-page", "official-page"),
+    ("ipeds", "ipeds"),
+    (" ipeds ", "ipeds"),
+])
+def test_programs_source_values(tmp_path, value, expected):
+    path = write_csv(tmp_path, [valid_program_row(source=value)])
+
+    assert load_programs(path)[0].source == expected
+
+
+@pytest.mark.parametrize("value", ["official", "IPEDS", "guess", "official page"])
+def test_programs_bad_source_is_rejected_with_file_and_line(tmp_path, value):
+    rows = [valid_program_row(source="ipeds"), valid_program_row(source=value)]
+    path = write_csv(tmp_path, rows)
+
+    with pytest.raises(DataError, match=rf"data\.csv, line 3: source must be estimate, "
+                                        rf"official-page or ipeds, got '{value}'$"):
+        load_programs(path)
