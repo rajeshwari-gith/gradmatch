@@ -259,3 +259,105 @@ def test_match_uses_sat_and_act_from_the_request(tmp_path, monkeypatch):
     fits = {p["program_id"]: p["fit"] for p in client.post("/match", json=profile(sat=1250)).json()["programs"]}
     assert fits["CHEAP"] == "Safety"
     assert client.post("/match", json=profile(sat=100)).status_code == 422
+
+
+# ---- Paging: limit and offset (programs.csv has over 22,000 rows) ----
+# Boundary values: limit 0 / 1 / 1000 / 1001, offset -1 / 0 / last / past the end.
+
+BULK_ROWS = 150
+
+
+@pytest.fixture
+def big_client(tmp_path, monkeypatch):
+    """The fixture data plus 150 cheap MS CS programs in MI, so the defaults matter."""
+    folder = write_fixture_data(tmp_path)
+    bulk = [f"BULK{i:03},Bulk University {i:03},MS in Computer Science,Computer Science,MS,MI,"
+            f"1000,2000,2,3.40,,0.40,0,80,2027-01-15,https://example.edu/bulk{i}"
+            for i in range(BULK_ROWS)]
+    with open(folder / "programs.csv", "a") as file:
+        file.write("\n".join(bulk) + "\n")
+    monkeypatch.setenv("GRADMATCH_DATA_DIR", str(folder))
+    return TestClient(app)
+
+
+def ids(response):
+    return [p["program_id"] for p in response.json()]
+
+
+@pytest.mark.parametrize("query, expected", [
+    ("?limit=1", ["CHEAP"]),
+    ("?limit=2", ["CHEAP", "MID"]),
+    ("?limit=2&offset=2", ["PRICEY", "DS1"]),
+    ("?offset=5", ["PHD2"]),                     # last row
+    ("?offset=6", []),                           # just past the end
+    ("?offset=1000", []),
+    ("?degree=MS&limit=1&offset=1", ["MID"]),    # paging applies after the filters
+])
+def test_programs_limit_and_offset(client, query, expected):
+    response = client.get("/programs" + query)
+
+    assert response.status_code == 200
+    assert ids(response) == expected
+
+
+def test_programs_default_limit_is_100(big_client):
+    result = ids(big_client.get("/programs"))
+
+    assert len(result) == 100
+    assert result[:2] == ["CHEAP", "MID"]
+
+
+def test_programs_maximum_limit_returns_everything_up_to_1000(big_client):
+    assert len(ids(big_client.get("/programs?limit=1000"))) == 6 + BULK_ROWS
+
+
+def test_programs_pages_do_not_overlap(big_client):
+    first = ids(big_client.get("/programs?limit=100"))
+    second = ids(big_client.get("/programs?limit=100&offset=100"))
+
+    assert len(second) == 6 + BULK_ROWS - 100
+    assert set(first).isdisjoint(second)
+
+
+@pytest.mark.parametrize("query", ["?limit=0", "?limit=1001", "?limit=-1", "?limit=many",
+                                   "?offset=-1", "?offset=first"])
+def test_programs_bad_limit_or_offset_gives_422(client, query):
+    assert client.get("/programs" + query).status_code == 422
+
+
+def test_match_reports_total_programs(client):
+    answer = client.post("/match", json=profile()).json()
+
+    assert answer["total_programs"] == 2
+    assert len(answer["programs"]) == 2
+
+
+def test_match_limit_keeps_the_best_results(client):
+    answer = client.post("/match?limit=1", json=profile()).json()
+
+    assert answer["total_programs"] == 2
+    assert [p["program_id"] for p in answer["programs"]] == ["CHEAP"]   # cheapest first
+
+
+def test_match_default_limit_is_50(big_client):
+    answer = big_client.post("/match", json=profile()).json()
+
+    assert answer["total_programs"] == BULK_ROWS + 2      # 150 bulk + CHEAP + MID
+    assert len(answer["programs"]) == 50
+
+
+def test_match_maximum_limit_is_1000(big_client):
+    answer = big_client.post("/match?limit=1000", json=profile()).json()
+
+    assert len(answer["programs"]) == answer["total_programs"] == BULK_ROWS + 2
+
+
+def test_match_with_no_programs_has_total_zero(client):
+    answer = client.post("/match", json=profile(annual_budget=0)).json()
+
+    assert (answer["total_programs"], answer["programs"]) == (0, [])
+
+
+@pytest.mark.parametrize("limit", ["0", "1001", "-5", "all"])
+def test_match_bad_limit_gives_422(client, limit):
+    assert client.post(f"/match?limit={limit}", json=profile()).status_code == 422
