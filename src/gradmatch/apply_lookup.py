@@ -38,6 +38,10 @@ COPIED = {
     "min_toefl": "min_toefl",
 }
 OFFICIAL_SOURCE = "official-page"
+IMPORTED_SOURCE = "ipeds"      # rows made by ipeds_import; they are not listed in SOURCES.md until checked
+IMPORTED_HEADING = "## Checked programs imported from official data"
+IMPORTED_TABLE_HEADER = ("| program_id | University | Program | Status | Source (official page) | Notes |\n"
+                         "|---|---|---|---|---|---|")
 STATUS_LINE = re.compile(r"Verified: \d+ of \d+ rows \(programs\)")
 
 
@@ -64,7 +68,7 @@ def apply_lookup(sheet_path, data_dir) -> list[str]:
     for sheet_row in checked:
         changes += _update_program(by_id[sheet_row["program_id"]], sheet_row)
         sources = _set_status(sources, sheet_row)
-    sources = _count_verified(sources, [row["program_id"] for row in programs])
+    sources = _count_verified(sources, programs)
 
     new_programs = _programs_text(header, programs)
     _check_with_loader(new_programs, programs_path)        # raises SheetError
@@ -118,7 +122,9 @@ def _row_problems(row: dict, by_id: dict, sources: str) -> list[str]:
         return [f"unknown program_id '{row['program_id']}'"]
 
     problems = []
-    if f"| {row['program_id']} |" not in sources:
+    # The 24 hand-entered programs must already be listed in SOURCES.md. A program from the importer
+    # is not (there are tens of thousands); it gets its row here, once a person has checked it.
+    if f"| {row['program_id']} |" not in sources and program["source"] != IMPORTED_SOURCE:
         problems.append("program_id has no row in SOURCES.md")
     if row["official_url"] and not row["official_url"].startswith("https://"):
         problems.append("official_url must start with https://")
@@ -234,16 +240,32 @@ def _set_status(sources: str, sheet_row: dict) -> str:
                 cells[4] = sheet_row["official_url"]
             cells[5] = sheet_row["notes"].replace("|", "/")
             lines[index] = "| " + " | ".join(cells) + " |"
-    return "\n".join(lines)
+            return "\n".join(lines)
+    return _add_imported_row(sources, sheet_row)
 
 
-def _count_verified(sources: str, program_ids: list[str]) -> str:
+def _add_imported_row(sources: str, sheet_row: dict) -> str:
+    """Add a row for a checked imported program, under its own heading at the end of the file."""
+    row = ("| " + " | ".join([
+        sheet_row["program_id"], sheet_row["university"], sheet_row["program_name"],
+        f"verified by {sheet_row['checked_by']} on {sheet_row['checked_on']}",
+        sheet_row["official_url"], sheet_row["notes"].replace("|", "/")]) + " |")
+    if IMPORTED_HEADING not in sources:
+        sources = sources.rstrip("\n") + f"\n\n{IMPORTED_HEADING}\n\n{IMPORTED_TABLE_HEADER}\n"
+    return sources.rstrip("\n") + "\n" + row + "\n"
+
+
+def _count_verified(sources: str, programs: list[dict]) -> str:
+    """Update "Verified: N of M". M counts the hand-entered rows plus the imported rows that
+    have been checked (those no longer have source ipeds), not all the unchecked imported rows."""
+    program_ids = [row["program_id"] for row in programs]
+    total = sum(1 for row in programs if row["source"] != IMPORTED_SOURCE)
     verified = 0
     for line in sources.split("\n"):
         cells = [cell.strip() for cell in line.strip("|").split("|")]
         if len(cells) == 6 and cells[0] in program_ids and cells[3].startswith("verified by"):
             verified += 1
-    return STATUS_LINE.sub(f"Verified: {verified} of {len(program_ids)} rows (programs)", sources)
+    return STATUS_LINE.sub(f"Verified: {verified} of {total} rows (programs)", sources)
 
 
 if __name__ == "__main__":  # pragma: no cover

@@ -445,3 +445,72 @@ def test_command_usage_text_is_exact(capsys):
     main(["apply_lookup", "a", "b", "c"])
 
     assert capsys.readouterr().out == "usage: python -m gradmatch.apply_lookup <sheet.csv> [data_dir]\n"
+
+
+# ---- Rows imported from official data ----
+# The importer makes tens of thousands of rows, so they are not listed in SOURCES.md. A row only gets
+# a line there when a person has checked it, and it then counts in the "Verified: N of M" line.
+
+@pytest.fixture
+def imported_dir(data_dir):
+    lines = (data_dir / "programs.csv").read_text().strip().split("\n")
+    lines = [lines[0] + ",source"] + [line + "," for line in lines[1:]]
+    lines.append("IPEDS-1-MS-11.0701,Big State University,MS in Computer Science,Computer Science,MS,MI,"
+                 "9000,18000,2,,,,,,,https://example.edu/admissions,ipeds")
+    lines.append("IPEDS-2-MS-11.0701,Other State University,MS in Computer Science,Computer Science,MS,OH,"
+                 "8000,16000,2,,,,,,,https://example.edu/other,ipeds")
+    (data_dir / "programs.csv").write_text("\n".join(lines) + "\n")
+    return data_dir
+
+
+def imported_row(**values):
+    return sheet_row(program_id="IPEDS-1-MS-11.0701", university="Big State University",
+                     official_url="https://example.edu/ms-cs/admission", **values)
+
+
+def test_a_checked_imported_row_is_applied_and_added_to_sources(tmp_path, imported_dir):
+    summary = apply_lookup(write_sheet(tmp_path, [imported_row(notes="Fall deadline")]), imported_dir)
+
+    assert summary[0].startswith("1 row(s) applied")
+    imported = program(imported_dir, "IPEDS-1-MS-11.0701")
+    assert imported.source == "official-page" and str(imported.application_deadline) == "2027-01-10"
+    sources = (imported_dir / "SOURCES.md").read_text()
+    assert "## Checked programs imported from official data" in sources
+    assert ("| IPEDS-1-MS-11.0701 | Big State University | MS in Computer Science | verified by Rajeshwari "
+            "Galugu on 2026-10-26 | https://example.edu/ms-cs/admission | Fall deadline |") in sources
+
+
+def test_two_imported_rows_in_one_sheet_share_one_heading(tmp_path, imported_dir):
+    second = imported_row()
+    second["program_id"] = "IPEDS-2-MS-11.0701"
+    second["university"] = "Other State University"
+    apply_lookup(write_sheet(tmp_path, [imported_row(), second]), imported_dir)
+
+    sources = (imported_dir / "SOURCES.md").read_text()
+    assert sources.count("## Checked programs imported from official data") == 1
+    assert "| IPEDS-1-MS-11.0701 |" in sources and "| IPEDS-2-MS-11.0701 |" in sources
+
+
+def test_the_count_ignores_unchecked_imported_rows_and_counts_checked_ones(tmp_path, imported_dir):
+    apply_lookup(write_sheet(tmp_path, [imported_row()]), imported_dir)
+
+    # 2 hand-entered rows + 1 checked imported row; the status line does not count unchecked imports
+    assert "**Verified: 1 of 3 rows (programs)" in (imported_dir / "SOURCES.md").read_text()
+
+
+def test_a_second_imported_row_goes_under_the_same_heading(tmp_path, imported_dir):
+    apply_lookup(write_sheet(tmp_path, [imported_row()]), imported_dir)
+    again = imported_row()
+    again["program_id"] = "MS1"
+    again["university"] = "Test University"
+    apply_lookup(write_sheet(tmp_path, [again]), imported_dir)
+
+    sources = (imported_dir / "SOURCES.md").read_text()
+    assert sources.count("## Checked programs imported from official data") == 1
+    assert "**Verified: 2 of 3 rows (programs)" in sources
+
+
+def test_an_unchecked_imported_row_is_still_skipped(tmp_path, imported_dir):
+    summary = apply_lookup(write_sheet(tmp_path, [imported_row(checked_by="")]), imported_dir)
+
+    assert summary == ["0 row(s) applied, 0 value(s) changed"]
