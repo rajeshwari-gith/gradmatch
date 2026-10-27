@@ -135,3 +135,17 @@ def test_a_too_expensive_program_before_an_affordable_one_does_not_stop_the_sear
                 make_program(program_id="CHEAP", state="MI")]      # 15,000 + 12,000
     results = search_programs(make_profile(annual_budget=30000), programs, LIVING)
     assert ids(results) == ["CHEAP"]
+
+
+# ---- Defect D-003: international students are not residents of any state ----
+# The first version charged in-state tuition to anyone whose "home state" matched
+# the program's state, so an international student who picked MI paid the in-state
+# rate at a Michigan university. Public universities charge international students
+# the non-resident rate.
+
+@pytest.mark.xfail(strict=True, reason="D-003: international students are charged in-state tuition")
+def test_international_student_pays_out_of_state_tuition_even_with_a_matching_home_state():
+    profile = make_profile(citizenship="International", toefl=100, home_state="MI",
+                           annual_budget=100000)
+    [result] = search_programs(profile, [make_program(state="MI")], LIVING)
+    assert result.yearly_cost == 30000 + 12000      # out-of-state tuition + MI living cost
