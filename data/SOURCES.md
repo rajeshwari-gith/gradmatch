@@ -1,6 +1,6 @@
 # Program data sources
 
-**Verified: 3 of 24 rows (programs) · Scholarships verified: 0 of 13**
+**Verified: 10 of 31 rows (programs) · Scholarships verified: 0 of 13**
 (25 new programs are listed below but not yet in `programs.csv`.)
 
 One entry per program. Status is one of:
@@ -89,3 +89,15 @@ Notes for the lookup:
 - Some master's degrees are not called "MS" (Rice "Master of Data Science", Texas A&M "Master of Computer Science").
   They go in `programs.csv` with `degree` = `MS`, and the exact name goes in `program_name`.
 - Rice's thesis MS in Computer Science is not admitted to directly, so it is not listed.
+
+## Checked programs imported from official data
+
+| program_id | University | Program | Status | Source (official page) | Notes |
+|---|---|---|---|---|---|
+| IPEDS-198419-PHD-14.0501 | Duke University | PhD in Biomedical Engineering | verified by Rajeshwari Galugu on 2026-10-27 | https://gradschool.duke.edu/academics/programs-degrees/biomedical-engineering/ | Duke Graduate School: deadline Dec 3, 2026; PhD tuition covered; stipend is the 2026-27 year-2+ rate (first-year schedule differs). Also: https://gradschool.duke.edu/financial-support/tuition-fees-and-phd-stipend-schedule/ |
+| IPEDS-114549-PHD-42.2801 | Fielding Graduate University | PhD in Clinical Psychology | verified by Rajeshwari Galugu on 2026-10-27 | https://www.fielding.edu/school-of-psychology/phd-in-clinical-psychology/ | Deadline Jan 28, 2027. Tuition is listed per term (0,905), not per year, so it is left blank. |
+| IPEDS-139755-PHD-14.1001 | Georgia Institute of Technology-Main Campus | PhD in Electrical Engineering | verified by Rajeshwari Galugu on 2026-10-27 | https://ece.gatech.edu/future-students/graduate-admissions | Institute TOEFL minimum 90 (iBT, before Jan 2026). Stipend is monthly and depends on appointment, so it is left blank. |
+| IPEDS-139755-PHD-14.0501 | Georgia Institute of Technology-Main Campus | PhD in Biomedical Engineering | verified by Rajeshwari Galugu on 2026-10-27 | https://grad.gatech.edu/hiring-supervision | Institute TOEFL minimum 90 (iBT, before Jan 2026). Stipend is monthly and depends on appointment, so it is left blank. |
+| IPEDS-139755-PHD-14.0201 | Georgia Institute of Technology-Main Campus | PhD in Aerospace Engineering | verified by Rajeshwari Galugu on 2026-10-27 | https://grad.gatech.edu/hiring-supervision | Institute TOEFL minimum 90 (iBT, before Jan 2026). Stipend is monthly and depends on appointment, so it is left blank. |
+| IPEDS-166027-PHD-26.0102 | Harvard University | PhD in Biomedical Sciences | verified by Rajeshwari Galugu on 2026-10-27 | https://bbsphd.hms.harvard.edu/apply | Deadline Dec 1, 2026; TOEFL 100 on the old scale (tests before Jan 21, 2026). Full support, but the stipend amount is not on the page. |
+| IPEDS-193405-PHD-26.0102 | Icahn School of Medicine at Mount Sinai | PhD in Biomedical Sciences | verified by Rajeshwari Galugu on 2026-10-27 | https://icahn.mssm.edu/education/admissions/graduate-education/phd-biomedical-sciences | 2026-27 cost-of-attendance document: compensation 52,000 a year, tuition and fees 0. Deadline not confirmed. |
