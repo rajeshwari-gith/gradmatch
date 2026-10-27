@@ -177,3 +177,20 @@ def test_international_total_cost_also_uses_the_out_of_state_rate():
     profile = make_profile(citizenship="International", toefl=100, annual_budget=100000)
     [result] = search_programs(profile, [make_program(state="MI", duration_years=2)], LIVING)
     assert result.total_cost == (30000 + 12000) * 2
+
+
+# ---- Programs with unpublished values still appear ----
+
+def test_programs_with_unpublished_values_are_found_and_labelled():
+    program = make_program(avg_gpa=None, acceptance_rate=None, stipend=None,
+                           application_deadline=None, source="ipeds")
+    [result] = search_programs(make_profile(), [program], LIVING)
+    assert (result.fit, result.funding) == ("Unknown", "Funding unknown")
+    assert result.yearly_cost == 27000
+
+
+def test_phd_sort_treats_an_unpublished_stipend_as_zero():
+    profile = make_profile(degree_sought="PhD", annual_budget=100000)
+    programs = [make_program(program_id="NONE", degree="PhD", stipend=None),
+                make_program(program_id="PAID", degree="PhD", stipend=10000)]
+    assert ids(search_programs(profile, programs, LIVING)) == ["PAID", "NONE"]

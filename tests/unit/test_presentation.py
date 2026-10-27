@@ -10,10 +10,10 @@ import pytest
 
 from conftest import make_program, make_scholarship
 from gradmatch.deadlines import CLOSED, LATER, SOON, URGENT
-from gradmatch.fit import MATCH, REACH, SAFETY
-from gradmatch.funding import FULLY_FUNDED, PARTIALLY_FUNDED, SELF_FUNDED
+from gradmatch.fit import MATCH, REACH, SAFETY, UNKNOWN
+from gradmatch.funding import FULLY_FUNDED, FUNDING_UNKNOWN, PARTIALLY_FUNDED, SELF_FUNDED
 from gradmatch.presentation import (DEADLINE_COLORS, ESTIMATE_NOTE, FIT_COLORS, FUNDING_COLORS,
-                                    BLUE, GREEN, YELLOW, chip, deadline_item_html, deadline_label,
+                                    BLUE, GREEN, GREY, YELLOW, chip, deadline_item_html, deadline_label,
                                     eligibility_summary, format_date, money, percent,
                                     result_card_html, safe_link, scholarship_card_html,
                                     special_label, toefl_warning)
@@ -77,8 +77,8 @@ def test_other_text_is_not_linked(url):
 # ---- colors ----
 
 def test_every_label_has_a_color():
-    assert set(FIT_COLORS) == {SAFETY, MATCH, REACH}
-    assert set(FUNDING_COLORS) == {FULLY_FUNDED, PARTIALLY_FUNDED, SELF_FUNDED}
+    assert set(FIT_COLORS) == {SAFETY, MATCH, REACH, UNKNOWN}
+    assert set(FUNDING_COLORS) == {FULLY_FUNDED, PARTIALLY_FUNDED, SELF_FUNDED, FUNDING_UNKNOWN}
     assert set(DEADLINE_COLORS) == {URGENT, SOON, LATER, CLOSED}
 
 
@@ -266,3 +266,48 @@ def test_deadline_row_escapes_the_name():
 def test_scholarship_card_does_not_claim_the_award_is_per_year():
     """Some awards are one-time totals, so the card only says 'award'."""
     assert "per year" not in scholarship_card_html(make_scholarship(), TODAY)
+
+
+# ---- Values that are not published (rows from official government data) ----
+
+UNPUBLISHED = dict(avg_gpa=None, acceptance_rate=None, stipend=None, application_deadline=None,
+                   source="ipeds")
+
+
+def test_unpublished_values_show_n_a_and_are_not_called_estimates():
+    html = result_card_html(make_result(fit=UNKNOWN, funding=FUNDING_UNKNOWN, **UNPUBLISHED), TODAY)
+    assert html.count(">n/a<") == 2
+    assert "(est.)" not in html
+
+
+def test_published_values_from_official_data_are_not_called_estimates():
+    html = result_card_html(make_result(source="official-page"), TODAY)
+    assert "3.40" in html and "40%" in html
+    assert "(est.)" not in html
+
+
+def test_a_missing_deadline_says_to_check_the_program_page():
+    html = result_card_html(make_result(application_deadline=None), TODAY)
+    assert chip("Deadline: check program page", GREY) in html
+    assert "days left" not in html
+
+
+def test_unknown_fit_and_funding_are_grey():
+    html = result_card_html(make_result(fit=UNKNOWN, funding=FUNDING_UNKNOWN), TODAY)
+    assert chip(UNKNOWN, GREY) in html and chip(FUNDING_UNKNOWN, GREY) in html
+    assert f"border-left-color:{GREY}" in html
+
+
+@pytest.mark.parametrize("source, text", [("ipeds", "Official school data"),
+                                          ("official-page", "Verified on official page")])
+def test_card_says_where_official_rows_come_from(source, text):
+    assert text in result_card_html(make_result(source=source), TODAY)
+
+
+def test_estimate_rows_have_no_source_chip():
+    html = result_card_html(make_result(), TODAY)
+    assert "Official school data" not in html and "Verified" not in html
+
+
+def test_the_estimate_note_explains_n_a():
+    assert "n/a" in ESTIMATE_NOTE

@@ -5,6 +5,7 @@ Rules (see CONTRIBUTING.md):
   otherwise out-of-state tuition.
 - A PhD program that pays a stipend (stipend > 0) waives tuition, so the
   student is charged no tuition. MS programs always charge tuition.
+- An unpublished stipend (None) counts as 0, the cautious choice, so tuition is not waived.
 - Yearly cost = tuition charged + living cost of the program's state - stipend,
   and never below 0.
 """
@@ -18,14 +19,19 @@ def tuition_for(program: Program, home_state: str | None) -> float:
     return program.tuition_out_state
 
 
+def known_stipend(program: Program) -> float:
+    """The stipend, counting an unpublished one (None) as 0."""
+    return program.stipend or 0.0
+
+
 def tuition_charged(program: Program, home_state: str | None) -> float:
-    if program.degree == "PhD" and program.stipend > 0:
+    if program.degree == "PhD" and known_stipend(program) > 0:
         return 0.0
     return tuition_for(program, home_state)
 
 
 def yearly_cost(program: Program, home_state: str | None, living_cost: float) -> float:
-    cost = tuition_charged(program, home_state) + living_cost - program.stipend
+    cost = tuition_charged(program, home_state) + living_cost - known_stipend(program)
     return max(cost, 0.0)
 
 
@@ -43,7 +49,7 @@ def cost_breakdown(program: Program, home_state: str | None, living_cost: float)
     return {
         "tuition": tuition_charged(program, home_state),
         "living": living_cost,
-        "stipend": program.stipend,
+        "stipend": known_stipend(program),
         "yearly": yearly_cost(program, home_state, living_cost),
         "total": total_cost(program, home_state, living_cost),
         "years": program.duration_years,

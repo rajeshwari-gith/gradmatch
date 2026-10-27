@@ -6,7 +6,7 @@ boundary-value analysis around 0 and around the living cost.
 import pytest
 
 from conftest import make_program
-from gradmatch.funding import (FULLY_FUNDED, PARTIALLY_FUNDED, SELF_FUNDED,
+from gradmatch.funding import (FULLY_FUNDED, FUNDING_UNKNOWN, PARTIALLY_FUNDED, SELF_FUNDED,
                                funding_label)
 
 pytestmark = pytest.mark.unit
@@ -24,3 +24,7 @@ LIVING_COST = 20000
 ])
 def test_funding_label_boundaries(stipend, expected):
     assert funding_label(make_program(stipend=stipend), LIVING_COST) == expected
+
+
+def test_an_unpublished_stipend_gives_funding_unknown():
+    assert funding_label(make_program(stipend=None), 12000) == FUNDING_UNKNOWN
