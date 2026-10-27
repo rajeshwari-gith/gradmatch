@@ -111,3 +111,21 @@ Every row needs a real `website` (official source). Data is an estimate; UI show
 - Name tests after the technique where useful: `test_deadline_status_boundary_14_days_is_urgent`.
 - Mark tests: `@pytest.mark.unit`, `integration`, `system`, `acceptance`.
 - Any bug found by a test → add a row to `DEFECT_LOG.md` (id, date, module, description, severity, status).
+
+## Values that are not published (rows imported from official government data)
+Rows built from the US Department of Education data (IPEDS) have the state, the graduate tuition
+and the institution website, but **not** the admitted GPA, acceptance rate, stipend or deadline.
+Those cells are left **blank** in `programs.csv`, and a blank means **"not published"** (it is
+never a guess). The rules:
+- **Loader:** blank `avg_gpa`, `acceptance_rate`, `stipend`, `application_deadline`, `avg_gre` and
+  `min_toefl` are allowed and become `None`. A non-blank value is still checked against its range
+  and format. The tuition columns, state, degree, field and website stay required.
+- **New optional column `source`:** `estimate` (hand-drafted values, the default when blank),
+  `official-page` (checked by a person on the program's official page) or `ipeds` (imported).
+- **Fit:** `avg_gpa` is `None` -> `Unknown`; but an acceptance rate below 10% is still `Reach`.
+- **Funding:** `stipend` is `None` -> `Funding unknown`. For the cost, an unknown stipend counts as 0
+  (the cautious choice), so an unknown PhD stipend means tuition is not waived.
+- **Deadlines:** a `None` deadline is left out of the Deadlines tab, the calendar file and
+  `upcoming()`; the program card says to check the program page.
+- **Exports and the API:** a `None` value is written as an empty cell (CSV) or `null` (JSON).
+- **Cards:** an unknown value is shown as "not published", never as 0.

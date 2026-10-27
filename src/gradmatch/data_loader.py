@@ -6,7 +6,7 @@ DataError with the file name, the line number and the problem, so whoever
 edits the data can find and fix it quickly.
 """
 import csv
-from dataclasses import fields
+from dataclasses import MISSING, fields
 from datetime import date, datetime
 
 from gradmatch.models import Program, Scholarship
@@ -25,7 +25,7 @@ class DataError(ValueError):
 # ---- Public loaders ----
 
 def load_programs(path) -> list[Program]:
-    columns = [f.name for f in fields(Program)]
+    columns = [f.name for f in fields(Program) if f.default is MISSING]   # fields with a default are optional columns
     return _load(path, columns, _to_program)
 
 
