@@ -372,3 +372,21 @@ def test_old_results_do_not_come_back_when_the_page_reruns_after_a_bad_submissio
     app.run()                                  # a rerun with no new click
     assert not app.exception
     assert not app.tabs and not app.metric
+
+
+# ---- Defect D-003: international students pay out-of-state tuition ----
+
+def test_international_student_sees_the_out_of_state_cost_even_with_a_matching_home_state(app):
+    app.selectbox(key="citizenship").set_value("International")
+    app.number_input(key="toefl").set_value(100)
+    app.selectbox(key="home_state").set_value("MI")
+    search_for(app, budget=100_000)
+    # Cheap State University is in MI: in-state $10,000, out-of-state $20,000, living $15,000
+    assert yearly_costs(app)[0] == 20000 + 15000
+    assert metrics(app)["Tuition per year"] == "$20,000"     # the cost breakdown agrees
+
+
+def test_us_student_with_the_same_home_state_still_gets_the_in_state_cost(app):
+    search_for(app, budget=100_000)
+    assert yearly_costs(app)[0] == 10000 + 15000
+    assert metrics(app)["Tuition per year"] == "$10,000"

@@ -27,7 +27,7 @@ from gradmatch.presentation import (CARD_CSS, ESTIMATE_NOTE, FIT_COLORS,  # noqa
                                     SPECIAL_LABELS, deadline_item_html, deadline_label, money,
                                     result_card_html, scholarship_card_html)
 from gradmatch.scholarships import eligible_scholarships  # noqa: E402
-from gradmatch.search import search_programs  # noqa: E402
+from gradmatch.search import search_programs, tuition_state  # noqa: E402
 from gradmatch.validation import CITIZENSHIP, DEGREES, US_STATES, validate_profile  # noqa: E402
 
 DATA_DIR = ROOT / "data"
@@ -162,7 +162,7 @@ def show_programs(profile: StudentProfile, results, living_costs, today: date):
     chosen = st.selectbox("Choose a program", range(len(results)), key="cost_choice",
                           format_func=lambda i: labels[i])
     result = results[chosen]
-    parts = cost_breakdown(result.program, profile.home_state, living_costs[result.program.state])
+    parts = cost_breakdown(result.program, tuition_state(profile), living_costs[result.program.state])
     cols = st.columns(4)
     cols[0].metric("Tuition per year", money(parts["tuition"]))
     cols[1].metric("Living costs per year", money(parts["living"]))

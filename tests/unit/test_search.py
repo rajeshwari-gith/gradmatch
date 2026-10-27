@@ -10,7 +10,7 @@ from hypothesis import given, strategies as st
 from conftest import make_profile, make_program
 from gradmatch.fit import MATCH
 from gradmatch.funding import FULLY_FUNDED, SELF_FUNDED
-from gradmatch.search import matches_filters, search_programs
+from gradmatch.search import matches_filters, search_programs, tuition_state
 
 pytestmark = pytest.mark.unit
 
@@ -143,9 +143,37 @@ def test_a_too_expensive_program_before_an_affordable_one_does_not_stop_the_sear
 # rate at a Michigan university. Public universities charge international students
 # the non-resident rate.
 
-@pytest.mark.xfail(strict=True, reason="D-003: international students are charged in-state tuition")
 def test_international_student_pays_out_of_state_tuition_even_with_a_matching_home_state():
     profile = make_profile(citizenship="International", toefl=100, home_state="MI",
                            annual_budget=100000)
     [result] = search_programs(profile, [make_program(state="MI")], LIVING)
     assert result.yearly_cost == 30000 + 12000      # out-of-state tuition + MI living cost
+
+
+# Decision table for tuition_state():
+# citizenship   | home state | tuition state
+# US            | MI         | MI   (can get the in-state rate in MI)
+# PR            | MI         | MI
+# International | MI         | None (never in-state)
+
+@pytest.mark.parametrize("citizenship, expected", [("US", "MI"), ("PR", "MI"), ("International", None)])
+def test_tuition_state_depends_on_citizenship(citizenship, expected):
+    profile = make_profile(citizenship=citizenship, toefl=100, home_state="MI")
+    assert tuition_state(profile) == expected
+
+
+def test_us_student_in_the_programs_state_still_pays_in_state_tuition():
+    [result] = search_programs(make_profile(annual_budget=100000), [make_program(state="MI")], LIVING)
+    assert result.yearly_cost == 15000 + 12000
+
+
+def test_permanent_resident_in_the_programs_state_pays_in_state_tuition():
+    profile = make_profile(citizenship="PR", annual_budget=100000)
+    [result] = search_programs(profile, [make_program(state="MI")], LIVING)
+    assert result.yearly_cost == 15000 + 12000
+
+
+def test_international_total_cost_also_uses_the_out_of_state_rate():
+    profile = make_profile(citizenship="International", toefl=100, annual_budget=100000)
+    [result] = search_programs(profile, [make_program(state="MI", duration_years=2)], LIVING)
+    assert result.total_cost == (30000 + 12000) * 2

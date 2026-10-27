@@ -97,7 +97,7 @@ Every row needs a real `website` (official source). Data is an estimate; UI show
   days_left = (deadline - today).days; `< 0` → "closed"; `0–14` → "urgent"; `15–30` → "soon"; `> 30` → "later".
 - **Scholarship eligibility**: ALL must hold: degree in degree_levels; field in fields or "Any";
   gpa >= min_gpa; citizenship in list or "Any"; home_state in states or "Any"; every `special` item in profile.special.
-- **Tuition**: in-state rate if profile.home_state == program.state, else out-of-state.
+- **Tuition**: in-state rate if profile.home_state == program.state, else out-of-state. **International students (citizenship "International") are never residents of a state and always pay the out-of-state rate.**
 - **Tuition charged**: a PhD program with `stipend > 0` waives tuition (charged 0); MS programs always charge tuition.
 - **Yearly cost** = tuition charged + living cost of program state − stipend (never below 0).
 - **Fit** (diff = gpa − avg_gpa, rounded to 2 decimals): `diff >= 0.20` Safety; `-0.15 <= diff < 0.20` Match;
