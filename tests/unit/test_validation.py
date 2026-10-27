@@ -64,14 +64,14 @@ def test_budget_negative_is_invalid():
 
 # ---- Equivalence classes for text/choice fields ----
 
-@pytest.mark.parametrize("degree", ["MS", "PhD"])
+@pytest.mark.parametrize("degree", ["BS", "MS", "PhD"])
 def test_valid_degrees(degree):
     assert is_valid(make_profile(degree_sought=degree))
 
 
-@pytest.mark.parametrize("degree", ["", "BS", "ms", "MBA"])
+@pytest.mark.parametrize("degree", ["", "bs", "ms", "MBA"])
 def test_invalid_degrees(degree):
-    assert "Degree must be MS or PhD." in validate_profile(make_profile(degree_sought=degree))
+    assert "Degree must be BS, MS or PhD." in validate_profile(make_profile(degree_sought=degree))
 
 
 @pytest.mark.parametrize("field", ["", "   "])
@@ -121,5 +121,5 @@ def test_domestic_without_toefl_is_valid(citizenship):
 
 
 def test_all_errors_are_returned_together():
-    profile = make_profile(degree_sought="BS", gpa=5.0, annual_budget=-10)
+    profile = make_profile(degree_sought="MBA", gpa=5.0, annual_budget=-10)
     assert len(validate_profile(profile)) == 3

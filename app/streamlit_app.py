@@ -38,6 +38,7 @@ from gradmatch.search import search_programs, tuition_state  # noqa: E402
 from gradmatch.validation import CITIZENSHIP, DEGREES, US_STATES, validate_profile  # noqa: E402
 
 DATA_DIR = ROOT / "data"
+DEGREE_LABELS = {"BS": "Bachelor's (BS)", "MS": "Master's (MS)", "PhD": "PhD"}
 CITIZENSHIP_LABELS = {
     "US": "U.S. citizen",
     "PR": "Permanent resident",
@@ -71,11 +72,13 @@ def show_profile_form(fields: list[str]):
     with st.form("profile_form"):
         left, right = st.columns(2)
         with left:
-            degree = st.radio("Degree you are applying for", DEGREES, key="degree", horizontal=True)
+            degree = st.radio("Degree you are applying for", DEGREES, index=DEGREES.index("MS"),
+                              key="degree", horizontal=True, format_func=DEGREE_LABELS.get,
+                              help="Bachelor's results list colleges for undergraduate applicants.")
             field = st.selectbox("Field of study", fields, key="field")
             gpa = st.number_input("Your GPA (0.0 – 4.0)", min_value=0.0, max_value=10.0,
                                   value=3.5, step=0.05, format="%.2f", key="gpa")
-            gre = st.number_input("GRE score (optional)", min_value=0, max_value=400,
+            gre = st.number_input("GRE score (optional, graduate only)", min_value=0, max_value=400,
                                   value=None, step=1, key="gre",
                                   help="Leave empty if you have not taken the GRE. Range 260 – 340.")
             toefl = st.number_input("TOEFL score (optional)", min_value=0, max_value=200,
@@ -248,7 +251,7 @@ def _deadline(item) -> date:
 def main():
     st.set_page_config(page_title="GradMatch", page_icon="🎓", layout="wide")
     st.title("🎓 GradMatch")
-    st.caption("Find graduate programs, funding, scholarships and deadlines that fit you. "
+    st.caption("Find colleges and graduate programs, funding, scholarships and deadlines that fit you. "
                "All numbers are estimates – always check the official program website.")
 
     try:

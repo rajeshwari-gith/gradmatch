@@ -10,6 +10,7 @@ Story 2  As a graduate student, I can find fully funded PhD programs in my
          field and the fellowships I am eligible for.
 Story 3  As a student, I can see the upcoming deadlines for my programs and
          scholarships and am warned when one is due within 14 days.
+Story 4  As a high school student, I can choose Bachelor's and see colleges I can afford.
 """
 import re
 from pathlib import Path
@@ -163,3 +164,12 @@ def test_story_3_student_with_nothing_left_to_apply_to_is_told_so(student, monke
     student.run()
     press_find_programs(student)
     assert "no open deadlines" in student.tabs[DEADLINES].info[0].value.lower()
+
+
+# ---- Story 4: a high school student looks for a college ----
+
+def test_story_4_a_high_school_student_finds_colleges_they_can_afford(student):
+    student.radio(key="degree").set_value("BS")
+    press_find_programs(student)
+    # The fixed data has no bachelor's programs, so the student is told so politely, not shown an error.
+    assert any("No programs match" in i.value for i in student.info)

@@ -194,3 +194,14 @@ def test_phd_sort_treats_an_unpublished_stipend_as_zero():
     programs = [make_program(program_id="NONE", degree="PhD", stipend=None),
                 make_program(program_id="PAID", degree="PhD", stipend=10000)]
     assert ids(search_programs(profile, programs, LIVING)) == ["PAID", "NONE"]
+
+
+# ---- Bachelor's programs ----
+
+def test_bachelors_search_finds_bachelors_programs_cheapest_first():
+    programs = [make_program(program_id="CA", degree="BS", state="CA", duration_years=4),
+                make_program(program_id="MI", degree="BS", state="MI", duration_years=4),
+                make_program(program_id="MS", degree="MS")]
+    results = search_programs(make_profile(degree_sought="BS", annual_budget=100000), programs, LIVING)
+    assert ids(results) == ["MI", "CA"]
+    assert results[0].total_cost == (15000 + 12000) * 4

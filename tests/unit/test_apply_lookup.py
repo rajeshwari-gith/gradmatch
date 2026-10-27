@@ -268,7 +268,7 @@ def test_existing_bad_row_stops_the_update_and_writes_nothing(tmp_path, data_dir
     (data_dir / "programs.csv").write_text(PROGRAMS.replace(",PhD,MI,", ",MBA,MI,"))
     before = files(data_dir)
 
-    with pytest.raises(SheetError, match="would not load.*degree must be MS or PhD"):
+    with pytest.raises(SheetError, match="would not load.*degree must be BS, MS or PhD"):
         apply_lookup(write_sheet(tmp_path, [sheet_row()]), data_dir)
     assert files(data_dir) == before
     assert not (data_dir / "programs.csv.new").exists()

@@ -6,7 +6,7 @@ student everything they need to fix.
 """
 from gradmatch.models import StudentProfile
 
-DEGREES = ("MS", "PhD")
+DEGREES = ("BS", "MS", "PhD")
 CITIZENSHIP = ("US", "PR", "International")
 
 US_STATES = (
@@ -26,7 +26,7 @@ def validate_profile(profile: StudentProfile) -> list[str]:
     errors = []
 
     if profile.degree_sought not in DEGREES:
-        errors.append("Degree must be MS or PhD.")
+        errors.append("Degree must be BS, MS or PhD.")
 
     if not GPA_MIN <= profile.gpa <= GPA_MAX:
         errors.append("GPA must be between 0.0 and 4.0.")

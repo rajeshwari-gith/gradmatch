@@ -198,7 +198,7 @@ def test_programs_leap_day_in_leap_year_is_accepted(tmp_path):
 def test_programs_degree_not_ms_or_phd_is_rejected(tmp_path, degree):
     path = write_csv(tmp_path, [valid_program_row(degree=degree)])
 
-    with pytest.raises(DataError, match="degree must be MS or PhD"):
+    with pytest.raises(DataError, match="degree must be BS, MS or PhD"):
         load_programs(path)
 
 
