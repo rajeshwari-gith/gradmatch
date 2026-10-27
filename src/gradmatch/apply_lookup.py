@@ -4,7 +4,9 @@ A person opens each official program page and fills one sheet row. Only
 rows with a name in `checked_by` are applied. For each one:
 - every value is checked first; if any row is bad, nothing is written,
 - a blank cell means "not stated on the page" and keeps the current value,
-- the program row is updated, and its status in SOURCES.md becomes
+- the program row is updated and its `source` becomes "official-page"
+  (the column is added to programs.csv if it is missing),
+- its status in SOURCES.md becomes
   "verified by <checked_by> on <checked_on>",
 - the "Verified: N of M rows (programs)" line is counted again.
 
@@ -35,6 +37,7 @@ COPIED = {
     "stipend": "stipend",
     "min_toefl": "min_toefl",
 }
+OFFICIAL_SOURCE = "official-page"
 STATUS_LINE = re.compile(r"Verified: \d+ of \d+ rows \(programs\)")
 
 
@@ -54,6 +57,8 @@ def apply_lookup(sheet_path, data_dir) -> list[str]:
     sources = sources_path.read_text(encoding="utf-8")
 
     checked = _read_sheet(sheet_path, by_id, sources)     # raises SheetError
+    if not checked:
+        return ["0 row(s) applied, 0 value(s) changed"]     # nothing to do: write nothing
 
     changes = []
     for sheet_row in checked:
@@ -171,7 +176,13 @@ def _is_toefl(text: str) -> bool:
 def _read_programs(path) -> tuple[list[str], list[dict]]:
     with open(path, newline="", encoding="utf-8") as file:
         reader = csv.DictReader(file)
-        return list(reader.fieldnames), list(reader)
+        header, programs = list(reader.fieldnames), list(reader)
+    if "source" not in header:
+        # Older files have no source column. A blank source means "estimate".
+        header.append("source")
+        for program in programs:
+            program["source"] = ""
+    return header, programs
 
 
 def _update_program(program: dict, sheet_row: dict) -> list[str]:
@@ -179,6 +190,7 @@ def _update_program(program: dict, sheet_row: dict) -> list[str]:
     new_values = {COPIED[name]: sheet_row[name] for name in COPIED if sheet_row[name]}
     if program["degree"] == "PhD" and sheet_row["phd_tuition_waiver"] == "no":
         new_values["stipend"] = "0"          # no waiver: tuition is charged, no stipend counted
+    new_values["source"] = OFFICIAL_SOURCE    # a person checked this row on the official page
 
     changes = []
     for column, value in new_values.items():
