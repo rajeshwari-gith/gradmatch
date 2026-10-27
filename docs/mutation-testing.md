@@ -82,3 +82,40 @@ Python rather than our code.
 - Unit tests only; the integration, system and acceptance tests were not run per mutant.
 - 516 of 519 killed means no simple one-line change of the kinds `mutmut` tries goes unnoticed in
   these modules, apart from the three equivalent ones. It does not prove the tests are complete.
+
+## Unpublished values (`None`) and `apply_lookup.py`
+
+Run after the loader, deadlines, exports and `apply_lookup` were changed to handle values that
+are not published (blank cells become `None`, the new `source` column). `apply_lookup.py` was
+added to `source_paths`, and `app/` to `also_copy` (the unit tests for `app/freshness.py` need it).
+
+| Module | Mutants | Killed | Survived | Notes |
+|---|---:|---:|---:|---|
+| `data_loader.py` | 417 | 414 | 3 | the same 3 equivalent `encoding` mutants as before; every mutant in the new `None` and `source` code is killed |
+| `deadlines.py` | 20 | 20 | 0 | includes skipping `None` deadlines in `upcoming()` |
+| `exports.py` | 105 | 105 | 0 | includes empty CSV cells for `None` and skipping undated programs in `.ics` |
+| `apply_lookup.py` (first run) | 424 | 370 | 54 | first time this module was mutation tested |
+| `apply_lookup.py` (after new tests) | 424 | **402** | 22 | all 22 are equivalent, see below |
+
+`scholarships.py` (35 of 35) and Rajeshwari's modules (216 of 216) are unchanged.
+
+### Tests added for `apply_lookup.py`
+The 32 survivors that were real gaps came from messages and output that the tests only matched
+in part, and from cases no test used: an exact multi-problem error message, the exact waiver,
+SOURCES.md, column-list and usage messages; a stipend of 0.5 (boundary of "greater than 0"); an
+unchecked row before a checked one (`continue` vs `break`); changes from two rows (`+=` vs `=`);
+Unix line endings in the written CSV; a line break inside quoted cells and notes; a `|` in notes;
+the command run with only the sheet (default `data` folder) and its printed lines.
+
+### Equivalent mutants (25, not killed on purpose)
+- **`encoding` (20: 3 in `data_loader`, 17 in `apply_lookup`).** `encoding=None`, no `encoding`
+  argument, and `"UTF-8"` instead of `"utf-8"` when reading or writing a file. Python runs in UTF-8
+  mode on this machine, and `"UTF-8"` and `"utf-8"` are the same codec, so no test can see a
+  difference. The explicit `encoding="utf-8"` stays for computers whose default is not UTF-8.
+- **Temporary file name (2).** `_check_with_loader` writes the new CSV to a temporary file, loads
+  it and deletes it; any name in the same folder behaves the same.
+- **`program["source"] = None` instead of `""` (1).** `csv.DictWriter` writes `None` as an empty
+  cell, so the file is identical.
+- **`line.strip("XX|XX")` instead of `line.strip("|")` (2).** `strip` removes a *set* of characters
+  from the ends of the line. Table lines start and end with `|`, and the first and last cells are
+  separated from it by spaces, so the extra `X` never touches a cell.
