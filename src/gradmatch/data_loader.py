@@ -5,12 +5,18 @@ cells to the right types and checks the business limits. A bad row raises
 DataError with the file name, the line number and the problem, so whoever
 edits the data can find and fix it quickly.
 """
+# In plain words: the data lives in CSV files that people type into or that an import
+# script writes. This file reads them and turns every row into a Python object the rest of
+# the app can trust. If a row is wrong (a GPA of 5, a date like 2027-02-30), we stop with a
+# clear message instead of quietly showing a wrong number to a student.
+
 import csv
 from dataclasses import MISSING, fields
 from datetime import date, datetime
 
 from gradmatch.models import Program, Scholarship
 
+# The allowed values and limits live together here, so every check uses the same numbers.
 DEGREES = ("BS", "MS", "PhD")
 GPA_MIN, GPA_MAX = 0.0, 4.0
 RATE_MIN, RATE_MAX = 0.0, 1.0
@@ -18,26 +24,34 @@ SAT_MIN, SAT_MAX = 400, 1600
 ACT_MIN, ACT_MAX = 1, 36
 DATE_FORMAT = "%Y-%m-%d"
 LIVING_COST_COLUMNS = ["state", "annual_living_cost"]
+# Where a row came from: typed in by us (estimate), checked by a person on the official
+# page (official-page), or imported from government data (ipeds). Old rows have no source
+# column at all, so a blank means "estimate".
 SOURCES = ("estimate", "official-page", "ipeds")
 DEFAULT_SOURCE = "estimate"
 
 
+# One error type for every data problem, so the app can catch it and show one message.
 class DataError(ValueError):
     """Raised when a CSV file or one of its rows is invalid."""
 
 
 # ---- Public loaders ----
 
+# Read programs.csv. Columns that have a default in the Program model (like source or the
+# test scores) are optional, so older files without them still load.
 def load_programs(path) -> list[Program]:
     columns = [f.name for f in fields(Program) if f.default is MISSING]   # fields with a default are optional columns
     return _load(path, columns, _to_program)
 
 
+# Read scholarships.csv. Every column is required here.
 def load_scholarships(path) -> list[Scholarship]:
     columns = [f.name for f in fields(Scholarship)]
     return _load(path, columns, _to_scholarship)
 
 
+# Read living_costs.csv into a dict, so a program's state can be looked up quickly.
 def load_living_costs(path) -> dict[str, float]:
     """Return {state code: yearly living cost in USD}."""
     pairs = _load(path, LIVING_COST_COLUMNS, _to_living_cost)
@@ -46,6 +60,9 @@ def load_living_costs(path) -> dict[str, float]:
 
 # ---- Reading the file ----
 
+# The shared reading loop for all three files. It checks the header first, so a missing
+# column fails once with a clear message instead of on every row. Each row is turned into an
+# object by the convert function it is given.
 def _load(path, columns, convert) -> list:
     """Read the CSV at path and convert every row with convert(row).
 
@@ -53,6 +70,9 @@ def _load(path, columns, convert) -> list:
     ValueError for a row (the line number is added to the message).
     """
     results = []
+    # newline="" is what the csv module asks for, so a line break inside a quoted cell stays
+    # part of that cell. utf-8 is said out loud so school names with accents read the same on
+    # every computer.
     with open(path, newline="", encoding="utf-8") as file:
         reader = csv.DictReader(file)
         header = reader.fieldnames or []
@@ -62,6 +82,8 @@ def _load(path, columns, convert) -> list:
 
         for row in reader:
             # reader.line_num is the line just read; line 1 is the header.
+            # Why name the file and the line: with 45,000 rows, "bad GPA" alone would be useless. The
+            # person fixing the data needs to know exactly which line to open.
             try:
                 results.append(convert(row))
             except ValueError as error:
@@ -71,6 +93,9 @@ def _load(path, columns, convert) -> list:
 
 # ---- Converting one row ----
 
+# Turn one programs.csv row into a Program. Required cells must be there; optional cells may
+# be blank. A blank becomes None, which means "not published": it is not 0. A GPA of 0 or a
+# stipend of 0 would be a real (and wrong) number on a card; None lets the app say "n/a".
 def _to_program(row) -> Program:
     # A blank avg_gpa, acceptance_rate, stipend or deadline means "not published"
     # and becomes None; a value that is there is still checked (CONTRIBUTING.md).
@@ -102,6 +127,8 @@ def _to_program(row) -> Program:
     )
 
 
+# Turn one scholarships.csv row into a Scholarship. A scholarship must be for at least one
+# degree level, otherwise no student could ever match it.
 def _to_scholarship(row) -> Scholarship:
     degree_levels = tuple(_degree(level) for level in _list(row, "degree_levels"))
     if not degree_levels:
@@ -123,6 +150,7 @@ def _to_scholarship(row) -> Scholarship:
     )
 
 
+# One living-cost row: a state and a yearly cost. A negative cost makes no sense, so it is rejected.
 def _to_living_cost(row) -> tuple[str, float]:
     cost = _number(row, "annual_living_cost")
     if cost < 0:
@@ -132,6 +160,7 @@ def _to_living_cost(row) -> tuple[str, float]:
 
 # ---- Small helpers for single cells ----
 
+# The text of one cell with spaces trimmed. "  " counts as blank, like an empty cell.
 def _cell(row, name) -> str:
     # A short row gives None for the missing cells, so treat None as "".
     # get() allows optional columns such as `source`; required columns were
@@ -139,6 +168,7 @@ def _cell(row, name) -> str:
     return (row.get(name) or "").strip()
 
 
+# A required text cell: blank is an error.
 def _text(row, name) -> str:
     value = _cell(row, name)
     if not value:
@@ -146,6 +176,7 @@ def _text(row, name) -> str:
     return value
 
 
+# A required number. The message repeats what was typed, so a typo like "15,000" is easy to spot.
 def _number(row, name) -> float:
     value = _text(row, name)
     try:
@@ -154,12 +185,14 @@ def _number(row, name) -> float:
         raise ValueError(f"{name} must be a number, got '{value}'") from None
 
 
+# An optional number: blank gives None ("not published"), anything else must be a number.
 def _optional_number(row, name) -> float | None:
     if not _cell(row, name):
         return None             # empty cell = not published
     return _number(row, name)
 
 
+# An optional whole number, for GRE, TOEFL and test scores. 80.5 is rejected, not rounded.
 def _optional_int(row, name) -> int | None:
     value = _cell(row, name)
     if not value:
@@ -170,6 +203,8 @@ def _optional_int(row, name) -> int | None:
         raise ValueError(f"{name} must be a whole number, got '{value}'") from None
 
 
+# A required date in YYYY-MM-DD. strptime also rejects dates that do not exist, such as
+# February 30 or February 29 in a year that is not a leap year.
 def _date(row, name) -> date:
     value = _text(row, name)
     try:
@@ -178,12 +213,17 @@ def _date(row, name) -> date:
         raise ValueError(f"{name} must be a real date in YYYY-MM-DD format, got '{value}'") from None
 
 
+# An optional date: blank means the deadline is not published, so the program is left out
+# of the deadline list and the calendar file.
 def _optional_date(row, name) -> date | None:
     if not _cell(row, name):
         return None             # empty cell = not published
     return _date(row, name)
 
 
+# The 25th and 75th percentile SAT or ACT scores come as a pair. Half a pair cannot be used
+# for the Safety/Match/Reach rule, and a 25th above the 75th is a typing mistake, so both
+# are errors.
 def _percentiles(row, prefix, low, high) -> tuple[int | None, int | None]:
     """The optional <prefix>_25 and <prefix>_75 test-score columns: both blank or both in range."""
     names = f"{prefix}_25", f"{prefix}_75"
@@ -199,6 +239,7 @@ def _percentiles(row, prefix, low, high) -> tuple[int | None, int | None]:
     return pair
 
 
+# Where the row came from. Only three words are allowed, so a typo cannot create a new kind of row.
 def _source(row) -> str:
     value = _cell(row, "source") or DEFAULT_SOURCE
     if value not in SOURCES:
@@ -206,23 +247,27 @@ def _source(row) -> str:
     return value
 
 
+# List cells use ";" because "," already separates the CSV columns.
 def _list(row, name) -> tuple[str, ...]:
     """Split a ';' list cell, e.g. 'MS;PhD' -> ('MS', 'PhD'). Empty cell -> ()."""
     return tuple(item.strip() for item in _cell(row, name).split(";") if item.strip())
 
 
+# Exact match on purpose: "ms" or "Masters" is rejected, because the search compares the exact text.
 def _degree(value) -> str:
     if value not in DEGREES:
         raise ValueError(f"degree must be BS, MS or PhD, got '{value}'")
     return value
 
 
+# Range check that lets None through, for optional values.
 def _optional_in_range(value, low, high, name) -> float | None:
     if value is None:
         return None
     return _in_range(value, low, high, name)
 
 
+# Both ends count as valid (a GPA of exactly 0.0 or 4.0 is fine); the tests check those edges.
 def _in_range(value, low, high, name) -> float:
     if not low <= value <= high:
         raise ValueError(f"{name} must be between {low} and {high}, got {value}")

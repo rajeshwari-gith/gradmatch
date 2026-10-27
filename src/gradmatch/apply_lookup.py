@@ -12,6 +12,12 @@ rows with a name in `checked_by` are applied. For each one:
 
 Run it with:  PYTHONPATH=src python -m gradmatch.apply_lookup <sheet.csv> [data_dir]
 """
+# In plain words: we cannot open university websites from our development tools, so a person
+# opens each official program page by hand and types what they found into a "lookup sheet"
+# (a CSV). This script copies those checked values into programs.csv and marks the row as
+# "verified by <name> on <date>" in SOURCES.md. It is careful on purpose: it checks every row
+# first and writes nothing at all if any row is wrong, so the data is never half-updated.
+
 import csv
 import io
 import re
@@ -21,14 +27,18 @@ from pathlib import Path
 
 from gradmatch.data_loader import DataError, load_programs
 
+# The columns the sheet must have. Missing ones are reported before anything else happens.
 SHEET_COLUMNS = ["program_id", "university", "program_name", "degree", "official_url",
                  "tuition_in_state", "tuition_out_state", "application_deadline", "stipend",
                  "phd_tuition_waiver", "min_toefl", "checked_by", "checked_on", "notes"]
+# Does the PhD waive tuition? "na" is for master's programs, where the question does not apply.
 WAIVER_VALUES = ("yes", "no", "na")
 TOEFL_MIN, TOEFL_MAX = 0, 120
 DATE_FORMAT = "%Y-%m-%d"
 
 # Sheet column -> programs.csv column, for the values copied as they are.
+# Sheet column -> programs.csv column. Only these values come from the sheet; the estimates
+# (average GPA, acceptance rate) stay as they are, and the app labels them "(est.)".
 COPIED = {
     "official_url": "website",
     "tuition_in_state": "tuition_in_state",
@@ -37,16 +47,21 @@ COPIED = {
     "stipend": "stipend",
     "min_toefl": "min_toefl",
 }
+# Every row a person checks gets this source, so anyone can see which rows were checked by hand.
 OFFICIAL_SOURCE = "official-page"
 STATUS_LINE = re.compile(r"Verified: \d+ of \d+ rows \(programs\)")
 
 
+# The error for a bad sheet. When it is raised, nothing has been written yet.
 class SheetError(ValueError):
     """Raised when the lookup sheet has a bad row; nothing has been written."""
 
 
 # ---- Public function and command ----
 
+# The whole job in order: read, check every row, update in memory, check the result with the
+# real loader, and only then write both files. Returns one line per changed value so the
+# person can see exactly what changed.
 def apply_lookup(sheet_path, data_dir) -> list[str]:
     """Apply the sheet and return one line per changed value."""
     programs_path = Path(data_dir) / "programs.csv"
@@ -57,6 +72,7 @@ def apply_lookup(sheet_path, data_dir) -> list[str]:
     sources = sources_path.read_text(encoding="utf-8")
 
     checked = _read_sheet(sheet_path, by_id, sources)     # raises SheetError
+    # An empty sheet changes nothing, so we do not even rewrite the files.
     if not checked:
         return ["0 row(s) applied, 0 value(s) changed"]     # nothing to do: write nothing
 
@@ -73,6 +89,8 @@ def apply_lookup(sheet_path, data_dir) -> list[str]:
     return [f"{len(checked)} row(s) applied, {len(changes)} value(s) changed"] + changes
 
 
+# The command line: python -m gradmatch.apply_lookup sheet.csv [data_folder].
+# Exit code 0 = applied, 1 = bad sheet (nothing written), 2 = wrong arguments.
 def main(argv: list[str]) -> int:
     if len(argv) not in (2, 3):
         print("usage: python -m gradmatch.apply_lookup <sheet.csv> [data_dir]")
@@ -89,6 +107,9 @@ def main(argv: list[str]) -> int:
 
 # ---- Reading and checking the sheet ----
 
+# Read the sheet and keep only rows with a name in checked_by (the rows a person actually
+# checked). Every bad row is collected, not just the first, so the person can fix them all
+# in one go. The line number is in each message, like in the CSV loader.
 def _read_sheet(sheet_path, by_id: dict, sources: str) -> list[dict]:
     """Return the checked rows. Raise SheetError listing every bad row."""
     errors = []
@@ -112,6 +133,8 @@ def _read_sheet(sheet_path, by_id: dict, sources: str) -> list[dict]:
     return checked
 
 
+# All the checks for one sheet row. A blank cell is allowed: it means "not stated on the page"
+# and keeps the old value. We never fill in a guess.
 def _row_problems(row: dict, by_id: dict, sources: str) -> list[str]:
     program = by_id.get(row["program_id"])
     if program is None:
@@ -135,6 +158,8 @@ def _row_problems(row: dict, by_id: dict, sources: str) -> list[str]:
     return problems
 
 
+# The PhD tuition-waiver rule. The cost math waives tuition only for a PhD with a stipend above
+# 0, so "yes" needs a stipend, or the waiver would be lost. "no" means stipend 0 (tuition is charged).
 def _waiver_problems(row: dict, degree: str) -> list[str]:
     waiver = row["phd_tuition_waiver"]
     if waiver and waiver not in WAIVER_VALUES:
@@ -146,12 +171,15 @@ def _waiver_problems(row: dict, degree: str) -> list[str]:
     stipend_given = _is_non_negative_number(row["stipend"])
     if waiver == "yes" and not (stipend_given and float(row["stipend"]) > 0):
         return ["phd_tuition_waiver is yes, so stipend must be greater than 0"]
+    # A stipend together with "no waiver" is refused rather than silently set to 0: dropping a
+    # number the person typed would hide their mistake.
     if waiver == "no" and stipend_given and float(row["stipend"]) > 0:
         # The rule sets the stipend to 0; refuse rather than silently drop a value.
         return ["phd_tuition_waiver is no, so stipend must be blank or 0"]
     return []
 
 
+# Small yes/no checks, each used by the row checks above.
 def _is_non_negative_number(text: str) -> bool:
     try:
         return float(text) >= 0
@@ -173,10 +201,13 @@ def _is_toefl(text: str) -> bool:
 
 # ---- Updating programs.csv ----
 
+# Read programs.csv as plain text rows (not Program objects), so we can write it back with
+# exactly the same columns and formatting, changing only the cells we mean to change.
 def _read_programs(path) -> tuple[list[str], list[dict]]:
     with open(path, newline="", encoding="utf-8") as file:
         reader = csv.DictReader(file)
         header, programs = list(reader.fieldnames), list(reader)
+    # Older files have no source column. We add it; a blank source means "estimate".
     if "source" not in header:
         # Older files have no source column. A blank source means "estimate".
         header.append("source")
@@ -185,6 +216,7 @@ def _read_programs(path) -> tuple[list[str], list[dict]]:
     return header, programs
 
 
+# Copy the filled-in sheet values into the program row and list each change as "old -> new".
 def _update_program(program: dict, sheet_row: dict) -> list[str]:
     """Copy every non-blank value into the program row; return what changed."""
     new_values = {COPIED[name]: sheet_row[name] for name in COPIED if sheet_row[name]}
@@ -200,6 +232,7 @@ def _update_program(program: dict, sheet_row: dict) -> list[str]:
     return changes
 
 
+# Turn the rows back into CSV text, with \n line endings like the file already has.
 def _programs_text(header: list[str], programs: list[dict]) -> str:
     buffer = io.StringIO()
     writer = csv.DictWriter(buffer, fieldnames=header, lineterminator="\n")
@@ -208,6 +241,8 @@ def _programs_text(header: list[str], programs: list[dict]) -> str:
     return buffer.getvalue()
 
 
+# Safety net: write the new file next to the real one, load it with the normal loader, and
+# delete it. If the loader would reject it, we stop before the real file is touched.
 def _check_with_loader(text: str, programs_path: Path):
     """Load the new file with the normal loader before replacing the real one."""
     temp_path = programs_path.with_name("programs.csv.new")
@@ -222,6 +257,8 @@ def _check_with_loader(text: str, programs_path: Path):
 
 # ---- Updating SOURCES.md ----
 
+# Update this program's row in the SOURCES.md table. A "|" in the notes would break the
+# Markdown table, so it is changed to "/".
 def _set_status(sources: str, sheet_row: dict) -> str:
     """Rewrite the program's row in the SOURCES.md table (6 columns)."""
     program_id = sheet_row["program_id"]
@@ -237,6 +274,9 @@ def _set_status(sources: str, sheet_row: dict) -> str:
     return "\n".join(lines)
 
 
+# Recount the "Verified: N of M" line instead of adding 1, so it can never drift from the table.
+# Only programs listed in SOURCES.md (the hand-entered ones) count; the 45,000 imported rows
+# are official data and are not checked one by one.
 def _count_verified(sources: str, program_ids: list[str]) -> str:
     """Count the programs listed in SOURCES.md (the hand-entered rows) and how many are verified.
 
