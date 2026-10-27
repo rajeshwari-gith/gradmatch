@@ -31,13 +31,14 @@ class Program:
     tuition_in_state: float       # USD per year
     tuition_out_state: float
     duration_years: float
-    avg_gpa: float
+    avg_gpa: float | None         # None = not published
     avg_gre: int | None
-    acceptance_rate: float        # 0.0 - 1.0
-    stipend: float                # USD per year, 0 if none
+    acceptance_rate: float | None  # 0.0 - 1.0, None = not published
+    stipend: float | None         # USD per year, 0 = none, None = not published
     min_toefl: int | None
-    application_deadline: date
+    application_deadline: date | None  # None = not published, check the program page
     website: str
+    source: str = "estimate"      # where the row comes from: "estimate", "official-page" or "ipeds"
 
 
 @dataclass(frozen=True)
