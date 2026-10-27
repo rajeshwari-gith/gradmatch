@@ -1,6 +1,6 @@
 # Program data sources
 
-**Verified: 0 of 24 rows (programs) · Scholarships verified: 0 of 13**
+**Verified: 3 of 24 rows (programs) · Scholarships verified: 0 of 13**
 (25 new programs are listed below but not yet in `programs.csv`.)
 
 One entry per program. Status is one of:
@@ -35,10 +35,10 @@ replaced by the program page.
 | UIUC-MSCS | University of Illinois Urbana-Champaign | MS in Computer Science | needs lookup |  | website is the department home page |
 | UIUC-PHDCS | University of Illinois Urbana-Champaign | PhD in Computer Science | needs lookup |  | website is the department home page |
 | GT-MSCS | Georgia Institute of Technology | MS in Computer Science | needs lookup |  | website is the college home page |
-| GT-PHDCS | Georgia Institute of Technology | PhD in Computer Science | needs lookup |  | website is the college home page |
+| GT-PHDCS | Georgia Institute of Technology | PhD in Computer Science | verified by Rajeshwari Galugu on 2026-10-26 | https://www.cc.gatech.edu/phd-cs-admissions-requirements | Official page lists old-scale TOEFL minimum 100; confirm all fields before submission |
 | UTA-MSCS | University of Texas at Austin | MS in Computer Science | needs lookup |  | website is the department home page |
-| PURDUE-MSCS | Purdue University | MS in Computer Science | needs lookup |  | website is the department home page |
-| PURDUE-PHDCS | Purdue University | PhD in Computer Science | needs lookup |  | website is the department home page |
+| PURDUE-MSCS | Purdue University | MS in Computer Science | verified by Rajeshwari Galugu on 2026-10-26 | https://cs.purdue.edu/graduate/admission/steps.html | Official page confirms deadline; preferred old-scale TOEFL 100; confirm all fields before submission |
+| PURDUE-PHDCS | Purdue University | PhD in Computer Science | verified by Rajeshwari Galugu on 2026-10-26 | https://cs.purdue.edu/graduate/admission/steps.html | Official page confirms deadline; preferred old-scale TOEFL 100; confirm all fields before submission |
 | UW-PHDCSE | University of Washington | PhD in Computer Science and Engineering | needs lookup |  | website is the school home page |
 | BERKELEY-PHDEECS | University of California Berkeley | PhD in Electrical Engineering and Computer Sciences | needs lookup |  | website is the department home page |
 | CMU-PHDCS | Carnegie Mellon University | PhD in Computer Science | needs lookup |  | website is the department home page |

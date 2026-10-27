@@ -12,6 +12,12 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "src"))
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+
+import freshness  # noqa: E402
+
+# After an update, make sure the page does not run new app code on an old copy of gradmatch.
+freshness.forget_stale_gradmatch(ROOT / "src" / "gradmatch", sys.modules)
 
 import altair as alt  # noqa: E402
 import streamlit as st  # noqa: E402

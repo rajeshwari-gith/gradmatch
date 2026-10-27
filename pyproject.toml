@@ -5,7 +5,7 @@ description = "Find graduate programs, funding, scholarships and deadlines."
 requires-python = ">=3.11"
 
 [tool.pytest.ini_options]
-pythonpath = ["src"]
+pythonpath = ["src", "app"]
 testpaths = ["tests"]
 markers = [
     "unit: tests one function or module on its own",
