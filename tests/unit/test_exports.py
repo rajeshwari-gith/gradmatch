@@ -310,7 +310,6 @@ any_text = st.text(st.characters(blacklist_categories=("Cs",), blacklist_charact
                    min_size=1, max_size=120)
 
 
-@pytest.mark.xfail(strict=False, reason="D-004: lone \\r is not escaped yet", raises=AssertionError)
 @given(names=st.lists(any_text, min_size=1, max_size=5))
 def test_every_calendar_line_is_at_most_75_bytes_and_ends_with_crlf(names):
     items = [make_scholarship(scholarship_id=f"S{i}", name=name) for i, name in enumerate(names)]
@@ -342,7 +341,6 @@ def test_csv_reads_back_exactly_what_was_written(university, program_name, websi
 # Why: the property test above found it. A name with "\r" on its own (not "\r\n") was written
 # into the calendar unescaped, so a calendar app could see a line break in the middle of a line.
 
-@pytest.mark.xfail(strict=True, reason="D-004: lone \\r is not escaped yet")
 def test_lone_carriage_return_in_a_name_is_escaped():
     lines = unfold(to_ics([make_scholarship(name="Line one\rLine two")], STAMP))
 

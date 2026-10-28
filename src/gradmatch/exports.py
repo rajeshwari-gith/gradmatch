@@ -121,7 +121,8 @@ def _escape_text(text: str) -> str:
     """Escape a TEXT value: backslash first, then ; , and newlines."""
     text = text.replace("\\", "\\\\")
     text = text.replace(";", "\\;").replace(",", "\\,")
-    return text.replace("\r\n", "\\n").replace("\n", "\\n")
+    # A lone \r (no \n after it) is a line break too; it is escaped the same way (defect D-004).
+    return text.replace("\r\n", "\\n").replace("\r", "\\n").replace("\n", "\\n")
 
 
 # Why fold: the calendar standard says no line may be longer than 75 bytes, and some apps may
