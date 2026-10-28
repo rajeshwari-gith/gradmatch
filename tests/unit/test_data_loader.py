@@ -15,9 +15,13 @@ pytest's tmp_path folder.
 # can never break these tests, and every test is fast and repeatable.
 
 import csv
+import tempfile
+from dataclasses import fields
 from datetime import date
+from pathlib import Path
 
 import pytest
+from hypothesis import given, strategies as st
 
 from gradmatch.data_loader import (
     DataError,
@@ -546,3 +550,69 @@ def test_programs_reversed_act_range_message_gives_both_values(tmp_path):
 
     with pytest.raises(DataError, match="line 2: act_25 cannot be above act_75, got 30 and 24$"):
         load_programs(path)
+
+
+# ---- Property-based test (Hypothesis): write, load, compare ----
+# Why (property-based): instead of one hand-made row, Hypothesis makes hundreds of random but VALID
+# programs (odd names with accents, commas and quotes; numbers at any size within the limits;
+# blank optional values; all three degrees and sources), writes them to a CSV file and loads them
+# back. Every field must come back exactly as it was. This catches mistakes in any single
+# conversion (a number read as text, a blank read as 0, a date shifted) that a few examples miss.
+
+# Text a person could type in a cell: any letters and symbols, no control characters, and no
+# spaces at the ends (the loader trims those on purpose).
+cell_text = st.text(st.characters(blacklist_categories=("Cs", "Cc")), min_size=1, max_size=30) \
+    .map(str.strip).filter(bool)
+amount = st.floats(0, 1_000_000, allow_nan=False, allow_infinity=False)
+
+
+def maybe(strategy):
+    """Either a value or None (a blank cell = not published)."""
+    return st.one_of(st.none(), strategy)
+
+
+def score_pair(low, high):
+    """A 25th/75th percentile pair in range and in order, or no pair at all."""
+    return st.one_of(st.just((None, None)),
+                     st.tuples(st.integers(low, high), st.integers(low, high)).map(lambda p: tuple(sorted(p))))
+
+
+programs_strategy = st.builds(
+    lambda sat, act, **fields: Program(**fields, sat_25=sat[0], sat_75=sat[1], act_25=act[0], act_75=act[1]),
+    sat=score_pair(400, 1600), act=score_pair(1, 36),
+    program_id=cell_text, university=cell_text, program_name=cell_text, field=cell_text,
+    degree=st.sampled_from(["BS", "MS", "PhD"]),
+    state=st.text("ABCDEFGHIJKLMNOPQRSTUVWXYZ", min_size=2, max_size=2),
+    tuition_in_state=amount, tuition_out_state=amount,
+    duration_years=st.floats(0.5, 10, allow_nan=False),
+    avg_gpa=maybe(st.floats(0, 4, allow_nan=False)),
+    avg_gre=maybe(st.integers(260, 340)),
+    acceptance_rate=maybe(st.floats(0, 1, allow_nan=False)),
+    stipend=maybe(amount),
+    min_toefl=maybe(st.integers(0, 120)),
+    application_deadline=maybe(st.dates(date(2000, 1, 1), date(2100, 12, 31))),
+    website=cell_text,
+    source=st.sampled_from(["estimate", "official-page", "ipeds"]),
+)
+
+
+def as_cell(value) -> str:
+    """How a value is written in programs.csv: blank for None, YYYY-MM-DD for dates, repr for numbers."""
+    if value is None:
+        return ""
+    if isinstance(value, date):
+        return value.isoformat()
+    return repr(value) if isinstance(value, float) else str(value)
+
+
+@given(programs=st.lists(programs_strategy, min_size=1, max_size=5))
+def test_any_valid_programs_load_back_exactly(programs):
+    columns = [f.name for f in fields(Program)]
+    with tempfile.TemporaryDirectory() as folder:
+        path = Path(folder) / "programs.csv"
+        with open(path, "w", newline="", encoding="utf-8") as file:
+            writer = csv.writer(file)
+            writer.writerow(columns)
+            writer.writerows([[as_cell(getattr(p, c)) for c in columns] for p in programs])
+
+        assert load_programs(path) == programs
