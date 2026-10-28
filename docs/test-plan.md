@@ -79,7 +79,7 @@ GitHub Actions (`.github/workflows/tests.yml`).
 
 ## 8. Defects
 
-Three defects were found by tests and fixed; the log with severity and the finding test is in
+Four defects were found by tests and fixed (the fourth, a bare carriage return in a calendar name, was found by a property-based test); the log with severity and the finding test is in
 [`DEFECT_LOG.md`](../DEFECT_LOG.md).
 
 ## 9. How to run everything
