@@ -21,9 +21,11 @@ GPA exactly equal, no special requirement) and the sort order.
 # then one row per rule where only that rule fails. If any rule were forgotten in the code,
 # its row would wrongly say "eligible" and the test would fail.
 
+from dataclasses import replace
 from datetime import date
 
 import pytest
+from hypothesis import given, strategies as st
 
 from conftest import make_profile
 from gradmatch.models import Scholarship
@@ -174,3 +176,85 @@ def test_no_scholarships_gives_empty_list():
 
 def test_none_eligible_gives_empty_list():
     assert eligible_scholarships(make_profile(gpa=1.0), [make_scholarship()]) == []
+
+
+# ---- Property-based tests (Hypothesis) ----
+# Why (property-based): eligibility is "every rule must hold", so making a scholarship STRICTER
+# (adding a condition) can only remove students, never add one. Hypothesis builds hundreds of
+# random students and scholarships, tightens one rule at random, and checks that rule. If the
+# code ever used "or" instead of "and", or forgot a rule, some random case would break it.
+
+DEGREES = ("BS", "MS", "PhD")
+FIELDS = ("Computer Science", "Data Science", "Biology")
+CITIZENSHIPS = ("US", "PR", "International")
+STATES = ("MI", "OH", "CA")
+GROUPS = ("first_gen", "women_stem", "new_american")
+
+
+def some_of(values):
+    """A non-empty subset of values, as a tuple in a fixed order."""
+    return st.sets(st.sampled_from(values), min_size=1).map(lambda chosen: tuple(sorted(chosen)))
+
+
+def any_or_some(values):
+    """Either "Any" (no limit) or a non-empty list of values."""
+    return st.one_of(st.just(("Any",)), some_of(values))
+
+
+students = st.builds(
+    make_profile,
+    degree_sought=st.sampled_from(DEGREES),
+    gpa=st.floats(0, 4, allow_nan=False),
+    field=st.sampled_from(FIELDS),
+    citizenship=st.sampled_from(CITIZENSHIPS),
+    home_state=st.sampled_from(STATES),
+    special=st.sets(st.sampled_from(GROUPS)).map(tuple),
+)
+scholarships = st.builds(
+    make_scholarship,
+    degree_levels=some_of(DEGREES),
+    fields=any_or_some(FIELDS),
+    min_gpa=st.floats(0, 4, allow_nan=False),
+    citizenship=any_or_some(CITIZENSHIPS),
+    states=any_or_some(STATES),
+    special=st.sets(st.sampled_from(GROUPS)).map(lambda chosen: tuple(sorted(chosen))),
+)
+
+
+def narrower(allowed, values):
+    """A stricter version of a rule list: "Any" becomes a real list, a list loses entries."""
+    pool = values if allowed == ("Any",) else allowed
+    return some_of(pool)
+
+
+@st.composite
+def stricter(draw, scholarship):
+    """The same scholarship with ONE rule made stricter (a condition added)."""
+    rule = draw(st.sampled_from(["degree", "field", "gpa", "citizenship", "state", "special"]))
+    if rule == "degree":
+        return replace(scholarship, degree_levels=draw(some_of(scholarship.degree_levels)))
+    if rule == "field":
+        return replace(scholarship, fields=draw(narrower(scholarship.fields, FIELDS)))
+    if rule == "gpa":
+        return replace(scholarship, min_gpa=scholarship.min_gpa + draw(st.floats(0, 1, allow_nan=False)))
+    if rule == "citizenship":
+        return replace(scholarship, citizenship=draw(narrower(scholarship.citizenship, CITIZENSHIPS)))
+    if rule == "state":
+        return replace(scholarship, states=draw(narrower(scholarship.states, STATES)))
+    extra = draw(st.sampled_from(GROUPS))
+    return replace(scholarship, special=tuple(sorted(set(scholarship.special) | {extra})))
+
+
+@given(student=students, scholarship=scholarships, data=st.data())
+def test_adding_a_condition_never_makes_a_student_eligible(student, scholarship, data):
+    tighter = data.draw(stricter(scholarship))
+
+    if is_eligible(student, tighter):
+        assert is_eligible(student, scholarship)
+
+
+@given(student=students, offers=st.lists(scholarships, max_size=6), data=st.data())
+def test_stricter_scholarships_never_give_a_longer_list(student, offers, data):
+    tighter = [data.draw(stricter(s)) for s in offers]
+
+    assert len(eligible_scholarships(student, tighter)) <= len(eligible_scholarships(student, offers))
