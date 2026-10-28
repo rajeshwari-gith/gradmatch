@@ -152,3 +152,23 @@ def test_valid_act_scores(act):
 @pytest.mark.parametrize("act", [0, 37])
 def test_invalid_act_scores(act):
     assert "ACT score must be between 1 and 36." in validate_profile(make_profile(act=act))
+
+
+# ---- Property-based: any profile inside every limit is valid ----
+# Why: instead of picking values ourselves, Hypothesis builds many in-range profiles; none may be rejected.
+
+from hypothesis import given, strategies as st
+from gradmatch.validation import US_STATES
+
+
+@given(gpa=st.floats(min_value=0.0, max_value=4.0, allow_nan=False),
+       gre=st.one_of(st.none(), st.integers(260, 340)),
+       toefl=st.one_of(st.none(), st.integers(0, 120)),
+       sat=st.one_of(st.none(), st.integers(400, 1600)),
+       act=st.one_of(st.none(), st.integers(1, 36)),
+       budget=st.floats(min_value=0, max_value=500_000, allow_nan=False),
+       state=st.sampled_from(US_STATES), degree=st.sampled_from(["BS", "MS", "PhD"]))
+def test_every_profile_inside_the_limits_is_valid(gpa, gre, toefl, sat, act, budget, state, degree):
+    profile = make_profile(gpa=gpa, gre=gre, toefl=toefl, sat=sat, act=act, annual_budget=budget,
+                           home_state=state, degree_sought=degree)
+    assert validate_profile(profile) == []

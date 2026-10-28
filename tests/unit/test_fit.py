@@ -141,3 +141,25 @@ def test_without_a_score_the_gpa_rule_is_used():
 def test_a_score_is_ignored_when_the_college_publishes_no_percentiles():
     assert classify_fit(3.40, make_program(), sat=1600, act=36) == MATCH
     assert classify_fit(3.40, make_program(avg_gpa=None), sat=1600) == UNKNOWN
+
+
+# ---- Property-based: a better GPA never makes the fit worse ----
+# Why: Hypothesis tries hundreds of GPA pairs. Whatever the average GPA is, raising the student's
+# GPA may move Reach to Match to Safety, but never the other way.
+
+from hypothesis import given, strategies as st
+
+RANK = {REACH: 0, MATCH: 1, SAFETY: 2}
+gpas = st.floats(min_value=0.0, max_value=4.0, allow_nan=False)
+
+
+@given(low=gpas, high=gpas, average=st.floats(min_value=0.0, max_value=4.0, allow_nan=False))
+def test_a_higher_gpa_never_gives_a_worse_fit(low, high, average):
+    low, high = sorted([low, high])
+    program = make_program(avg_gpa=average, acceptance_rate=0.40)
+    assert RANK[classify_fit(low, program)] <= RANK[classify_fit(high, program)]
+
+
+@given(gpa=gpas, rate=st.floats(min_value=0.0, max_value=0.0999, allow_nan=False))
+def test_a_very_selective_program_is_a_reach_for_every_gpa(gpa, rate):
+    assert classify_fit(gpa, make_program(acceptance_rate=rate)) == REACH
