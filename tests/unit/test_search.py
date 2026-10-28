@@ -224,3 +224,32 @@ def test_a_students_sat_decides_the_fit_of_a_college():
     results = search_programs(make_profile(degree_sought="BS", act=20, annual_budget=100000),
                               [make_program(degree="BS", act_25=24, act_75=29)], LIVING)
     assert results[0].fit == "Reach"
+
+
+# ---- More property-based tests ----
+# Why: rules that must hold for ANY budget and any list of programs, not just the examples above.
+
+@given(low=st.floats(min_value=0, max_value=100_000, allow_nan=False),
+       high=st.floats(min_value=0, max_value=100_000, allow_nan=False),
+       states=st.lists(st.sampled_from(["MI", "CA", "TX", "OH"]), min_size=1, max_size=8))
+def test_a_bigger_budget_never_removes_a_result(low, high, states):
+    low, high = sorted([low, high])
+    programs = [make_program(program_id=str(i), state=s) for i, s in enumerate(states)]
+    few = set(ids(search_programs(make_profile(annual_budget=low), programs, LIVING)))
+    many = set(ids(search_programs(make_profile(annual_budget=high), programs, LIVING)))
+    assert few <= many
+
+
+@given(states=st.lists(st.sampled_from(["MI", "CA", "TX", "OH"]), max_size=8))
+def test_ms_results_always_come_back_cheapest_first(states):
+    programs = [make_program(program_id=str(i), state=s) for i, s in enumerate(states)]
+    costs = [r.yearly_cost for r in search_programs(make_profile(annual_budget=100_000), programs, LIVING)]
+    assert costs == sorted(costs)
+
+
+@given(states=st.lists(st.sampled_from(["MI", "CA", "TX", "OH"]), max_size=8))
+def test_every_result_matches_the_students_field_and_degree(states):
+    programs = [make_program(program_id=str(i), state=s, field=("Biology" if i % 2 else "Computer Science"))
+                for i, s in enumerate(states)]
+    for r in search_programs(make_profile(annual_budget=100_000), programs, LIVING):
+        assert (r.program.field, r.program.degree) == ("Computer Science", "MS")
