@@ -310,7 +310,12 @@ any_text = st.text(st.characters(blacklist_categories=("Cs",), blacklist_charact
                    min_size=1, max_size=120)
 
 
-@given(names=st.lists(any_text, min_size=1, max_size=5))
+# Long names too (100-300 characters), so a line has to be folded more than once.
+long_text = st.text(st.characters(blacklist_categories=("Cs",), blacklist_characters="\x00"),
+                    min_size=100, max_size=300)
+
+
+@given(names=st.lists(st.one_of(any_text, long_text), min_size=1, max_size=5))
 def test_every_calendar_line_is_at_most_75_bytes_and_ends_with_crlf(names):
     items = [make_scholarship(scholarship_id=f"S{i}", name=name) for i, name in enumerate(names)]
     items += [make_program(program_id=f"P{i}", university=name) for i, name in enumerate(names)]

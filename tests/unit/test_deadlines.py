@@ -165,7 +165,8 @@ def test_upcoming_only_unpublished_deadlines_gives_empty_list():
 URGENCY = {LATER: 0, SOON: 1, URGENT: 2, CLOSED: 3}
 
 
-@given(more_days=st.integers(-400, 400), fewer_days=st.integers(-400, 400))
+# Days from -60 to 60: around the cut-offs (0, 14, 30), where a mistake would show.
+@given(more_days=st.integers(-60, 60), fewer_days=st.integers(-60, 60))
 def test_status_never_gets_less_urgent_as_the_deadline_gets_closer(more_days, fewer_days):
     more_days, fewer_days = max(more_days, fewer_days), min(more_days, fewer_days)
 

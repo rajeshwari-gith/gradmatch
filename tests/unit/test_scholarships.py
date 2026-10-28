@@ -210,15 +210,32 @@ students = st.builds(
     home_state=st.sampled_from(STATES),
     special=st.sets(st.sampled_from(GROUPS)).map(tuple),
 )
-scholarships = st.builds(
-    make_scholarship,
-    degree_levels=some_of(DEGREES),
-    fields=any_or_some(FIELDS),
-    min_gpa=st.floats(0, 4, allow_nan=False),
-    citizenship=any_or_some(CITIZENSHIPS),
-    states=any_or_some(STATES),
-    special=st.sets(st.sampled_from(GROUPS)).map(lambda chosen: tuple(sorted(chosen))),
-)
+
+
+@st.composite
+def scholarship_for(draw, student):
+    """A random scholarship built around the student, so they often (not always) qualify.
+
+    Fully random scholarships almost never fit a random student on every rule, and then the
+    rule being tested would hardly ever matter. Starting near the student fixes that.
+    """
+    def around(values, own):
+        if draw(st.booleans()):
+            return ("Any",)
+        chosen = draw(st.sets(st.sampled_from(values)))
+        if draw(st.booleans()):
+            chosen.add(own)
+        return tuple(sorted(chosen or {own}))
+
+    return make_scholarship(
+        degree_levels=tuple(sorted(draw(st.sets(st.sampled_from(DEGREES))) | {student.degree_sought}))
+        if draw(st.booleans()) else draw(some_of(DEGREES)),
+        fields=around(FIELDS, student.field),
+        min_gpa=draw(st.floats(0, 4, allow_nan=False)),
+        citizenship=around(CITIZENSHIPS, student.citizenship),
+        states=around(STATES, student.home_state),
+        special=tuple(sorted(draw(st.sets(st.sampled_from(student.special or GROUPS))))),
+    )
 
 
 def narrower(allowed, values):
@@ -227,10 +244,12 @@ def narrower(allowed, values):
     return some_of(pool)
 
 
+RULES = ["degree", "field", "gpa", "citizenship", "state", "special"]
+
+
 @st.composite
-def stricter(draw, scholarship):
-    """The same scholarship with ONE rule made stricter (a condition added)."""
-    rule = draw(st.sampled_from(["degree", "field", "gpa", "citizenship", "state", "special"]))
+def stricter(draw, scholarship, rule):
+    """The same scholarship with the given rule made stricter (a condition added)."""
     if rule == "degree":
         return replace(scholarship, degree_levels=draw(some_of(scholarship.degree_levels)))
     if rule == "field":
@@ -245,16 +264,20 @@ def stricter(draw, scholarship):
     return replace(scholarship, special=tuple(sorted(set(scholarship.special) | {extra})))
 
 
-@given(student=students, scholarship=scholarships, data=st.data())
-def test_adding_a_condition_never_makes_a_student_eligible(student, scholarship, data):
-    tighter = data.draw(stricter(scholarship))
+# One run per rule, so each rule gets its own hundreds of examples.
+@pytest.mark.parametrize("rule", RULES)
+@given(student=students, data=st.data())
+def test_adding_a_condition_never_makes_a_student_eligible(rule, student, data):
+    scholarship = data.draw(scholarship_for(student))
+    tighter = data.draw(stricter(scholarship, rule))
 
     if is_eligible(student, tighter):
         assert is_eligible(student, scholarship)
 
 
-@given(student=students, offers=st.lists(scholarships, max_size=6), data=st.data())
-def test_stricter_scholarships_never_give_a_longer_list(student, offers, data):
-    tighter = [data.draw(stricter(s)) for s in offers]
+@given(student=students, data=st.data())
+def test_stricter_scholarships_never_give_a_longer_list(student, data):
+    offers = [data.draw(scholarship_for(student)) for _ in range(data.draw(st.integers(0, 6)))]
+    tighter = [data.draw(stricter(s, data.draw(st.sampled_from(RULES)))) for s in offers]
 
     assert len(eligible_scholarships(student, tighter)) <= len(eligible_scholarships(student, offers))
