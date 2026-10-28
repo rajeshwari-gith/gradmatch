@@ -542,3 +542,36 @@ def test_status_line_counts_only_rows_listed_in_sources(tmp_path, data_dir):
     apply_lookup(write_sheet(tmp_path, [sheet_row()]), data_dir)
 
     assert "**Verified: 1 of 2 rows (programs)" in (data_dir / "SOURCES.md").read_text()
+
+
+# ---- The SOURCES.md section for checked imported rows: exact shape ----
+# Why: found by mutation testing. A "|" in a note would break the Markdown table, and the new section
+# must start after exactly one blank line and end with a single newline, however the file ended before.
+
+def test_a_pipe_in_the_notes_of_an_imported_row_cannot_break_the_table(tmp_path, imported_dir):
+    apply_lookup(write_sheet(tmp_path, [imported_row(notes="deadline | stipend")]), imported_dir)
+
+    row = next(line for line in (imported_dir / "SOURCES.md").read_text().split("\n")
+               if line.startswith("| IPEDS-1-MS-11.0701 |"))
+    assert row.endswith("| deadline / stipend |")
+    assert len(row.strip("|").split("|")) == 6
+
+
+def test_the_new_section_follows_one_blank_line_and_the_file_ends_with_one_newline(tmp_path, imported_dir):
+    (imported_dir / "SOURCES.md").write_text((imported_dir / "SOURCES.md").read_text() + "\n\n\n")
+
+    apply_lookup(write_sheet(tmp_path, [imported_row()]), imported_dir)
+
+    text = (imported_dir / "SOURCES.md").read_text()
+    assert "|\n\n## Checked programs imported from official data\n\n| program_id |" in text
+    assert text.endswith(" |\n") and not text.endswith(" |\n\n")
+
+
+def test_a_second_imported_row_is_added_on_the_next_line_without_a_blank_line(tmp_path, imported_dir):
+    second = imported_row()
+    second["program_id"] = "IPEDS-2-MS-11.0701"
+    second["university"] = "Other State University"
+    apply_lookup(write_sheet(tmp_path, [imported_row(), second]), imported_dir)
+
+    lines = (imported_dir / "SOURCES.md").read_text().rstrip("\n").split("\n")
+    assert lines[-2].startswith("| IPEDS-1-MS-11.0701 |") and lines[-1].startswith("| IPEDS-2-MS-11.0701 |")
