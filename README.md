@@ -63,13 +63,14 @@ different data folder.
 
 ## Use the REST API
 
-The same search is available as a JSON API (FastAPI). It needs `uvicorn`, which is not in
-`requirements.txt`:
+The same search is available as a JSON API (FastAPI). `uvicorn`, the server that runs it, is
+installed with `requirements.txt`:
 
 ```
-pip install uvicorn
 PYTHONPATH=src uvicorn gradmatch.api:app --reload      # http://127.0.0.1:8000, docs at /docs
 ```
+
+The examples below are run by `tests/integration/test_readme_examples.py`, so they stay correct.
 
 | Call | What it returns |
 |---|---|
