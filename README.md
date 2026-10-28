@@ -142,6 +142,17 @@ PYTHONPATH=src python -m gradmatch.link_check
 
 It prints every broken link and exits with 1 if there are any. It never changes the data.
 
+## Data quality report
+
+```
+PYTHONPATH=src python -m gradmatch.data_report
+```
+
+Prints rows by source, degree and field, how many cells are blank ("not published") in each
+column of the imported rows, duplicate ids, websites that are not https, and the "Verified"
+counts from `data/SOURCES.md`. It exits with 1 if there are duplicate ids or non-https links.
+A dated snapshot is in `docs/data-report.md`.
+
 ## Project layout
 
 ```
