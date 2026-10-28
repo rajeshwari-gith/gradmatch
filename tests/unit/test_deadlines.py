@@ -14,6 +14,7 @@ February 29 is counted as a real day.
 from datetime import date, timedelta
 
 import pytest
+from hypothesis import given, strategies as st
 
 from conftest import make_program
 from gradmatch.deadlines import CLOSED, LATER, SOON, URGENT, deadline_of, deadline_status, upcoming
@@ -153,3 +154,30 @@ def test_upcoming_only_unpublished_deadlines_gives_empty_list():
     items = [make_program(program_id=f"P{i}", application_deadline=None) for i in range(3)]
 
     assert upcoming(items, TODAY) == []
+
+
+# ---- Property-based test (Hypothesis) ----
+# Why (property-based): instead of a few chosen days, Hypothesis tries hundreds of random pairs of
+# days and checks a rule that must ALWAYS hold: as the days left shrink, the label never becomes
+# LESS urgent. later -> soon -> urgent -> closed, never backwards. A wrong cut-off (like a typo
+# that makes day 20 "later") would break this for some pair of days.
+
+URGENCY = {LATER: 0, SOON: 1, URGENT: 2, CLOSED: 3}
+
+
+@given(more_days=st.integers(-400, 400), fewer_days=st.integers(-400, 400))
+def test_status_never_gets_less_urgent_as_the_deadline_gets_closer(more_days, fewer_days):
+    more_days, fewer_days = max(more_days, fewer_days), min(more_days, fewer_days)
+
+    earlier_label = deadline_status(in_days(more_days), TODAY)
+    later_label = deadline_status(in_days(fewer_days), TODAY)
+
+    assert URGENCY[later_label] >= URGENCY[earlier_label]
+
+
+@given(deadline=st.dates(), today=st.dates())
+def test_status_depends_only_on_the_days_between(deadline, today):
+    # Moving both dates by the same amount never changes the label (no hidden "today").
+    shift = timedelta(days=100)
+    if date.min + shift <= today and date.min + shift <= deadline:
+        assert deadline_status(deadline, today) == deadline_status(deadline - shift, today - shift)
