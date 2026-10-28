@@ -167,3 +167,27 @@ mutants from the fix that counts only hand-entered rows, all killed),
   line-break test. Column names never contain a line break.
 - **`newline` when `main` reads `living_costs.csv` (2).** Only a line break inside a quoted cell
   would change, and only the two-letter state codes are used from that file.
+
+## Checked imported rows in `apply_lookup.py`
+
+After `apply_lookup` learned to add a row to `SOURCES.md` for a checked program from the official data
+(`_add_imported_row`), the full run (2,040 mutants over all 11 modules) left **9 new survivors** in that
+new code. Four showed real test gaps and were killed with three new tests at the end of
+`tests/unit/test_apply_lookup.py`:
+
+| Mutant | What changed | Test added |
+|---|---|---|
+| `_add_imported_row` 25, 26 | the `"|"` to `"/"` replacement in the notes was altered | `test_a_pipe_in_the_notes_of_an_imported_row_cannot_break_the_table` |
+| `_add_imported_row` 32, 38 | `rstrip("\n")` became `lstrip("\n")` | `test_the_new_section_follows_one_blank_line_and_the_file_ends_with_one_newline`, `test_a_second_imported_row_is_added_on_the_next_line_without_a_blank_line` |
+
+The other **5 are equivalent for real input** and are left on purpose:
+
+| Mutant | Change | Why it cannot be noticed |
+|---|---|---|
+| `_set_status` 12 | `strip("|")` became `strip("XX|XX")` | differs only if a table line starts or ends with the letter X |
+| `_add_imported_row` 31, 37 | `rstrip("\n")` became `rstrip(None)` | differs only if `SOURCES.md` ends with spaces or tabs |
+| `_add_imported_row` 33, 39 | `rstrip("\n")` became `rstrip("XX\nXX")` | differs only if the file ends with the letter X |
+
+Result for the whole `[tool.mutmut]` set at this point: cost, fit, funding, validation and search
+had **no survivors**; the remaining survivors are the documented equivalents in `data_loader`,
+`apply_lookup` and `ipeds_import`.
