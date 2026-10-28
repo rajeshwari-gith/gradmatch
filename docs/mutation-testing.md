@@ -191,3 +191,19 @@ The other **5 are equivalent for real input** and are left on purpose:
 Result for the whole `[tool.mutmut]` set at this point: cost, fit, funding, validation and search
 had **no survivors**; the remaining survivors are the documented equivalents in `data_loader`,
 `apply_lookup` and `ipeds_import`.
+
+## Property-based tests and defect D-004 (2026-10-28)
+
+Property-based tests (Hypothesis) were added for the loader, deadlines, scholarships and exports.
+The calendar property found defect D-004 (a lone carriage return in a name was not escaped); the
+fix added a few lines to `exports.py`. Mutation run after the fix: `exports.py` **111 of 111**
+killed (6 new mutants, all killed). `data_loader.py` 476/479, `deadlines.py` 20/20 and
+`scholarships.py` 35/35 are unchanged.
+
+Each new property was also checked by breaking the code on purpose: the scholarship property fails
+for a reversed GPA rule, an "any" instead of "all" special rule and a reversed "Any" check; the
+deadline property fails for a misplaced cut-off; the calendar property fails when continuation
+lines are folded at 76 bytes; the CSV property fails without quoting; the loader property fails
+when a blank cell is read as 0. A property does not replace the example tests: for instance,
+swapping `and` for `or` in the eligibility rule keeps "stricter never adds" true, and only the
+decision-table tests catch it.

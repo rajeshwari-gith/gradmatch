@@ -16,6 +16,7 @@ import time
 from datetime import date, datetime, timedelta, timezone
 
 import pytest
+from hypothesis import given, strategies as st
 
 from conftest import make_program
 from gradmatch.exports import CSV_COLUMNS, to_csv, to_ics
@@ -296,3 +297,56 @@ def test_ics_only_unpublished_deadlines_gives_a_calendar_with_no_events():
 
     assert "BEGIN:VEVENT" not in lines
     assert lines[-2:] == ["END:VCALENDAR", ""]
+
+
+# ---- Property-based tests (Hypothesis) ----
+# Why (property-based): names in real data can hold any character (accents, emoji, commas, quotes,
+# line breaks). Hypothesis tries hundreds of random names and checks two rules that must ALWAYS
+# hold: every calendar line is at most 75 bytes and ends with \r\n, and the CSV file reads back
+# exactly what was written.
+
+# Any text except the NUL character (the csv module cannot write it) and lone surrogates.
+any_text = st.text(st.characters(blacklist_categories=("Cs",), blacklist_characters="\x00"),
+                   min_size=1, max_size=120)
+
+
+# Long names too (100-300 characters), so a line has to be folded more than once.
+long_text = st.text(st.characters(blacklist_categories=("Cs",), blacklist_characters="\x00"),
+                    min_size=100, max_size=300)
+
+
+@given(names=st.lists(st.one_of(any_text, long_text), min_size=1, max_size=5))
+def test_every_calendar_line_is_at_most_75_bytes_and_ends_with_crlf(names):
+    items = [make_scholarship(scholarship_id=f"S{i}", name=name) for i, name in enumerate(names)]
+    items += [make_program(program_id=f"P{i}", university=name) for i, name in enumerate(names)]
+
+    ics = to_ics(items, STAMP)
+
+    assert ics.endswith("\r\n")
+    for line in ics.split("\r\n")[:-1]:
+        assert "\r" not in line and "\n" not in line      # no line break except CRLF
+        assert len(line.encode("utf-8")) <= 75
+
+
+@given(university=any_text, program_name=any_text, website=any_text,
+       yearly=st.one_of(st.none(), st.floats(0, 1e6, allow_nan=False)))
+def test_csv_reads_back_exactly_what_was_written(university, program_name, website, yearly):
+    result = ProgramResult(program=make_program(university=university, program_name=program_name,
+                                                website=website),
+                           yearly_cost=yearly, total_cost=yearly, fit="Match", funding="Self-Funded")
+
+    [header, row] = read_csv(to_csv([result]))
+
+    assert header == CSV_COLUMNS
+    assert row[0] == university and row[1] == program_name and row[-1] == website
+    assert row[4] == ("" if yearly is None else f"{yearly:.2f}")
+
+
+# ---- Defect D-004: a lone carriage return in a name broke the calendar line ----
+# Why: the property test above found it. A name with "\r" on its own (not "\r\n") was written
+# into the calendar unescaped, so a calendar app could see a line break in the middle of a line.
+
+def test_lone_carriage_return_in_a_name_is_escaped():
+    lines = unfold(to_ics([make_scholarship(name="Line one\rLine two")], STAMP))
+
+    assert "SUMMARY:Scholarship deadline: Line one\\nLine two" in lines

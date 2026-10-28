@@ -21,9 +21,11 @@ GPA exactly equal, no special requirement) and the sort order.
 # then one row per rule where only that rule fails. If any rule were forgotten in the code,
 # its row would wrongly say "eligible" and the test would fail.
 
+from dataclasses import replace
 from datetime import date
 
 import pytest
+from hypothesis import given, strategies as st
 
 from conftest import make_profile
 from gradmatch.models import Scholarship
@@ -174,3 +176,108 @@ def test_no_scholarships_gives_empty_list():
 
 def test_none_eligible_gives_empty_list():
     assert eligible_scholarships(make_profile(gpa=1.0), [make_scholarship()]) == []
+
+
+# ---- Property-based tests (Hypothesis) ----
+# Why (property-based): eligibility is "every rule must hold", so making a scholarship STRICTER
+# (adding a condition) can only remove students, never add one. Hypothesis builds hundreds of
+# random students and scholarships, tightens one rule at random, and checks that rule. If the
+# code ever used "or" instead of "and", or forgot a rule, some random case would break it.
+
+DEGREES = ("BS", "MS", "PhD")
+FIELDS = ("Computer Science", "Data Science", "Biology")
+CITIZENSHIPS = ("US", "PR", "International")
+STATES = ("MI", "OH", "CA")
+GROUPS = ("first_gen", "women_stem", "new_american")
+
+
+def some_of(values):
+    """A non-empty subset of values, as a tuple in a fixed order."""
+    return st.sets(st.sampled_from(values), min_size=1).map(lambda chosen: tuple(sorted(chosen)))
+
+
+def any_or_some(values):
+    """Either "Any" (no limit) or a non-empty list of values."""
+    return st.one_of(st.just(("Any",)), some_of(values))
+
+
+students = st.builds(
+    make_profile,
+    degree_sought=st.sampled_from(DEGREES),
+    gpa=st.floats(0, 4, allow_nan=False),
+    field=st.sampled_from(FIELDS),
+    citizenship=st.sampled_from(CITIZENSHIPS),
+    home_state=st.sampled_from(STATES),
+    special=st.sets(st.sampled_from(GROUPS)).map(tuple),
+)
+
+
+@st.composite
+def scholarship_for(draw, student):
+    """A random scholarship built around the student, so they often (not always) qualify.
+
+    Fully random scholarships almost never fit a random student on every rule, and then the
+    rule being tested would hardly ever matter. Starting near the student fixes that.
+    """
+    def around(values, own):
+        if draw(st.booleans()):
+            return ("Any",)
+        chosen = draw(st.sets(st.sampled_from(values)))
+        if draw(st.booleans()):
+            chosen.add(own)
+        return tuple(sorted(chosen or {own}))
+
+    return make_scholarship(
+        degree_levels=tuple(sorted(draw(st.sets(st.sampled_from(DEGREES))) | {student.degree_sought}))
+        if draw(st.booleans()) else draw(some_of(DEGREES)),
+        fields=around(FIELDS, student.field),
+        min_gpa=draw(st.floats(0, 4, allow_nan=False)),
+        citizenship=around(CITIZENSHIPS, student.citizenship),
+        states=around(STATES, student.home_state),
+        special=tuple(sorted(draw(st.sets(st.sampled_from(student.special or GROUPS))))),
+    )
+
+
+def narrower(allowed, values):
+    """A stricter version of a rule list: "Any" becomes a real list, a list loses entries."""
+    pool = values if allowed == ("Any",) else allowed
+    return some_of(pool)
+
+
+RULES = ["degree", "field", "gpa", "citizenship", "state", "special"]
+
+
+@st.composite
+def stricter(draw, scholarship, rule):
+    """The same scholarship with the given rule made stricter (a condition added)."""
+    if rule == "degree":
+        return replace(scholarship, degree_levels=draw(some_of(scholarship.degree_levels)))
+    if rule == "field":
+        return replace(scholarship, fields=draw(narrower(scholarship.fields, FIELDS)))
+    if rule == "gpa":
+        return replace(scholarship, min_gpa=scholarship.min_gpa + draw(st.floats(0, 1, allow_nan=False)))
+    if rule == "citizenship":
+        return replace(scholarship, citizenship=draw(narrower(scholarship.citizenship, CITIZENSHIPS)))
+    if rule == "state":
+        return replace(scholarship, states=draw(narrower(scholarship.states, STATES)))
+    extra = draw(st.sampled_from(GROUPS))
+    return replace(scholarship, special=tuple(sorted(set(scholarship.special) | {extra})))
+
+
+# One run per rule, so each rule gets its own hundreds of examples.
+@pytest.mark.parametrize("rule", RULES)
+@given(student=students, data=st.data())
+def test_adding_a_condition_never_makes_a_student_eligible(rule, student, data):
+    scholarship = data.draw(scholarship_for(student))
+    tighter = data.draw(stricter(scholarship, rule))
+
+    if is_eligible(student, tighter):
+        assert is_eligible(student, scholarship)
+
+
+@given(student=students, data=st.data())
+def test_stricter_scholarships_never_give_a_longer_list(student, data):
+    offers = [data.draw(scholarship_for(student)) for _ in range(data.draw(st.integers(0, 6)))]
+    tighter = [data.draw(stricter(s, data.draw(st.sampled_from(RULES)))) for s in offers]
+
+    assert len(eligible_scholarships(student, tighter)) <= len(eligible_scholarships(student, offers))
