@@ -5,8 +5,8 @@ the quoting, so names with commas or quotes stay in one cell.
 
 A value that is not published (None) becomes an empty CSV cell.
 
-to_ics() turns Program and Scholarship deadlines into calendar text that
-calendar apps can import; a program with no published deadline is left out. It follows the parts of RFC 5545 we need:
+to_ics() turns Program, Scholarship and CustomDeadline deadlines into calendar
+text that calendar apps can import; a program with no published deadline is left out. It follows the parts of RFC 5545 we need:
 lines end in CRLF, text values are escaped, and long lines are folded.
 The DTSTAMP time is passed in by the caller; this module never calls now().
 """
@@ -17,9 +17,10 @@ The DTSTAMP time is passed in by the caller; this module never calls now().
 
 import csv
 import io
+import re
 from datetime import date, datetime, timezone
 
-from gradmatch.deadlines import deadline_of
+from gradmatch.deadlines import CustomDeadline, deadline_of
 from gradmatch.models import Program, Scholarship
 from gradmatch.search import ProgramResult
 
@@ -73,7 +74,7 @@ def _date_cell(day: date | None) -> str:
 
 # Build the calendar text. `stamp` (the time the file was made) is passed in for the same
 # reason as `today` in deadlines.py: the tests can use a fixed time and get the same file every run.
-def to_ics(items: list[Program | Scholarship], stamp: datetime) -> str:
+def to_ics(items: list[Program | Scholarship | CustomDeadline], stamp: datetime) -> str:
     """Return a calendar with one all-day event per deadline."""
     lines = ["BEGIN:VCALENDAR", "VERSION:2.0", f"PRODID:{PRODID}", "CALSCALE:GREGORIAN"]
     for item in items:
@@ -85,24 +86,40 @@ def to_ics(items: list[Program | Scholarship], stamp: datetime) -> str:
 
 
 # One all-day calendar event for one deadline. The UID stays the same every time the file
-# is made, so importing it again updates the event instead of adding a copy. The "program-"
-# and "scholarship-" prefixes stop a program and a scholarship with the same id from clashing.
-def _event_lines(item: Program | Scholarship, stamp: datetime) -> list[str]:
+# is made, so importing it again updates the event instead of adding a copy. The "program-",
+# "scholarship-" and "deadline-" prefixes stop items of different kinds from clashing.
+# A custom deadline has no id, so its UID is made from its date and name; it gets a URL line
+# only if the student gave a link, and its note becomes the event's description.
+def _event_lines(item: Program | Scholarship | CustomDeadline, stamp: datetime) -> list[str]:
+    extra = []
     if isinstance(item, Program):
         uid = f"program-{item.program_id}@gradmatch"
         summary = f"Application deadline: {item.university} – {item.program_name}"
-    else:
+    elif isinstance(item, Scholarship):
         uid = f"scholarship-{item.scholarship_id}@gradmatch"
         summary = f"Scholarship deadline: {item.name}"
+    else:
+        uid = f"deadline-{item.deadline:%Y%m%d}-{_slug(item.name)}@gradmatch"
+        summary = f"Deadline: {item.name}"
+        if item.note:
+            extra.append(f"DESCRIPTION:{_escape_text(item.note)}")
+    if item.website:
+        extra.append(f"URL:{item.website}")
     return [
         "BEGIN:VEVENT",
         f"UID:{uid}",
         f"DTSTAMP:{_utc_stamp(stamp)}",
         f"DTSTART;VALUE=DATE:{deadline_of(item):%Y%m%d}",
         f"SUMMARY:{_escape_text(summary)}",
-        f"URL:{item.website}",
+        *extra,
         "END:VEVENT",
     ]
+
+
+# A name made safe for a UID: lower case, and every run of other characters becomes one "-".
+# "Rec letters, MSU!" -> "rec-letters-msu".
+def _slug(name: str) -> str:
+    return re.sub(r"[^a-z0-9]+", "-", name.lower()).strip("-")
 
 
 # Calendar times must say their time zone. We always write UTC (the Z at the end), so the
