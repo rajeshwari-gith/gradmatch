@@ -232,3 +232,30 @@ Equivalent survivors (left on purpose):
 |---|---|---|
 | `safe_link` 3 | `url or ""` became `url or "XXXX"` | both give a value that is not an http(s) link, so the result is `None` either way |
 | `result_card_html` 9, `_title_html` 6 | `escape(link, quote=True)` became `escape(link)` | `html.escape` escapes quotes by default, so the output is identical |
+
+## Scholarship sheet: `apply_scholarship_sheet.py`
+
+`apply_scholarship_sheet.py` was added to `source_paths`.
+
+| Run | Mutants | Killed | Survived |
+|---|---:|---:|---:|
+| First run | 306 | 279 | 27 |
+| After new tests | 306 | **286** | **20** (equivalent) |
+
+Tests added at the end of the valid-row and skipped-row sections of
+`tests/unit/test_apply_scholarship_sheet.py`:
+
+| Survivors | What changed | Test added |
+|---|---|---|
+| 1 | `changes +=` became `changes =`, so only the last row's changes were listed | `test_changes_from_every_row_are_listed_and_counted` (two rows, each with one change) |
+| 1 | `continue` became `break`, so an unchecked row stopped the rows after it | `test_an_unchecked_row_before_a_checked_row_does_not_stop_it` |
+| 1 | `lineterminator="\n"` removed, so the file was written with `\r\n` | `test_written_file_uses_unix_line_endings` |
+| 4 | `newline=""` changed or removed when reading the sheet or `scholarships.csv` | `test_line_break_inside_quoted_cells_is_kept` (a `\r\n` inside a quoted name and in the notes) |
+
+Equivalent survivors (left on purpose, the same kinds as in `apply_lookup.py`):
+
+| Survivors | Change | Why nothing can notice it |
+|---|---|---|
+| 17 | `encoding=None`, no `encoding` argument, or `"UTF-8"` instead of `"utf-8"` when reading or writing a file | Python runs in UTF-8 mode on this machine, and `"UTF-8"` and `"utf-8"` are the same codec. The explicit `encoding="utf-8"` stays for computers whose default is not UTF-8. |
+| 2 | the temporary file `scholarships.csv.new` gets another name | the file is written, loaded and deleted; any name in the same folder behaves the same |
+| 1 | `line.strip("XX\|XX")` instead of `line.strip("\|")` | `strip` removes a set of characters from the ends; table lines start and end with `\|`, and the cells are separated from it by spaces, so the `X` never touches a cell |
