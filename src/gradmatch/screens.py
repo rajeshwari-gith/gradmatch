@@ -239,7 +239,7 @@ def deadline_row_html(item, today: date, urgent_days: int = 14) -> str:
     days_left = (day - today).days
     urgent = 0 <= days_left <= urgent_days
     name_class = "gm-name gm-passed" if days_left < 0 else "gm-name"
-    link = official_link(getattr(item, "website", ""))
+    link = official_link(item.website)
     detail = escape(item_kind(item)) + (f" · {link}" if link else "")
     return (f'<div class="gm-cell-name">{date_tile(day, urgent)}<div>'
             f'<div class="{name_class}">{escape(item_name(item))}</div>'

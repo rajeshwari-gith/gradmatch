@@ -86,6 +86,7 @@ def test_an_unknown_tag_kind_looks_optional_and_text_is_escaped():
     ("of the", "?"),                                     # nothing left after small words
     ("", "?"),
     ("12th Street College", "1SC"),
+    ("Winston-Salem State University", "WSS"),            # a hyphen splits two words
 ])
 def test_initials(name, letters):
     assert initials(name) == letters
@@ -165,6 +166,7 @@ def test_warning_banner_is_an_alert_with_a_reach_face_and_escaped_text():
     (5, 4, "100%"),     # more done than total is capped
     (-1, 4, "0%"),      # never below zero
     (0, 0, "0%"),       # nothing to do: an empty bar, no division by zero
+    (1, 1, "100%"),     # a single task, done
 ])
 def test_progress_bar_width(done, total, width):
     html = progress_bar(done, total)
@@ -177,3 +179,15 @@ def test_progress_bar_width(done, total, width):
 def test_check_item_shows_a_tick_or_a_warning_and_escapes():
     assert check_item("Full tuition waiver", True) == '<li><span class="gm-ok">✓</span> Full tuition waiver</li>'
     assert check_item("<x>", False) == '<li><span class="gm-warn">!</span> &lt;x&gt;</li>'
+
+
+# ---- Pieces that must use the right label and the default sizes ----
+
+def test_a_badge_draws_the_face_of_its_own_label():
+    for label in (SAFETY, MATCH, REACH, PASSED):
+        assert face_svg(label) in chance_badge(label)
+
+
+def test_default_sizes_of_the_face_and_the_star():
+    assert 'width="26" height="26"' in face_svg(SAFETY)
+    assert 'width="20" height="20"' in star_svg(True)

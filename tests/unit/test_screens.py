@@ -12,7 +12,8 @@ import pytest
 
 from conftest import make_profile, make_program, make_scholarship
 from gradmatch.deadlines import CustomDeadline
-from gradmatch.components import PASSED, chance_badge, check_item, date_tile, funding_bar, official_link, tag
+from gradmatch.components import face_svg
+from gradmatch.components import PASSED, URGENT_BG, chance_badge, check_item, date_tile, funding_bar, official_link, tag
 from gradmatch.fit import MATCH, REACH, SAFETY, UNKNOWN
 from gradmatch.funding import FULLY_FUNDED, FUNDING_UNKNOWN, PARTIALLY_FUNDED, SELF_FUNDED
 from gradmatch.screens import (DISCLAIMER, RESULTS_COLUMNS, cost_info_html, days_left_text, deadline_face,
@@ -266,3 +267,105 @@ def test_half_a_test_score_range_is_not_shown(changes):
 def test_only_the_published_test_is_shown():
     assert score_ranges(make_program(act_25=24, act_75=31)) == "ACT 24–31"
     assert "mid 50%" not in program_row_html(result(), "MI", 15000)
+
+
+# ---- Exact text of the fixed info cards ----
+# Why: these explain the numbers to the student, so a changed or lost sentence should fail a test.
+
+def test_cost_info_card_is_exact():
+    assert cost_info_html() == (
+        '<div class="gm-soft"><div class="gm-label">How cost is worked out</div>'
+        "<p>In-state or out-of-state tuition (international students always pay out-of-state), "
+        "plus the living cost of the school's state, minus any stipend. A funded PhD is assumed "
+        "to waive tuition.</p></div>")
+
+
+def test_faces_card_is_exact():
+    rows = "".join(f'<div class="gm-face-row">{face_svg(label)}<div><b>{label}</b> '
+                   f'<span class="gm-sub">{meaning}</span></div></div>'
+                   for label, meaning in ((SAFETY, "above the program's typical range"),
+                                          (MATCH, "within the typical range"),
+                                          (REACH, "below the typical range"),
+                                          (UNKNOWN, "the school does not publish the numbers")))
+    assert faces_info_html() == f'<div class="gm-card"><div class="gm-label">What the faces mean</div>{rows}</div>'
+
+
+def test_funding_legend_is_exact():
+    assert funding_legend_html() == (
+        '<div class="gm-legend"><b>Funding level</b>'
+        '<span><i style="background:#5E7D63"></i> Fully funded: stipend covers living costs</span>'
+        '<span><i style="background:#9DB8AC"></i> Partly funded</span>'
+        '<span><i style="background:#E2DDD0"></i> Not funded or not published</span></div>')
+
+
+def test_glance_card_is_exact():
+    assert glance_html({"within_window": 1, "within_90": 2, "later": 3, "passed": 4}) == (
+        '<div class="gm-soft"><div class="gm-serif gm-name">At a glance</div>'
+        '<div class="gm-glance-row"><span>Within 14 days</span><b class="gm-urgent">1</b></div>'
+        '<div class="gm-glance-row"><span>Within 90 days</span><b class="">2</b></div>'
+        '<div class="gm-glance-row"><span>Later</span><b class="">3</b></div>'
+        '<div class="gm-glance-row"><span>Passed</span><b class="gm-sub">4</b></div></div>')
+
+
+# ---- Deadline rows: boundary values on the warning window ----
+
+def due_in(days):
+    return CustomDeadline("Item", date.fromordinal(TODAY.toordinal() + days))
+
+
+@pytest.mark.parametrize("days, urgent", [(-1, False), (0, True), (14, True), (15, False)])
+def test_deadline_row_tints_dates_inside_the_window(days, urgent):
+    html = deadline_row_html(due_in(days), TODAY)
+    assert (URGENT_BG in html) is urgent
+
+
+@pytest.mark.parametrize("days", [0, 15])
+def test_only_passed_rows_are_struck_through(days):
+    assert '<div class="gm-name">Item</div>' in deadline_row_html(due_in(days), TODAY)
+
+
+def test_deadline_row_uses_the_chosen_window_for_the_face():
+    html = deadline_row_html(due_in(10), TODAY, 7)
+    assert chance_badge(MATCH, "10 days left") in html and URGENT_BG not in html
+
+
+# ---- Due text and amounts: more boundaries ----
+
+@pytest.mark.parametrize("days, text", [(0, "Due today"), (1, "Due in 1 day"), (2, "Due in 2 days")])
+def test_due_text_near_today(days, text):
+    assert due_text(date.fromordinal(TODAY.toordinal() + days), TODAY) == f'<span class="gm-urgent">{text}</span>'
+
+
+def test_scholarship_amount_follows_the_default_and_the_chosen_window():
+    in_15 = make_scholarship(deadline=date(2026, 11, 13), amount=1)
+    assert '<div class="gm-money gm-big">$1</div>' in scholarship_amount_html(in_15, TODAY)
+    assert "Due Nov 13, 2026" in scholarship_amount_html(in_15, TODAY)
+    in_10 = make_scholarship(deadline=date(2026, 11, 8))
+    assert "Due Nov 8, 2026" in scholarship_amount_html(in_10, TODAY, 7)
+
+
+def test_scholarship_tags_are_side_by_side():
+    html = scholarship_info_html(make_scholarship(), True)
+    assert f'<div>{tag("FELLOWSHIP", "fellowship")} {tag("✓ You qualify", "qualify")}</div>' in html
+
+
+# ---- PhD cards and program rows: exact joins ----
+
+def test_a_one_dollar_stipend_still_counts_as_a_stipend():
+    lines = phd_checklist(make_program(degree="PhD", stipend=1), PARTIALLY_FUNDED)
+    assert lines[0] == ("Tuition waived with funding", True)
+
+
+def test_phd_checklist_lines_are_side_by_side():
+    html = phd_card_html(result(degree="PhD", stipend=40000.0, funding=FULLY_FUNDED))
+    assert "</li><li>" in html and "</li>XX" not in html
+
+
+def test_toefl_warning_sits_after_the_link():
+    row = program_row_html(result(min_toefl=100), "MI", 15000, student_toefl=80)
+    assert f'{official_link("https://example.edu/ms-cs")} {tag("TOEFL min 100 · you 80", "pending")}' in row
+
+
+def test_row_cells_are_side_by_side():
+    row = program_row_html(result(), "MI", 15000)
+    assert '<div class="gm-money">$27,000</div><div><span class="gm-badge"' in row
