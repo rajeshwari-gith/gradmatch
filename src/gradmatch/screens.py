@@ -58,11 +58,24 @@ def rate_note(program: Program, home_state: str | None) -> str:
     return "in-state" if home_state is not None and home_state == program.state else "out-of-state"
 
 
+def score_ranges(program: Program) -> str:
+    """The middle 50% SAT and ACT of enrolled students, for colleges that publish both ends."""
+    parts = []
+    if program.sat_25 is not None and program.sat_75 is not None:
+        parts.append(f"SAT {program.sat_25}–{program.sat_75}")
+    if program.act_25 is not None and program.act_75 is not None:
+        parts.append(f"ACT {program.act_25}–{program.act_75}")
+    return " · ".join(parts)
+
+
 def program_row_html(result: ProgramResult, home_state: str | None, living_cost: float,
                      student_toefl: int | None = None) -> str:
     """One row of the results table: school, state and rate, tuition, living, yearly cost, chance."""
     program = result.program
     extras = official_link(program.website)
+    scores = score_ranges(program)
+    if scores:
+        extras = f"{scores} (mid 50%) · {extras}"
     warning = toefl_warning(program.min_toefl, student_toefl)
     if warning:
         extras += " " + tag(warning, "pending")

@@ -263,4 +263,4 @@ Equivalent survivors (left on purpose):
 | Mutant | Change | Why nothing can notice it |
 |---|---|---|
 | `safe_link` 3 | `url or ""` became `url or "XXXX"` | both give a value that is not an http(s) link, so the result is `None` either way |
-| `result_card_html` 9, `_title_html` 6 | `escape(link, quote=True)` became `escape(link)` | `html.escape` escapes quotes by default, so the output is identical |
+| `result_card_html` 9, `_title_html` 6 (since removed with the old cards) | `escape(link, quote=True)` became `escape(link)` | `html.escape` escapes quotes by default, so the output is identical |

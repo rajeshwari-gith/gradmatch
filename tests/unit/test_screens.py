@@ -19,7 +19,7 @@ from gradmatch.screens import (DISCLAIMER, RESULTS_COLUMNS, cost_info_html, days
                                deadline_row_html, due_text, faces_info_html, fellowships_note, funding_legend_html,
                                glance_html, header_pills_html, item_kind, item_name, page_title_html,
                                phd_card_html, phd_checklist, profile_summary_html, program_row_html,
-                               rate_note, results_header_html, scholarship_amount_html,
+                               rate_note, results_header_html, score_ranges, scholarship_amount_html,
                                scholarship_info_html)
 from gradmatch.search import ProgramResult
 
@@ -247,3 +247,22 @@ def test_a_custom_deadline_shows_its_note_as_the_kind():
 ])
 def test_fellowships_note(count, text):
     assert fellowships_note(count) == text
+
+
+# ---- SAT and ACT on a college row: both ends of a range are needed ----
+
+def test_a_college_row_shows_the_middle_half_of_sat_and_act():
+    scores = dict(degree="BS", sat_25=1100, sat_75=1300, act_25=24, act_75=31)
+    assert score_ranges(make_program(**scores)) == "SAT 1100–1300 · ACT 24–31"
+    row = program_row_html(result(**scores), "MI", 15000)
+    assert "SAT 1100–1300 · ACT 24–31 (mid 50%) · " in row
+
+
+@pytest.mark.parametrize("changes", [dict(sat_25=1100), dict(sat_75=1300), dict(act_25=24), dict(act_75=31)])
+def test_half_a_test_score_range_is_not_shown(changes):
+    assert score_ranges(make_program(**changes)) == ""
+
+
+def test_only_the_published_test_is_shown():
+    assert score_ranges(make_program(act_25=24, act_75=31)) == "ACT 24–31"
+    assert "mid 50%" not in program_row_html(result(), "MI", 15000)
