@@ -22,12 +22,12 @@ from fastapi.testclient import TestClient
 from conftest import make_profile
 from gradmatch.cost import yearly_cost
 from gradmatch.deadlines import upcoming
-from gradmatch.requirements import COLUMNS as REQUIREMENT_COLUMNS, load_requirements
 from gradmatch.scholarships import eligible_scholarships
 
 pytestmark = pytest.mark.integration
 
 from gradmatch.ipeds_import import CIP_FIELDS
+from gradmatch.requirements import COLUMNS as REQUIREMENT_COLUMNS, load_requirements
 
 # The hand-entered programs use four fields; rows imported from official data use the CIP_FIELDS names.
 FIELDS = {"Electrical and Computer Engineering", "Business Analytics", *CIP_FIELDS.values()}
