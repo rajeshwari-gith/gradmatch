@@ -144,6 +144,10 @@ a:hover, .gm-link:hover {{ color: var(--accent-dark); }}
   background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 800; }}
 .stButton > button[kind="primary"]:active {{ background: var(--accent-dark); }}
 
+/* The PhD screen's fellowships line is a plain link, not a raised button. */
+.st-key-phd_fellowships button {{ box-shadow:none !important; color: var(--accent); font-weight:700;
+  text-decoration: underline; padding:0; min-height:auto; }}
+
 /* Star buttons are small round white buttons. */
 [class*="st-key-star-"] button {{ border-radius:999px !important; background:#fff; width:44px; height:44px;
   min-width:44px; padding:0; font-size:20px; color: var(--star); border:1px solid var(--border); }}
