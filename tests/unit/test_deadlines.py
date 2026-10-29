@@ -17,7 +17,8 @@ import pytest
 from hypothesis import given, strategies as st
 
 from conftest import make_program
-from gradmatch.deadlines import CLOSED, LATER, SOON, URGENT, deadline_of, deadline_status, upcoming
+from gradmatch.deadlines import (CLOSED, LATER, SOON, URGENT, deadline_of, deadline_status, glance_counts,
+                                 upcoming)
 from gradmatch.models import Scholarship
 
 pytestmark = pytest.mark.unit
@@ -69,6 +70,73 @@ def test_deadline_status_far_past_is_closed():
 def test_deadline_status_far_future_is_later():
     assert deadline_status(in_days(365), TODAY) == LATER
 
+
+
+# ---- The warning window (urgent_days) ----
+# Why (boundary values): the window moves the urgent/soon cut-off, so each window is tested on
+# both sides of its own cut-off, plus the fixed 30-day cut-off and the allowed range 0-90.
+
+@pytest.mark.parametrize("urgent_days, days_left, expected", [
+    (7, 7, URGENT), (7, 8, SOON),            # a shorter window
+    (30, 30, URGENT), (30, 31, LATER),       # window of 30: no "soon" left
+    (0, 0, URGENT), (0, 1, SOON),            # window of 0: only "due today" is urgent
+    (90, 90, URGENT), (90, 91, LATER),       # the longest window
+    (7, -1, CLOSED),
+])
+def test_deadline_status_with_a_warning_window(urgent_days, days_left, expected):
+    assert deadline_status(in_days(days_left), TODAY, urgent_days=urgent_days) == expected
+
+
+def test_deadline_status_default_window_is_14_days():
+    assert [deadline_status(in_days(d), TODAY) for d in (14, 15)] == [URGENT, SOON]
+
+
+@pytest.mark.parametrize("urgent_days", [-1, 91, 7.5, True, "14"])
+def test_warning_window_outside_0_to_90_whole_days_is_refused(urgent_days):
+    with pytest.raises(ValueError, match="urgent_days must be a whole number from 0 to 90"):
+        deadline_status(TODAY, TODAY, urgent_days=urgent_days)
+    with pytest.raises(ValueError, match="urgent_days must be a whole number from 0 to 90"):
+        glance_counts([], TODAY, urgent_days=urgent_days)
+
+
+# ---- glance_counts() ----
+# Why (boundary values): one item at each of -1, 0, 7, 14, 15, 30, 90 and 91 days shows exactly
+# which count each edge falls into.
+
+def items_at(*days):
+    return [make_program(program_id=f"P{d}", application_deadline=in_days(d)) for d in days]
+
+
+@pytest.mark.parametrize("days_left, expected", [
+    (-1, dict(within_window=0, within_90=0, later=0, passed=1)),
+    (0, dict(within_window=1, within_90=1, later=0, passed=0)),
+    (7, dict(within_window=1, within_90=1, later=0, passed=0)),
+    (14, dict(within_window=1, within_90=1, later=0, passed=0)),
+    (15, dict(within_window=0, within_90=1, later=0, passed=0)),
+    (30, dict(within_window=0, within_90=1, later=0, passed=0)),
+    (90, dict(within_window=0, within_90=1, later=0, passed=0)),
+    (91, dict(within_window=0, within_90=0, later=1, passed=0)),
+])
+def test_glance_counts_boundaries_with_the_default_window(days_left, expected):
+    assert glance_counts(items_at(days_left), TODAY) == expected
+
+
+@pytest.mark.parametrize("urgent_days, within_window", [(0, 1), (7, 2), (14, 3), (30, 4), (90, 5)])
+def test_glance_counts_window_moves_only_within_window(urgent_days, within_window):
+    counts = glance_counts(items_at(-1, 0, 7, 14, 30, 90, 91), TODAY, urgent_days=urgent_days)
+
+    assert counts == dict(within_window=within_window, within_90=5, later=1, passed=1)
+
+
+def test_glance_counts_mixes_programs_and_scholarships_and_skips_unpublished():
+    items = [make_program(application_deadline=None), make_scholarship("S", in_days(3)),
+             make_program(application_deadline=in_days(40))]
+
+    assert glance_counts(items, TODAY) == dict(within_window=1, within_90=2, later=0, passed=0)
+
+
+def test_glance_counts_of_nothing_is_all_zero():
+    assert glance_counts([], TODAY) == dict(within_window=0, within_90=0, later=0, passed=0)
 
 # ---- Leap year ----
 # Why: February 29 is a real day in 2028; counting it wrong would move a deadline from "soon" to "later".

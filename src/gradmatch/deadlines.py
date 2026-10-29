@@ -6,6 +6,9 @@ Rule (CONTRIBUTING.md): days_left = (deadline - today).days
   15 <= days_left <= 30 -> "soon"
   days_left > 30     -> "later"
 
+The warning window (14 days by default) can be set from 0 to 90 days with
+`urgent_days`. glance_counts() gives the four numbers of the "at a glance" row.
+
 `today` is always passed in by the caller; this module never calls
 date.today(), so tests can use any fixed date.
 """
@@ -29,15 +32,20 @@ LATER = "later"
 # check -1, 0, 14, 15, 30 and 31 days so an off-by-one mistake would be caught.
 URGENT_MAX_DAYS = 14
 SOON_MAX_DAYS = 30
+# The longest warning window a student can choose, and the "within 90 days" count.
+GLANCE_DAYS = 90
 
 
 # Count the days left and pick the label. Due today (0 days) is urgent, not closed, because
 # the student can still apply. Counting whole days with dates (not hours) also gets leap years right.
-def deadline_status(deadline: date, today: date) -> str:
+# urgent_days is the student's warning window: with 7, a deadline in 10 days is "soon" instead of
+# "urgent". With a window of 30 days or more there is no "soon" left: it is urgent or later.
+def deadline_status(deadline: date, today: date, urgent_days: int = URGENT_MAX_DAYS) -> str:
+    _check_window(urgent_days)
     days_left = (deadline - today).days
     if days_left < 0:
         return CLOSED
-    if days_left <= URGENT_MAX_DAYS:
+    if days_left <= urgent_days:
         return URGENT
     if days_left <= SOON_MAX_DAYS:
         return SOON
@@ -55,6 +63,40 @@ def upcoming(items: list[Program | Scholarship], today: date) -> list[Program | 
     dated = [item for item in items if deadline_of(item) is not None]
     still_open = [item for item in dated if deadline_status(deadline_of(item), today) != CLOSED]
     return sorted(still_open, key=deadline_of)
+
+
+# The four numbers of the "at a glance" row. A deadline due today counts as open (0 days left).
+# "within_90" includes the warning window, so with the default window a deadline in 5 days is
+# counted in both "within_window" and "within_90". "later" is more than 90 days away, "passed" is
+# before today. Programs with no published deadline are not counted anywhere.
+def glance_counts(items: list[Program | Scholarship], today: date,
+                  urgent_days: int = URGENT_MAX_DAYS) -> dict:
+    """Return {"within_window", "within_90", "later", "passed"} counts for the dated items."""
+    _check_window(urgent_days)
+    counts = {"within_window": 0, "within_90": 0, "later": 0, "passed": 0}
+    for item in items:
+        deadline = deadline_of(item)
+        if deadline is None:
+            continue                         # not published: nothing to count
+        days_left = (deadline - today).days
+        if days_left < 0:
+            counts["passed"] += 1
+        elif days_left > GLANCE_DAYS:
+            counts["later"] += 1
+        else:
+            counts["within_90"] += 1
+            if days_left <= urgent_days:
+                counts["within_window"] += 1
+    return counts
+
+
+# The window must be a whole number from 0 to 90 days. A window longer than 90 days would count
+# more deadlines "within the window" than "within 90 days", which makes no sense on screen.
+# bool is refused too: True is an int in Python, but "a window of True days" is a mistake.
+def _check_window(urgent_days: int):
+    if (not isinstance(urgent_days, int) or isinstance(urgent_days, bool)
+            or not 0 <= urgent_days <= GLANCE_DAYS):
+        raise ValueError(f"urgent_days must be a whole number from 0 to {GLANCE_DAYS}, got {urgent_days!r}")
 
 
 # Programs and scholarships name their deadline field differently. This one helper hides
