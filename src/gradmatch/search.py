@@ -4,7 +4,9 @@ search_programs() keeps a program only if:
 - its field and degree match what the student is looking for,
 - it is in one of the student's preferred states (or any state if none
   are chosen), and
-- its yearly cost fits the student's yearly budget.
+- its yearly cost fits the student's yearly budget, and
+- a Reach/Match/Safety chance can be given (a program with no average GPA and no
+  acceptance rate, for itself or its university, is left out).
 
 Each result carries its cost, Reach/Match/Safety label and funding label.
 MS results are sorted cheapest first; PhD results are sorted by how much
@@ -13,7 +15,7 @@ the stipend is left after living costs (best funded first).
 from dataclasses import dataclass
 
 from gradmatch.cost import known_stipend, total_cost, yearly_cost
-from gradmatch.fit import classify_fit
+from gradmatch.fit import UNKNOWN, classify_fit
 from gradmatch.funding import funding_label
 from gradmatch.models import Program, StudentProfile
 
@@ -50,8 +52,19 @@ def matches_filters(profile: StudentProfile, program: Program) -> bool:
     return True
 
 
+def school_rates(programs: list[Program]) -> dict[tuple[str, str], float]:
+    """Each university's overall acceptance rate, keyed by (university, state).
+
+    Official data publishes it on the university's bachelor's rows; graduate rows of the same
+    university borrow it when they have no rate of their own.
+    """
+    return {(p.university, p.state): p.acceptance_rate for p in programs
+            if p.degree == "BS" and p.acceptance_rate is not None}
+
+
 def search_programs(profile: StudentProfile, programs: list[Program],
                     living_costs: dict[str, float]) -> list[ProgramResult]:
+    rates = school_rates(programs)
     results = []
     for program in programs:
         if not matches_filters(profile, program):
@@ -65,11 +78,16 @@ def search_programs(profile: StudentProfile, programs: list[Program],
         # Too expensive for this student's yearly budget: leave it out of the results.
         if cost > profile.annual_budget:
             continue
+        fit = classify_fit(profile.gpa, program, profile.sat, profile.act,
+                           rates.get((program.university, program.state)))
+        # No chance can be given at all: leave it out rather than show "Unknown".
+        if fit == UNKNOWN:
+            continue
         results.append(ProgramResult(
             program=program,
             yearly_cost=cost,
             total_cost=total_cost(program, tuition_state(profile), living),
-            fit=classify_fit(profile.gpa, program, profile.sat, profile.act),
+            fit=fit,
             funding=funding_label(program, living),
         ))
 

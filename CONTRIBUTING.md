@@ -132,7 +132,11 @@ never a guess). The rules:
   and format. The tuition columns, state, degree, field and website stay required.
 - **New optional column `source`:** `estimate` (hand-drafted values, the default when blank),
   `official-page` (checked by a person on the program's official page) or `ipeds` (imported).
-- **Fit:** `avg_gpa` is `None` -> `Unknown`; but an acceptance rate below 10% is still `Reach`.
+- **Fit:** `avg_gpa` is `None` -> estimated from the acceptance rate (the program's own, else its university's
+  overall rate from the `BS` rows of the same university and state): `rate >= 0.60` Safety; `0.25 <= rate < 0.60`
+  Match; `rate < 0.25` Reach; then `gpa >= 3.7` one step easier and `gpa < 3.0` one step harder, never past
+  Safety or Reach. A rate below 10% is always `Reach`. No GPA and no rate at all -> `Unknown`, and the
+  search leaves that program out.
 - **Funding:** `stipend` is `None` -> `Funding unknown`. For the cost, an unknown stipend counts as 0
   (the cautious choice), so an unknown PhD stipend means tuition is not waived.
 - **Deadlines:** a `None` deadline is left out of the Deadlines tab, the calendar file and
@@ -146,5 +150,5 @@ never a guess). The rules:
 - `degree` can be `BS`, `MS` or `PhD`. `BS` rows are colleges for undergraduate applicants.
 - A `BS` row uses undergraduate tuition (in-state and out-of-state), `duration_years` 4 and `stipend` 0.
 - The same cost rule applies: tuition charged + living cost - stipend, in-state only for US/PR students of that state.
-- GRE does not apply to a bachelor's search. The fit uses the same rules as above, so a `BS` row without a published average GPA shows fit Unknown.
+- GRE does not apply to a bachelor's search. The fit uses the same rules as above, so a `BS` row without a published average GPA gets a chance estimated from its acceptance rate.
 - Undergraduate scholarships go in `scholarships.csv` with `BS` in `degree_levels`. Add one only after checking it on the provider's official page.

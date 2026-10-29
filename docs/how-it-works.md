@@ -29,7 +29,7 @@ can pay $40,000 a year. (Illustrative numbers.)
 | 3. Check the input | `validation.py` | GPA 0 to 4, SAT 400 to 1600, budget not negative, TOEFL required for international students. All problems are shown at once. |
 | 4. Find matches | `search.py` | Keep her degree and field (and preferred states), drop anything over budget, then sort. |
 | 5. Real cost | `cost.py` | Tuition + living costs - stipend, never below 0. A Michigan school: $15,000 + $12,000 - $0 = **$27,000 a year**, $54,000 for 2 years. An international student pays the out-of-state rate ($30,000), so $42,000, which is over budget. A funded PhD pays no tuition. |
-| 6. Chance of admission | `fit.py` | Under 10% accepted: Reach. Colleges: SAT or ACT against the 25th/75th percentile. Otherwise GPA: +0.20 or more is Safety, -0.15 to +0.20 is Match, lower is Reach. No data: Unknown. Maya 3.5 vs 3.3 is +0.20, so **Safety**. |
+| 6. Chance of admission | `fit.py` | Under 10% accepted: Reach. Colleges: SAT or ACT against the 25th/75th percentile. Otherwise GPA: +0.20 or more is Safety, -0.15 to +0.20 is Match, lower is Reach. No GPA published: estimated from the acceptance rate (60%+ Safety, 25–60% Match, under 25% Reach), one step easier for GPA 3.7+ and harder under 3.0; no data at all: left out. Maya 3.5 vs 3.3 is +0.20, so **Safety**. |
 | 7. Funding | `funding.py` | Stipend covers living costs: Fully Funded. Some: Partially. None: Self-Funded. Blank: Funding unknown. |
 | 8. Scholarships | `scholarships.py` | Shown only if every condition matches: degree, field, GPA, citizenship, state, special group. |
 | 9. Deadlines | `deadlines.py` | Closed (past), Urgent (0 to 14 days), Soon (15 to 30), Later (31+). A Jan 15 deadline on Oct 27 is 80 days away: Later. |

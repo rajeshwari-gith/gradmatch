@@ -16,7 +16,7 @@ from gradmatch.components import face_svg
 from gradmatch.components import PASSED, URGENT_BG, chance_badge, check_item, date_tile, funding_bar, official_link, tag
 from gradmatch.fit import MATCH, REACH, SAFETY, UNKNOWN
 from gradmatch.funding import FULLY_FUNDED, FUNDING_UNKNOWN, PARTIALLY_FUNDED, SELF_FUNDED
-from gradmatch.screens import (DISCLAIMER, RESULTS_COLUMNS, cost_info_html, days_left_text, deadline_face,
+from gradmatch.screens import (DISCLAIMER, ESTIMATE_RULE, RESULTS_COLUMNS, cost_info_html, days_left_text, deadline_face,
                                deadline_row_html, due_text, faces_info_html, fellowships_note, funding_legend_html,
                                glance_html, header_pills_html, item_kind, item_name, page_title_html,
                                phd_card_html, phd_checklist, profile_summary_html, program_row_html,
@@ -93,7 +93,7 @@ def test_program_row_without_a_safe_website_has_no_link_and_escapes_names():
 def test_info_cards_and_disclaimer():
     assert "international students always pay out-of-state" in cost_info_html()
     faces = faces_info_html()
-    for label in (SAFETY, MATCH, REACH, UNKNOWN):
+    for label in (SAFETY, MATCH, REACH):
         assert f"<b>{label}</b>" in faces
     assert "not a promise of admission" in DISCLAIMER
 
@@ -285,9 +285,10 @@ def test_faces_card_is_exact():
                    f'<span class="gm-sub">{meaning}</span></div></div>'
                    for label, meaning in ((SAFETY, "above the program's typical range"),
                                           (MATCH, "within the typical range"),
-                                          (REACH, "below the typical range"),
-                                          (UNKNOWN, "the school does not publish the numbers")))
-    assert faces_info_html() == f'<div class="gm-card"><div class="gm-label">What the faces mean</div>{rows}</div>'
+                                          (REACH, "below the typical range")))
+    assert faces_info_html() == (f'<div class="gm-card"><div class="gm-label">What the faces mean</div>{rows}'
+                                 f'<p class="gm-sub">{ESTIMATE_RULE}</p></div>')
+    assert "Unknown" not in faces_info_html()
 
 
 def test_funding_legend_is_exact():

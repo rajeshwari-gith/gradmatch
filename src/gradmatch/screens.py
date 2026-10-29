@@ -12,7 +12,7 @@ from gradmatch.components import (PASSED, chance_badge, check_item, date_tile, f
                                   official_link, school_tile, stipend_box, tag)
 from gradmatch.cost import known_stipend, tuition_charged
 from gradmatch.deadlines import deadline_of
-from gradmatch.fit import MATCH, REACH, SAFETY, UNKNOWN
+from gradmatch.fit import MATCH, REACH, SAFETY
 from gradmatch.funding import FULLY_FUNDED
 from gradmatch.models import Program, Scholarship
 from gradmatch.scholarships import ASSISTANTSHIP, FELLOWSHIP, SCHOLARSHIP, kind_of
@@ -22,6 +22,8 @@ from gradmatch.search import ProgramResult
 DISCLAIMER = ("Results are estimates, not a promise of admission. Data: US Department of Education "
               "(IPEDS), College Scorecard and official university websites.")
 NOT_STATED = "Not published"
+ESTIMATE_RULE = ("Most programs do not publish an average GPA. For those, the chance is estimated from "
+                 "the school's official acceptance rate and your GPA.")
 WITHIN_90 = 90       # a deadline more than this many days away counts as "later"
 
 # The tag colour used for each kind of award (scholarships.kind_of gives the kind).
@@ -107,9 +109,9 @@ def faces_info_html() -> str:
                    for label, meaning in (
                        (SAFETY, "above the program's typical range"),
                        (MATCH, "within the typical range"),
-                       (REACH, "below the typical range"),
-                       (UNKNOWN, "the school does not publish the numbers")))
-    return f'<div class="gm-card"><div class="gm-label">What the faces mean</div>{rows}</div>'
+                       (REACH, "below the typical range")))
+    return (f'<div class="gm-card"><div class="gm-label">What the faces mean</div>{rows}'
+            f'<p class="gm-sub">{ESTIMATE_RULE}</p></div>')
 
 
 # ---- Screen 2: PhD cards ----

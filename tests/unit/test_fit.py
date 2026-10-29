@@ -7,7 +7,7 @@ table showing the acceptance-rate rule overrides the GPA rule.
 import pytest
 
 from conftest import make_program
-from gradmatch.fit import MATCH, REACH, SAFETY, UNKNOWN, classify_fit
+from gradmatch.fit import MATCH, REACH, SAFETY, UNKNOWN, classify_fit, rate_fit
 
 pytestmark = pytest.mark.unit
 
@@ -83,16 +83,17 @@ def test_gpa_difference_is_rounded_to_two_decimals(gpa, expected):
 
 
 # ---- Unpublished values (official government data) ----
-# Why: imported rows often have no GPA. Saying "Unknown" is honest; guessing would mislead students.
+# Why: imported rows almost never have a GPA, so the chance is estimated from the acceptance rate
+# (official data) and the student's GPA; only with no rate at all is it Unknown.
 # Decision table:  acceptance rate | avg GPA   | fit
 #                  < 10%           | any       | Reach
 #                  unknown         | unknown   | Unknown
 #                  unknown         | known     | by GPA
-#                  >= 10%          | unknown   | Unknown
+#                  >= 10%          | unknown   | estimated from the rate and the GPA
 
 @pytest.mark.parametrize("rate, avg_gpa, expected", [
     (0.09, None, REACH), (0.09, 3.40, REACH),
-    (None, None, UNKNOWN), (0.10, None, UNKNOWN), (0.40, None, UNKNOWN),
+    (None, None, UNKNOWN), (0.10, None, REACH), (0.40, None, MATCH),
     (None, 3.40, MATCH),
 ])
 def test_fit_with_unpublished_values(rate, avg_gpa, expected):
@@ -140,7 +141,7 @@ def test_without_a_score_the_gpa_rule_is_used():
 
 def test_a_score_is_ignored_when_the_college_publishes_no_percentiles():
     assert classify_fit(3.40, make_program(), sat=1600, act=36) == MATCH
-    assert classify_fit(3.40, make_program(avg_gpa=None), sat=1600) == UNKNOWN
+    assert classify_fit(3.40, make_program(avg_gpa=None, acceptance_rate=None), sat=1600) == UNKNOWN
 
 
 # ---- Property-based: a better GPA never makes the fit worse ----
@@ -163,3 +164,43 @@ def test_a_higher_gpa_never_gives_a_worse_fit(low, high, average):
 @given(gpa=gpas, rate=st.floats(min_value=0.0, max_value=0.0999, allow_nan=False))
 def test_a_very_selective_program_is_a_reach_for_every_gpa(gpa, rate):
     assert classify_fit(gpa, make_program(acceptance_rate=rate)) == REACH
+
+
+# ---- Estimated chance from the acceptance rate: boundary values on every cut-off ----
+# Why: 92% of graduate programs publish no GPA. The estimate starts from how many applicants the
+# school accepts (Reach under 25%, Match from 25%, Safety from 60%) and moves one step for a
+# strong (3.7+) or weak (under 3.0) GPA, never past Safety or Reach.
+
+@pytest.mark.parametrize("rate, expected", [
+    (0.10, REACH), (0.2499, REACH), (0.25, MATCH), (0.5999, MATCH), (0.60, SAFETY), (1.0, SAFETY)])
+def test_rate_sets_the_starting_point_for_an_average_gpa(rate, expected):
+    assert rate_fit(3.40, rate) == expected
+
+
+@pytest.mark.parametrize("gpa, rate, expected", [
+    (3.69, 0.30, MATCH), (3.70, 0.30, SAFETY),       # a strong GPA moves one step easier
+    (3.00, 0.30, MATCH), (2.99, 0.30, REACH),        # a weak GPA moves one step harder
+    (4.00, 0.70, SAFETY),                            # never past Safety
+    (2.00, 0.20, REACH),                             # never past Reach
+    (2.90, 0.70, MATCH),                             # a weak GPA at an open school: one step, not two
+    (3.90, 0.20, MATCH),                             # a strong GPA at a hard school
+])
+def test_gpa_moves_the_estimate_one_step(gpa, rate, expected):
+    assert rate_fit(gpa, rate) == expected
+
+
+def test_the_university_rate_is_used_when_the_program_has_none():
+    program = make_program(avg_gpa=None, acceptance_rate=None)
+    assert classify_fit(3.40, program, school_rate=0.70) == SAFETY
+    assert classify_fit(3.40, program, school_rate=0.05) == REACH     # very selective university
+    assert classify_fit(3.40, program) == UNKNOWN                    # nothing at all
+
+
+def test_the_programs_own_rate_wins_over_the_university_rate():
+    program = make_program(avg_gpa=None, acceptance_rate=0.20)
+    assert classify_fit(3.40, program, school_rate=0.90) == REACH
+
+
+def test_a_published_gpa_still_decides_before_any_estimate():
+    program = make_program(avg_gpa=3.90, acceptance_rate=None)
+    assert classify_fit(3.40, program, school_rate=0.90) == REACH

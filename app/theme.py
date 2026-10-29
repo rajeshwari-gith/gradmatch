@@ -115,8 +115,10 @@ a:hover, .gm-link:hover {{ color: var(--accent-dark); }}
 .gm-passed {{ text-decoration: line-through; color: var(--muted); }}
 
 /* Rows and cards built by gradmatch.screens. */
-.gm-grid {{ display:grid; grid-template-columns: minmax(260px,3.4fr) 1.5fr .9fr .9fr 1fr 1.2fr; gap:10px;
-  align-items:center; padding:4px 6px; }}
+.gm-grid {{ display:grid; grid-template-columns: minmax(200px,3.2fr) minmax(96px,1.4fr) minmax(64px,.9fr)
+  minmax(64px,.9fr) minmax(76px,1fr) minmax(118px,auto); gap:10px; align-items:center; padding:4px 6px; }}
+/* The header row lines up with the rows below it, which start after the star. */
+.gm-grid.gm-table-head {{ padding: 8px 22px 8px 90px; }}
 .gm-grid > div:nth-child(2) {{ white-space: nowrap; }}
 .gm-link {{ white-space: nowrap; }}
 .gm-cell-name {{ display:flex; gap:12px; align-items:center; }}
@@ -130,7 +132,25 @@ a:hover, .gm-link:hover {{ color: var(--accent-dark); }}
 .gm-glance-row {{ display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid var(--row-line); }}
 [class*="st-key-row-"], [class*="st-key-card-"], [class*="st-key-sch-"], [class*="st-key-dl-"] {{
   background: var(--surface); border:1px solid var(--border); border-radius:18px; box-shadow: {CARD_SHADOW};
-  padding: 6px 12px; position:relative; overflow:hidden; }}
+  padding: 12px 16px; position:relative; height:auto !important; overflow:visible; }}
+/* The column that holds a star keeps the star's full width instead of a squeezed share, and the
+   row it sits in never wraps the star onto a line of its own. */
+[data-testid="stColumn"]:has(> [data-testid="stVerticalBlock"] > [class*="st-key-star-"]) {{
+  flex: 0 0 52px !important; width: 52px !important; min-width: 52px !important; }}
+[data-testid="stHorizontalBlock"]:has(> [data-testid="stColumn"] > [data-testid="stVerticalBlock"] > [class*="st-key-star-"]) {{
+  flex-wrap: nowrap !important; }}
+[data-testid="stHorizontalBlock"]:has(> [data-testid="stColumn"] > [data-testid="stVerticalBlock"] > [class*="st-key-star-"]) > [data-testid="stColumn"] {{
+  min-width: 0 !important; }}
+
+/* A scholarship's amount and due date never break in the middle. */
+[data-testid="stColumn"]:has(> [data-testid="stVerticalBlock"] > [data-testid="stElementContainer"] .gm-amount) {{
+  flex: 0 0 150px !important; width: 150px !important; min-width: 150px !important; }}
+.gm-amount {{ white-space: nowrap; }}
+
+/* "Track deadline" keeps its whole label. */
+[data-testid="stColumn"]:has(> [data-testid="stVerticalBlock"] > [class*="st-key-track-"]) {{
+  flex: 0 0 160px !important; width: 160px !important; min-width: 160px !important; }}
+[class*="st-key-track-"] button {{ white-space: nowrap; }}
 
 /* Buttons: soft raised, lift on hover, press down when clicked. */
 .stButton > button, .stFormSubmitButton > button, .stDownloadButton > button {{
@@ -152,15 +172,18 @@ a:hover, .gm-link:hover {{ color: var(--accent-dark); }}
 [class*="st-key-star-"] button {{ border-radius:999px !important; background:#fff; width:44px; height:44px;
   min-width:44px; padding:0; font-size:20px; color: var(--star); border:1px solid var(--border); }}
 
-/* Phones: the results table becomes one small card per program, with a label on each number. */
-@media (max-width: 640px) {{
-  .gm-table-head {{ display:none; }}
-  .gm-grid.gm-row {{ grid-template-columns: 1fr 1fr; gap:8px 12px; }}
+/* When a results row is narrow (a phone, a small window or a split screen), it becomes a small card:
+   the school on top, then each number with its label, so nothing is cut off. */
+[data-testid="stMarkdownContainer"]:has(> .gm-grid) {{ container-type: inline-size; }}
+@container (max-width: 660px) {{
+  .gm-grid.gm-row {{ grid-template-columns: repeat(auto-fit, minmax(118px, 1fr)); gap:8px 14px; }}
   .gm-grid.gm-row > div:first-child {{ grid-column: 1 / -1; }}
   .gm-grid.gm-row > div[data-label]::before {{ content: attr(data-label); display:block; font-size:11px;
     font-weight:700; text-transform:uppercase; letter-spacing:.05em; color: var(--muted); }}
   .gm-grid > div:nth-child(2) {{ white-space: normal; }}
 }}
+/* The header is about 70px wider than a row (it has no star beside it), so it hides a little sooner. */
+@container (max-width: 730px) {{ .gm-grid.gm-table-head {{ display:none; }} }}
 
 /* Inputs: gold border and a soft ring when focused. */
 input:focus, textarea:focus, [data-baseweb="select"] > div:focus-within {{
