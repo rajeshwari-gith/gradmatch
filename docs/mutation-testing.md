@@ -192,6 +192,25 @@ Result for the whole `[tool.mutmut]` set at this point: cost, fit, funding, vali
 had **no survivors**; the remaining survivors are the documented equivalents in `data_loader`,
 `apply_lookup` and `ipeds_import`.
 
+## Warning window, custom deadlines and starred items
+
+`starred.py` was added to `source_paths` (the unit tests import it, so mutmut cannot start
+without it). `deadlines.py` and `exports.py` were run again for the warning window, `glance_counts`,
+`CustomDeadline` and the calendar events for custom deadlines.
+
+| Module | Mutants | Killed (first run) | Survived (first run) | Killed (after new test) | Survived (after) |
+|---|---:|---:|---:|---:|---:|
+| `deadlines.py` | 95 | 93 | 2 | 95 | 0 |
+| `exports.py` | 130 | 129 | 1 | 129 | **1** (equivalent) |
+| `starred.py` | 22 | 22 | 0 | 22 | 0 |
+
+- **The 2 survivors in `deadlines.py`** were `counts["passed"] += 1` and `counts["later"] += 1`
+  becoming `= 1`. Every test had at most one passed and one later deadline. Added
+  `test_glance_counts_adds_up_several_items_in_every_count` (two in each count).
+- **The equivalent survivor in `exports.py`**: `_slug` ends with `.strip("-")`; the mutant is
+  `.strip("XX-XX")`. `strip` removes a set of characters, and the slug is already lower case, so it
+  never has an `X` at either end.
+
 ## Property-based tests and defect D-004 (2026-10-28)
 
 Property-based tests (Hypothesis) were added for the loader, deadlines, scholarships and exports.
