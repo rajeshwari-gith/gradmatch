@@ -11,11 +11,12 @@ from datetime import date
 import pytest
 
 from conftest import make_profile, make_program, make_scholarship
+from gradmatch.deadlines import CustomDeadline
 from gradmatch.components import PASSED, chance_badge, check_item, date_tile, funding_bar, official_link, tag
 from gradmatch.fit import MATCH, REACH, SAFETY, UNKNOWN
 from gradmatch.funding import FULLY_FUNDED, FUNDING_UNKNOWN, PARTIALLY_FUNDED, SELF_FUNDED
-from gradmatch.screens import (DISCLAIMER, RESULTS_COLUMNS, cost_info_html, count_deadlines, days_left_text, deadline_face,
-                               deadline_row_html, due_text, faces_info_html, funding_legend_html,
+from gradmatch.screens import (DISCLAIMER, RESULTS_COLUMNS, cost_info_html, days_left_text, deadline_face,
+                               deadline_row_html, due_text, faces_info_html, fellowships_note, funding_legend_html,
                                glance_html, header_pills_html, item_kind, item_name, page_title_html,
                                phd_card_html, phd_checklist, profile_summary_html, program_row_html,
                                rate_note, results_header_html, scholarship_amount_html,
@@ -141,9 +142,14 @@ def test_scholarship_info_shows_type_qualify_name_eligibility_and_link():
     assert official_link("https://example.org/fellowship") in html
 
 
-def test_scholarship_info_without_qualifying_and_with_an_unusual_type():
+def test_a_fee_waiver_is_shown_as_a_scholarship_and_not_qualifying_has_no_tick():
     html = scholarship_info_html(make_scholarship(type="fee_waiver"), False)
-    assert tag("FEE WAIVER", "optional") in html and "You qualify" not in html
+    assert tag("SCHOLARSHIP", "scholarship") in html and "You qualify" not in html
+
+
+def test_an_assistantship_has_its_own_tag():
+    html = scholarship_info_html(make_scholarship(type="assistantship"), True)
+    assert tag("ASSISTANTSHIP", "assistantship") in html
 
 
 @pytest.mark.parametrize("deadline, text", [
@@ -190,11 +196,7 @@ def test_days_left_text(days, text):
     assert days_left_text(days) == text
 
 
-class Custom:
-    """Any other dated item, like a deadline the student adds: a name, a date and a link."""
-    name = "My own reminder"
-    deadline = date(2026, 11, 2)
-    website = ""
+CUSTOM = CustomDeadline("My own reminder", date(2026, 11, 2))
 
 
 def test_names_and_kinds_for_each_kind_of_item():
@@ -202,7 +204,7 @@ def test_names_and_kinds_for_each_kind_of_item():
     assert item_kind(make_program()) == "MS Computer Science"
     assert item_name(make_scholarship()) == "Test Fellowship"
     assert item_kind(make_scholarship()) == "Fellowship application"
-    assert item_name(Custom()) == "My own reminder" and item_kind(Custom()) == "Your own deadline"
+    assert item_name(CUSTOM) == "My own reminder" and item_kind(CUSTOM) == "Your own deadline"
 
 
 def test_deadline_row_for_an_urgent_scholarship():
@@ -220,7 +222,7 @@ def test_deadline_row_for_a_later_program_and_a_passed_one():
 
 
 def test_deadline_row_without_a_link():
-    html = deadline_row_html(Custom(), TODAY)
+    html = deadline_row_html(CUSTOM, TODAY)
     assert "Your own deadline</div>" in html and "Official site" not in html
 
 
@@ -232,21 +234,16 @@ def test_glance_card():
     assert "Within 7 days" in glance_html({"within_window": 0, "within_90": 0, "later": 0, "passed": 0}, 7)
 
 
-# ---- 'At a glance' counts: boundary values ----
-
-def dated(day):
-    item = Custom()
-    item.deadline = day
-    return item
+def test_a_custom_deadline_shows_its_note_as_the_kind():
+    assert item_kind(CustomDeadline("Letters", date(2026, 11, 2), note="Ask Prof. Lee")) == "Ask Prof. Lee"
 
 
-def test_count_deadlines_boundaries():
-    days = [-1, 0, 14, 15, 90, 91]
-    items = [dated(date.fromordinal(TODAY.toordinal() + d)) for d in days]
-    assert count_deadlines(items, TODAY) == {"within_window": 2, "within_90": 4, "later": 1, "passed": 1}
+# ---- The fellowships line on the PhD screen: 0, 1 and many ----
 
-
-def test_count_deadlines_follows_the_window_and_handles_nothing():
-    items = [dated(date.fromordinal(TODAY.toordinal() + d)) for d in (5, 10)]
-    assert count_deadlines(items, TODAY, 7)["within_window"] == 1
-    assert count_deadlines([], TODAY) == {"within_window": 0, "within_90": 0, "later": 0, "passed": 0}
+@pytest.mark.parametrize("count, text", [
+    (0, "No fellowships or assistantships match your profile yet"),
+    (1, "1 fellowship or assistantship you can apply for →"),
+    (4, "4 fellowships and assistantships you can apply for →"),
+])
+def test_fellowships_note(count, text):
+    assert fellowships_note(count) == text

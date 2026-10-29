@@ -15,6 +15,7 @@ from gradmatch.deadlines import deadline_of
 from gradmatch.fit import MATCH, REACH, SAFETY, UNKNOWN
 from gradmatch.funding import FULLY_FUNDED
 from gradmatch.models import Program, Scholarship
+from gradmatch.scholarships import ASSISTANTSHIP, FELLOWSHIP, SCHOLARSHIP, kind_of
 from gradmatch.presentation import eligibility_summary, format_date, money, toefl_warning
 from gradmatch.search import ProgramResult
 
@@ -23,8 +24,8 @@ DISCLAIMER = ("Results are estimates, not a promise of admission. Data: US Depar
 NOT_STATED = "Not published"
 WITHIN_90 = 90       # a deadline more than this many days away counts as "later"
 
-# Scholarship types in the data and the tag colour used for each.
-TYPE_TAGS = {"fellowship": "fellowship", "scholarship": "scholarship", "assistantship": "assistantship"}
+# The tag colour used for each kind of award (scholarships.kind_of gives the kind).
+KIND_TAGS = {SCHOLARSHIP: "scholarship", FELLOWSHIP: "fellowship", ASSISTANTSHIP: "assistantship"}
 
 
 # ---- Header ----
@@ -129,6 +130,14 @@ def phd_card_html(result: ProgramResult) -> str:
             f'<ul class="gm-check">{checks}</ul>')
 
 
+def fellowships_note(count: int) -> str:
+    """The line under the PhD title that points to the Scholarships screen."""
+    if count == 0:
+        return "No fellowships or assistantships match your profile yet"
+    noun = "fellowship or assistantship" if count == 1 else "fellowships and assistantships"
+    return f"{count} {noun} you can apply for →"
+
+
 def funding_legend_html() -> str:
     return ('<div class="gm-legend"><b>Funding level</b>'
             '<span><i style="background:#5E7D63"></i> Fully funded: stipend covers living costs</span>'
@@ -140,8 +149,8 @@ def funding_legend_html() -> str:
 
 def scholarship_info_html(scholarship: Scholarship, qualifies: bool) -> str:
     """Type tag, '✓ You qualify', the name, who can apply and the official link."""
-    kind = scholarship.type.replace("_", " ").title()
-    tags = tag(kind.upper(), TYPE_TAGS.get(scholarship.type, "optional"))
+    kind = kind_of(scholarship)
+    tags = tag(kind.upper(), KIND_TAGS[kind])
     if qualifies:
         tags += " " + tag("✓ You qualify", "qualify")
     return (f'<div>{tags}</div><div class="gm-name gm-serif">{escape(scholarship.name)}</div>'
@@ -207,8 +216,8 @@ def item_kind(item) -> str:
     if isinstance(item, Program):
         return f"{item.degree} {item.field}"
     if isinstance(item, Scholarship):
-        return f"{item.type.replace('_', ' ').title()} application"
-    return "Your own deadline"
+        return f"{kind_of(item)} application"
+    return item.note or "Your own deadline"
 
 
 def deadline_row_html(item, today: date, urgent_days: int = 14) -> str:
@@ -235,20 +244,3 @@ def glance_html(counts: dict, urgent_days: int = 14) -> str:
     body = "".join(f'<div class="gm-glance-row"><span>{label}</span><b class="{css}">{n}</b></div>'
                    for label, n, css in rows)
     return f'<div class="gm-soft"><div class="gm-serif gm-name">At a glance</div>{body}</div>'
-
-
-def count_deadlines(items, today: date, urgent_days: int = 14) -> dict:
-    """How many dated items fall in each 'At a glance' group. 'Within 90 days' includes the window."""
-    counts = {"within_window": 0, "within_90": 0, "later": 0, "passed": 0}
-    for item in items:
-        days_left = (deadline_of(item) - today).days
-        if days_left < 0:
-            counts["passed"] += 1
-            continue
-        if days_left <= urgent_days:
-            counts["within_window"] += 1
-        if days_left <= WITHIN_90:
-            counts["within_90"] += 1
-        else:
-            counts["later"] += 1
-    return counts

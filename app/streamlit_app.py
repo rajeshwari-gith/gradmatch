@@ -32,14 +32,16 @@ from gradmatch.components import CHANCE_COLORS, warning_banner  # noqa: E402
 from gradmatch.cost import cost_breakdown, known_stipend  # noqa: E402
 from gradmatch.data_loader import (DataError, load_living_costs, load_programs,  # noqa: E402
                                    load_scholarships)
-from gradmatch.deadlines import deadline_of  # noqa: E402
+from gradmatch.deadlines import (CustomDeadline, deadline_of, glance_counts,  # noqa: E402
+                                 validate_custom_deadline)
 from gradmatch.exports import to_csv, to_ics  # noqa: E402
 from gradmatch.fit import MATCH, REACH, SAFETY, UNKNOWN  # noqa: E402
 from gradmatch.models import StudentProfile  # noqa: E402
 from gradmatch.presentation import ESTIMATE_NOTE, SPECIAL_LABELS, format_date, money  # noqa: E402
-from gradmatch.scholarships import eligible_scholarships  # noqa: E402
-from gradmatch.screens import (DISCLAIMER, cost_info_html, count_deadlines,  # noqa: E402
-                               deadline_row_html, faces_info_html, funding_legend_html, glance_html,
+from gradmatch.scholarships import KINDS, eligible_scholarships, fellowship_count, kind_of  # noqa: E402
+from gradmatch.starred import only_starred, star_key, toggle  # noqa: E402
+from gradmatch.screens import (DISCLAIMER, cost_info_html,  # noqa: E402
+                               deadline_row_html, faces_info_html, fellowships_note, funding_legend_html, glance_html,
                                header_pills_html, item_name, page_title_html, phd_card_html,
                                profile_summary_html, program_row_html, results_header_html,
                                scholarship_amount_html, scholarship_info_html)
@@ -91,23 +93,28 @@ def optional_int(value):
 
 # ---- Stars and tracked deadlines (kept in the session) ----
 
-def starred() -> set:
-    return st.session_state.setdefault("starred", set())
+def starred() -> frozenset:
+    return st.session_state.setdefault("starred", frozenset())
 
 
-def tracked() -> set:
-    return st.session_state.setdefault("tracked", set())
+def tracked() -> frozenset:
+    return st.session_state.setdefault("tracked", frozenset())
 
 
-def _flip(collection: set, key: str):
+def custom_deadlines() -> list:
+    return st.session_state.setdefault("custom_deadlines", [])
+
+
+def _flip(collection: str, key: str):
     # Called by a button before the page redraws, so the new state shows straight away.
-    collection.symmetric_difference_update({key})
+    st.session_state[collection] = toggle(st.session_state.get(collection, frozenset()), key)
 
 
-def star_button(key: str, name: str):
+def star_button(item, name: str):
     """A round star button. Clicking it stars or unstars the item."""
+    key = star_key(item)
     on = key in starred()
-    st.button("★" if on else "☆", key=f"star-{key}", on_click=_flip, args=(starred(), key),
+    st.button("★" if on else "☆", key=f"star-{key}", on_click=_flip, args=("starred", key),
               help=f"{'Unstar' if on else 'Star'} {name}")
 
 
@@ -251,11 +258,11 @@ def show_results(profile, results, living_costs):
     counts = {label: sum(r.fit == label for r in results) for label in (SAFETY, MATCH, REACH, UNKNOWN)}
     options = ["All"] + [label for label, n in counts.items() if n]
     left, right = st.columns([1, 4], vertical_alignment="center")
-    only_starred = left.toggle("Starred only", key="results_starred")
+    starred_only = left.toggle("Starred only", key="results_starred")
     chance = right.radio("Chance", options, horizontal=True, key="chance", label_visibility="collapsed",
                          format_func=lambda o: f"{o} {len(results) if o == 'All' else counts[o]}")
     shown = [r for r in results if (chance == "All" or r.fit == chance)
-             and (not only_starred or f"program:{r.program.program_id}" in starred())]
+             and (not starred_only or star_key(r.program) in starred())]
 
     if len(shown) > MAX_ROWS:
         st.caption(f"Showing the first {MAX_ROWS} of {len(shown)} matches. Narrow your search with a "
@@ -269,7 +276,7 @@ def show_results(profile, results, living_costs):
         with st.container(key=f"row-{r.program.program_id}"):
             star_col, row_col = st.columns([0.5, 12], vertical_alignment="center")
             with star_col:
-                star_button(f"program:{r.program.program_id}", r.program.university)
+                star_button(r.program, r.program.university)
             row_col.markdown(program_row_html(r, home, living_costs[r.program.state], profile.toefl),
                              unsafe_allow_html=True)
 
@@ -285,7 +292,11 @@ def show_results(profile, results, living_costs):
 
 # ---- Screen 2: PhD funding ----
 
-def show_phd_page(profile, programs, living_costs, fields):
+def go_to_scholarships():
+    st.session_state["page"] = PAGES[2]
+
+
+def show_phd_page(profile, programs, living_costs, fields, scholarships):
     st.markdown(page_title_html("Funded", "PhD", " programs"), unsafe_allow_html=True)
     if profile is None:
         st.info("Fill in your profile on **Program search** first, so we can show your chances.")
@@ -296,15 +307,15 @@ def show_phd_page(profile, programs, living_costs, fields):
     sort = sort_col.selectbox("Sort by", PHD_SORTS, key="phd_sort")
     full_only = waiver_col.checkbox("Full waiver only", key="phd_full",
                                     help="Only programs with a stipend, where tuition is waived.")
-    only_starred = star_col.toggle("Starred only", key="phd_starred")
+    starred_only = star_col.toggle("Starred only", key="phd_starred")
 
     # The same search as Program search, for PhD programs in this subject, with no budget limit.
     phd_profile = replace(profile, degree_sought="PhD", field=subject, annual_budget=float("inf"))
     results = search_programs(phd_profile, programs, living_costs)
     if full_only:
         results = [r for r in results if known_stipend(r.program) > 0]
-    if only_starred:
-        results = [r for r in results if f"program:{r.program.program_id}" in starred()]
+    if starred_only:
+        results = [r for r in results if star_key(r.program) in starred()]
     if sort == PHD_SORTS[0]:
         results = sorted(results, key=lambda r: (-known_stipend(r.program), r.program.university))
     elif sort == PHD_SORTS[2]:
@@ -312,6 +323,9 @@ def show_phd_page(profile, programs, living_costs, fields):
 
     st.markdown(f'<div class="gm-sub">{len(results)} PhD programs in {subject} · any state · '
                 f'sorted by {sort.lower()}</div>', unsafe_allow_html=True)
+    count = fellowship_count(phd_profile, scholarships)
+    st.button(fellowships_note(count), key="phd_fellowships", type="tertiary", disabled=count == 0,
+              on_click=go_to_scholarships)
     st.markdown(funding_legend_html(), unsafe_allow_html=True)
     if not results:
         st.info("No PhD programs match these filters.")
@@ -325,7 +339,7 @@ def show_phd_page(profile, programs, living_costs, fields):
                 body, star_col = st.columns([6, 1])
                 body.markdown(phd_card_html(r), unsafe_allow_html=True)
                 with star_col:
-                    star_button(f"program:{r.program.program_id}", r.program.university)
+                    star_button(r.program, r.program.university)
     st.caption("Stipends and funding terms come from official data or program pages where we have "
                "them; confirm with each department.")
 
@@ -334,11 +348,10 @@ def show_phd_page(profile, programs, living_costs, fields):
 
 def show_scholarships_page(profile, scholarships, today):
     filters, cards = st.columns([1, 3], gap="large")
-    types = sorted({s.type for s in scholarships})
+    kinds = sorted(set(KINDS.values()))
     with filters:
         st.markdown('<div class="gm-label">Type</div>', unsafe_allow_html=True)
-        chosen_types = {t for t in types
-                        if st.checkbox(t.replace("_", " ").title(), value=True, key=f"type-{t}")}
+        chosen_kinds = {k for k in kinds if st.checkbox(k, value=True, key=f"type-{k.lower()}")}
         show = st.radio("Show", SHOW_CHOICES, key="sch_show")
         if profile is not None:
             st.markdown(profile_summary_html(profile), unsafe_allow_html=True)
@@ -347,10 +360,10 @@ def show_scholarships_page(profile, scholarships, today):
     if show == SHOW_CHOICES[0]:
         items = [s for s in scholarships if s.scholarship_id in eligible and s.deadline >= today]
     elif show == SHOW_CHOICES[1]:
-        items = [s for s in scholarships if f"scholarship:{s.scholarship_id}" in starred()]
+        items = only_starred(scholarships, starred())
     else:
         items = list(scholarships)
-    items = sorted((s for s in items if s.type in chosen_types), key=lambda s: (s.deadline, s.name))
+    items = sorted((s for s in items if kind_of(s) in chosen_kinds), key=lambda s: (s.deadline, s.name))
 
     with cards:
         st.markdown(page_title_html("Scholarships &", "opportunities"), unsafe_allow_html=True)
@@ -366,19 +379,19 @@ def show_scholarships_page(profile, scholarships, today):
                     "the groups that apply to you in the form.")
             return
         for s in items:
-            key = f"scholarship:{s.scholarship_id}"
+            key = star_key(s)
             with st.container(key=f"sch-{s.scholarship_id}"):
                 star_col, info_col, amount_col, track_col = st.columns([0.6, 7, 2.2, 1.9],
                                                                        vertical_alignment="center")
                 with star_col:
-                    star_button(key, s.name)
+                    star_button(s, s.name)
                 info_col.markdown(scholarship_info_html(s, s.scholarship_id in eligible),
                                   unsafe_allow_html=True)
                 amount_col.markdown(scholarship_amount_html(s, today), unsafe_allow_html=True)
                 on = key in tracked()
                 track_col.button("✓ Tracking" if on else "Track deadline", key=f"track-{s.scholarship_id}",
                                  type="secondary" if on else "primary", on_click=_flip,
-                                 args=(tracked(), key))
+                                 args=("tracked", key))
 
 
 # ---- Screen 5: Deadlines ----
@@ -387,19 +400,38 @@ def deadline_items(results, scholarships, profile):
     """Everything with a date the student cares about: their programs, the scholarships they
     qualify for, and any scholarship they chose to track. Each item appears once, soonest first."""
     eligible = eligible_scholarships(profile, scholarships) if profile else []
-    chosen = [s for s in scholarships if f"scholarship:{s.scholarship_id}" in tracked()]
+    chosen = [s for s in scholarships if star_key(s) in tracked()]
     items, seen = [], set()
-    for item in [r.program for r in results] + list(eligible) + chosen:
+    for item in [r.program for r in results] + list(eligible) + chosen + custom_deadlines():
         if id(item) not in seen and deadline_of(item) is not None:
             seen.add(id(item))
             items.append(item)
     return sorted(items, key=lambda item: (deadline_of(item), item_name(item)))
 
 
-def star_key(item) -> str:
-    if hasattr(item, "program_id"):
-        return f"program:{item.program_id}"
-    return f"scholarship:{item.scholarship_id}"
+def add_custom_deadline():
+    """Called by the form button: check the name and date, then keep the deadline in the session."""
+    name, day = st.session_state.get("custom_name", ""), st.session_state.get("custom_date")
+    link = (st.session_state.get("custom_link") or "").strip()
+    errors = validate_custom_deadline(name, day)
+    if any(star_key(item) == f"deadline:{name.strip()}" for item in custom_deadlines()):
+        errors.append("You already have a deadline with this name.")
+    st.session_state["custom_errors"] = errors
+    if not errors:
+        custom_deadlines().append(CustomDeadline(name.strip(), day, link))
+        st.session_state["custom_name"] = ""
+        st.session_state["custom_link"] = ""
+
+
+def show_add_deadline():
+    with st.expander("+ Add a deadline"):
+        with st.form("add_deadline", clear_on_submit=False, border=False):
+            st.text_input("What is due", key="custom_name", placeholder="e.g. Recommendation letters")
+            st.date_input("Date", key="custom_date", value=None, format="YYYY-MM-DD")
+            st.text_input("Link (optional)", key="custom_link")
+            st.form_submit_button("Add deadline", type="primary", on_click=add_custom_deadline)
+        for message in st.session_state.get("custom_errors", []):
+            st.error(message)
 
 
 def show_deadlines_page(items, today):
@@ -408,11 +440,12 @@ def show_deadlines_page(items, today):
         st.markdown(page_title_html("Upcoming", "deadlines"), unsafe_allow_html=True)
         st.markdown(f'<div class="gm-sub">{len(items)} tracked · today is {today:%b} {today.day}</div>',
                     unsafe_allow_html=True)
-    only_starred = star_col.toggle("Starred only", key="dl_starred")
+    starred_only = star_col.toggle("Starred only", key="dl_starred")
     warn_days = warn_col.selectbox("Warn me when a deadline is within", WARN_CHOICES, index=1,
                                    key="warn_days", format_func=lambda d: f"{d} days")
-    if only_starred:
-        items = [item for item in items if star_key(item) in starred()]
+    if starred_only:
+        items = only_starred(items, starred())
+    show_add_deadline()
     if not items:
         st.info("There are no deadlines for your programs or scholarships yet. Find programs first, "
                 "or track a scholarship.")
@@ -433,9 +466,9 @@ def show_deadlines_page(items, today):
                 row, star_col = st.columns([10, 1], vertical_alignment="center")
                 row.markdown(deadline_row_html(item, today, warn_days), unsafe_allow_html=True)
                 with star_col:
-                    star_button(star_key(item), item_name(item))
+                    star_button(item, item_name(item))
     with side:
-        st.markdown(glance_html(count_deadlines(items, today, warn_days), warn_days), unsafe_allow_html=True)
+        st.markdown(glance_html(glance_counts(items, today, warn_days), warn_days), unsafe_allow_html=True)
         open_items = [item for item in items if deadline_of(item) >= today]
         stamp = datetime.combine(today, time(0, 0))
         st.download_button("Add these deadlines to my calendar (.ics)", to_ics(open_items, stamp),
@@ -502,14 +535,15 @@ def main():
     items = deadline_items(results, scholarships, profile)
 
     if page == PAGES[1]:
-        show_phd_page(profile, programs, living_costs, fields)
+        show_phd_page(profile, programs, living_costs, fields, scholarships)
     elif page == PAGES[2]:
         show_scholarships_page(profile, scholarships, today)
     elif page == PAGES[3]:
         show_deadlines_page(items, today)
 
-    urgent = count_deadlines(items, today)["within_window"]
-    pills.markdown(header_pills_html(len(starred()), urgent), unsafe_allow_html=True)
+    warn_days = st.session_state.get("warn_days", WARN_CHOICES[1])
+    urgent = glance_counts(items, today, warn_days)["within_window"]
+    pills.markdown(header_pills_html(len(starred()), urgent, warn_days), unsafe_allow_html=True)
 
 
 main()
