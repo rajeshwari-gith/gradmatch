@@ -1,6 +1,6 @@
 # Data quality report (snapshot)
 
-Made on **2026-10-28** from `main` at `c806adb` with:
+Made on **2026-10-29** from `main` at `d7de8c7` with:
 
 ```
 PYTHONPATH=src python -m gradmatch.data_report
