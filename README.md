@@ -112,7 +112,7 @@ earlier import, so running it again gives the same file, and never touches hand-
 ## Run the tests
 
 ```
-pytest                                   # all tests (about 750)
+pytest                                   # all tests (about 820)
 pytest -m unit                           # one level: unit, integration, system or acceptance
 pytest --cov --cov-report=term-missing   # with line and branch coverage
 ```
@@ -124,7 +124,7 @@ All tests pass with 100% line and branch coverage of `src/gradmatch` and the app
 | Unit | one function or module at a time: validation, cost, fit, funding, search, scholarships, deadlines, loader, exports, cards | `tests/unit/` |
 | Integration | modules working together, from CSV files to search, cards and exports; the REST API; real data checks; the link checker | `tests/integration/` |
 | System | the whole Streamlit app, driven with Streamlit's `AppTest` | `tests/system/` |
-| Acceptance | the three user stories from the project specification | `tests/acceptance/` |
+| Acceptance | the user stories from the project specification, plus a bachelor's search story | `tests/acceptance/` |
 
 Test techniques used: boundary-value analysis, equivalence partitioning, decision tables,
 property-based testing (Hypothesis) and mutation testing (see `docs/mutation-testing.md`).
@@ -161,9 +161,20 @@ src/gradmatch/   application code (business logic, no Streamlit)
 app/             Streamlit user interface
 data/            programs, scholarships and living costs (CSV), plus SOURCES.md
 tests/           unit, integration, system and acceptance tests
-docs/            notes: the official-data import and the mutation testing results
+docs/            test plan, how it works, mutation testing, official-data import, data report
 DEFECT_LOG.md    defects found by testing, with how they were found and fixed
 CONTRIBUTING.md  the team's rules, data formats and business rules
 ```
 
 See `CONTRIBUTING.md` for the data formats and the rules the tests are written against.
+
+## Documentation
+
+| Document | What it covers |
+|---|---|
+| [`docs/how-it-works.md`](docs/how-it-works.md) | one search, step by step, and the design choices behind it |
+| [`docs/test-plan.md`](docs/test-plan.md) | test levels, techniques, coverage goal and which tests cover each feature |
+| [`docs/mutation-testing.md`](docs/mutation-testing.md) | mutation testing results and the tests it led to |
+| [`docs/official-data-import.md`](docs/official-data-import.md) | how the official government data is imported |
+| [`docs/data-report.md`](docs/data-report.md) | a dated snapshot of the data quality report |
+| [`DEFECT_LOG.md`](DEFECT_LOG.md) | every defect found by testing, with severity and status |
