@@ -48,7 +48,7 @@ html, body, [data-testid="stAppViewContainer"], button, input, select, textarea 
 }}
 h1, h2, h3, .gm-serif {{ font-family: 'Fraunces', serif !important; font-weight: 600;
   letter-spacing: -0.01em; color: var(--ink); }}
-.block-container {{ max-width: 1280px; padding-top: 1.2rem; }}
+.block-container {{ max-width: 1280px; padding-top: 3.75rem; }}  /* leave room for Streamlit's own top bar */
 .gm-title-accent {{ color: var(--accent); }}
 .gm-sub, .gm-muted {{ color: var(--muted); font-size: 0.9rem; }}
 a, .gm-link {{ color: var(--accent); font-weight: 600; text-decoration: underline; }}
@@ -63,13 +63,22 @@ a:hover, .gm-link:hover {{ color: var(--accent-dark); }}
 .gm-pill-star {{ color: var(--nav-text); }}
 .gm-pill-notice {{ background: var(--notice-bg); color: var(--notice-text); }}
 
-/* Navigation (a horizontal radio) drawn as pills. */
-div[data-testid="stRadio"].st-key-page div[role="radiogroup"] {{ gap: 6px; flex-wrap: wrap; }}
-.st-key-page label {{ padding:10px 16px; border-radius:999px; min-height:44px; color:var(--nav-text);
-  transition: background .15s ease, color .15s ease; }}
-.st-key-page label:hover {{ background: rgba(94,125,99,.08); }}
-.st-key-page label:has(input:checked) {{ background: var(--accent-tint); color: var(--accent-dark); font-weight:700; }}
-.st-key-page label > div:first-child {{ display:none; }}
+/* Navigation and the chance filter: horizontal radios drawn as pills (no round dots). */
+.st-key-page [role="radiogroup"], .st-key-chance [role="radiogroup"] {{ gap: 8px; flex-wrap: wrap; }}
+.st-key-page [role="radiogroup"] label, .st-key-chance [role="radiogroup"] label {{
+  padding: 8px 16px; border-radius: 999px; min-height: 44px; margin: 0; cursor: pointer;
+  transition: background .15s ease, color .15s ease, transform .1s ease; }}
+.st-key-page [role="radiogroup"] label > div > div:not([data-testid]),
+.st-key-chance [role="radiogroup"] label > div > div:not([data-testid]) {{ display: none; }}
+.st-key-page [role="radiogroup"] label {{ color: var(--nav-text); }}
+.st-key-page [role="radiogroup"] label:hover {{ background: rgba(94,125,99,.08); }}
+.st-key-page [role="radiogroup"] label:has(input:checked) {{ background: var(--accent-tint); }}
+.st-key-page [role="radiogroup"] label:has(input:checked) p {{ color: var(--accent-dark); font-weight: 700; }}
+.st-key-chance [role="radiogroup"] label {{ background: #fff; border: 1.5px solid var(--border);
+  box-shadow: 0 1px 2px rgba(43,43,38,.08); }}
+.st-key-chance [role="radiogroup"] label:hover {{ transform: translateY(-2px); }}
+.st-key-chance [role="radiogroup"] label:has(input:checked) {{ background: var(--ink); border-color: var(--ink); }}
+.st-key-chance [role="radiogroup"] label:has(input:checked) p {{ color: #fff; font-weight: 700; }}
 
 /* Cards, info boxes and tables. */
 .gm-card {{ background: var(--surface); border:1px solid var(--border); border-radius:18px;
@@ -88,7 +97,7 @@ div[data-testid="stRadio"].st-key-page div[role="radiogroup"] {{ gap: 6px; flex-
   letter-spacing:.02em; }}
 .gm-tile {{ width:46px; height:46px; border-radius:14px; background:var(--tile); color:var(--ink);
   display:inline-flex; align-items:center; justify-content:center; font-weight:800; font-size:14px; flex:0 0 46px; }}
-.gm-fundbar {{ position:absolute; left:0; right:0; top:0; height:8px; }}
+.gm-fundbar {{ height:8px; border-radius:999px; margin:2px 0 12px; }}
 .gm-stipend {{ background:var(--surface-soft); border-radius:14px; padding:12px 14px; display:flex;
   align-items:center; justify-content:space-between; gap:10px; margin:10px 0; }}
 .gm-stipend-label {{ font-size:12px; color:var(--muted); font-weight:600; }}
@@ -106,8 +115,10 @@ div[data-testid="stRadio"].st-key-page div[role="radiogroup"] {{ gap: 6px; flex-
 .gm-passed {{ text-decoration: line-through; color: var(--muted); }}
 
 /* Rows and cards built by gradmatch.screens. */
-.gm-grid {{ display:grid; grid-template-columns: minmax(240px,3fr) 1.3fr 1fr 1fr 1.1fr 1.2fr; gap:10px;
-  align-items:center; padding:12px 14px; }}
+.gm-grid {{ display:grid; grid-template-columns: minmax(260px,3.4fr) 1.5fr .9fr .9fr 1fr 1.2fr; gap:10px;
+  align-items:center; padding:4px 6px; }}
+.gm-grid > div:nth-child(2) {{ white-space: nowrap; }}
+.gm-link {{ white-space: nowrap; }}
 .gm-cell-name {{ display:flex; gap:12px; align-items:center; }}
 .gm-name {{ font-weight:700; font-size:15px; }}
 .gm-face-row {{ display:flex; gap:8px; align-items:center; margin:6px 0; }}
@@ -119,7 +130,7 @@ div[data-testid="stRadio"].st-key-page div[role="radiogroup"] {{ gap: 6px; flex-
 .gm-glance-row {{ display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid var(--row-line); }}
 [class*="st-key-row-"], [class*="st-key-card-"], [class*="st-key-sch-"], [class*="st-key-dl-"] {{
   background: var(--surface); border:1px solid var(--border); border-radius:18px; box-shadow: {CARD_SHADOW};
-  padding: 10px 14px; position:relative; overflow:hidden; }}
+  padding: 6px 12px; position:relative; overflow:hidden; }}
 
 /* Buttons: soft raised, lift on hover, press down when clicked. */
 .stButton > button, .stFormSubmitButton > button, .stDownloadButton > button {{
@@ -134,7 +145,8 @@ div[data-testid="stRadio"].st-key-page div[role="radiogroup"] {{ gap: 6px; flex-
 .stButton > button[kind="primary"]:active {{ background: var(--accent-dark); }}
 
 /* Star buttons are small round white buttons. */
-[class*="st-key-star-"] button {{ border-radius:999px; background:#fff; width:44px; padding:0; font-size:18px; }}
+[class*="st-key-star-"] button {{ border-radius:999px !important; background:#fff; width:44px; height:44px;
+  min-width:44px; padding:0; font-size:20px; color: var(--star); border:1px solid var(--border); }}
 
 /* Inputs: gold border and a soft ring when focused. */
 input:focus, textarea:focus, [data-baseweb="select"] > div:focus-within {{
