@@ -106,7 +106,8 @@ is not there, is not an error. A key that does not start with `program:`, `schol
 
 The profile fields are `degree_sought`, `gpa`, `field`, `home_state`, `citizenship` (`US`, `PR` or
 `International`) and `annual_budget`, plus optional `preferred_states`, `gre`, `toefl`, `sat`, `act`
-and `special`. An invalid profile, limit, offset or date gives 422; missing values are `null`.
+and `special`. An invalid profile, limit, offset, date or `urgent_days` (below 0 or above 90) gives 422;
+missing values are `null`.
 
 ## Import the official data
 

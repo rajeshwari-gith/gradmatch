@@ -125,6 +125,14 @@ def test_health_answer_in_the_table_matches_the_api(client):
     assert client.get("/health").json() == documented
 
 
+
+def test_deadlines_row_in_the_table_names_the_real_keys(client):
+    row = next(line for line in api_section().split("\n") if line.startswith("| `GET /deadlines"))
+    answer = client.get("/deadlines?today=2026-10-27").json()
+
+    assert all(f'"{key}"' in row for key in answer)                    # urgent_days, glance, deadlines
+    assert all(f"`{key}`" in row for key in answer["glance"])         # the four counts
+
 def test_the_uvicorn_command_names_the_real_app():
     command = re.search(r"uvicorn (\S+):(\S+)", api_section())
     module, name = command.groups()
