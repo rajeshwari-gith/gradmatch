@@ -152,6 +152,16 @@ a:hover, .gm-link:hover {{ color: var(--accent-dark); }}
 [class*="st-key-star-"] button {{ border-radius:999px !important; background:#fff; width:44px; height:44px;
   min-width:44px; padding:0; font-size:20px; color: var(--star); border:1px solid var(--border); }}
 
+/* Phones: the results table becomes one small card per program, with a label on each number. */
+@media (max-width: 640px) {{
+  .gm-table-head {{ display:none; }}
+  .gm-grid.gm-row {{ grid-template-columns: 1fr 1fr; gap:8px 12px; }}
+  .gm-grid.gm-row > div:first-child {{ grid-column: 1 / -1; }}
+  .gm-grid.gm-row > div[data-label]::before {{ content: attr(data-label); display:block; font-size:11px;
+    font-weight:700; text-transform:uppercase; letter-spacing:.05em; color: var(--muted); }}
+  .gm-grid > div:nth-child(2) {{ white-space: normal; }}
+}}
+
 /* Inputs: gold border and a soft ring when focused. */
 input:focus, textarea:focus, [data-baseweb="select"] > div:focus-within {{
   border-color: var(--star) !important; box-shadow: 0 0 0 4px rgba(94,125,99,.18) !important; }}

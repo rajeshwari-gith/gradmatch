@@ -49,3 +49,10 @@ def test_buttons_lift_on_hover_and_press_down_when_clicked():
     assert f"transform: translateY(-2px); box-shadow: {BUTTON_HOVER_SHADOW};" in css
     assert f"transform: translateY(1px) scale(.97); box-shadow: {BUTTON_PRESSED_SHADOW};" in css
     assert "min-height: 44px" in css      # touch targets at least 44px tall
+
+
+def test_on_a_phone_the_table_becomes_labelled_cards():
+    css = page_css()
+    assert "@media (max-width: 640px)" in css
+    assert ".gm-table-head { display:none; }" in css
+    assert "content: attr(data-label);" in css

@@ -132,7 +132,7 @@ def test_a_loaded_program_becomes_a_row_with_its_cost(data):
     programs, living, _ = data
     cheap = search_programs(make_profile(), programs, living)[0]
     html = program_row_html(cheap, "MI", living["MI"])
-    assert "Cheap State University" in html and 'gm-money">$25,000<' in html
+    assert "Cheap State University" in html and 'gm-money" data-label="Est. yearly">$25,000<' in html
     assert 'href="https://example.edu/cheap"' in html
 
 

@@ -76,7 +76,7 @@ def test_the_chance_filter_counts_each_label(app):
 def test_rows_show_state_tuition_living_and_the_rate(app):
     find_programs(app)
     first = rows(app)[0]
-    for text in ['MI <span class="gm-sub">in-state</span>', "<div>$10,000</div>", "<div>$15,000</div>"]:
+    for text in ['MI <span class="gm-sub">in-state</span>', '<div data-label="Tuition">$10,000</div>', '<div data-label="Living">$15,000</div>']:
         assert text in first
 
 

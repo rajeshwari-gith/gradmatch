@@ -69,14 +69,14 @@ def test_rate_note(home, note):
 def test_program_row_shows_every_column():
     html = program_row_html(result(fit=SAFETY), "MI", 12000)
     for text in ["Test University", "MS in Computer Science", "Official site ↗", ">MI <",
-                 "in-state", "$15,000", "$12,000", '<div class="gm-money">$27,000</div>',
+                 "in-state", "$15,000", "$12,000", '<div class="gm-money" data-label="Est. yearly">$27,000</div>',
                  chance_badge(SAFETY)]:
         assert text in html
 
 
 def test_program_row_uses_the_out_of_state_rate_for_another_state():
     html = program_row_html(result(), "OH", 12000)
-    assert "out-of-state" in html and "<div>$30,000</div>" in html
+    assert "out-of-state" in html and '<div data-label="Tuition">$30,000</div>' in html
 
 
 def test_program_row_shows_a_toefl_warning_only_when_below_the_minimum():
@@ -368,4 +368,10 @@ def test_toefl_warning_sits_after_the_link():
 
 def test_row_cells_are_side_by_side():
     row = program_row_html(result(), "MI", 15000)
-    assert '<div class="gm-money">$27,000</div><div><span class="gm-badge"' in row
+    assert '<div class="gm-money" data-label="Est. yearly">$27,000</div><div><span class="gm-badge"' in row
+
+
+def test_each_number_in_a_row_is_labelled_for_phones():
+    row = program_row_html(result(), "MI", 15000)
+    for label in ("State", "Tuition", "Living", "Est. yearly"):
+        assert f'data-label="{label}"' in row

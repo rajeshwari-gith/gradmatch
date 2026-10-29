@@ -82,12 +82,13 @@ def program_row_html(result: ProgramResult, home_state: str | None, living_cost:
     name = (f'<div class="gm-cell-name">{school_tile(program.university)}<div>'
             f'<div class="gm-name">{escape(program.university)}</div>'
             f'<div class="gm-sub">{escape(program.program_name)} · {extras}</div></div></div>')
+    # data-label names each cell, so a phone can show the cells as a small labelled card.
     cells = [
         name,
-        f'<div>{escape(program.state)} <span class="gm-sub">{rate_note(program, home_state)}</span></div>',
-        f"<div>{money(tuition_charged(program, home_state))}</div>",
-        f"<div>{money(living_cost)}</div>",
-        f'<div class="gm-money">{money(result.yearly_cost)}</div>',
+        f'<div data-label="State">{escape(program.state)} <span class="gm-sub">{rate_note(program, home_state)}</span></div>',
+        f'<div data-label="Tuition">{money(tuition_charged(program, home_state))}</div>',
+        f'<div data-label="Living">{money(living_cost)}</div>',
+        f'<div class="gm-money" data-label="Est. yearly">{money(result.yearly_cost)}</div>',
         f"<div>{chance_badge(result.fit)}</div>",
     ]
     return f'<div class="gm-grid gm-row">{"".join(cells)}</div>'

@@ -72,7 +72,7 @@ def row_names(at) -> list[str]:
 
 
 def yearly_costs(at) -> list[int]:
-    return [int(re.search(r'gm-money">\$([\d,]+)<', row).group(1).replace(",", "")) for row in rows(at)]
+    return [int(re.search(r'gm-money"[^>]*>\$([\d,]+)<', row).group(1).replace(",", "")) for row in rows(at)]
 
 
 def chances(at) -> list[str]:
