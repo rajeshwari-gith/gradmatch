@@ -137,6 +137,35 @@ def test_pipe_in_notes_is_changed_so_the_table_stays_whole(tmp_path, data_dir):
     assert "| a / b |" in (data_dir / "SOURCES.md").read_text()
 
 
+def test_changes_from_every_row_are_listed_and_counted(tmp_path, data_dir):
+    sheet = write_sheet(tmp_path, [sheet_row(official_url="", deadline=""),
+                                   sheet_row(scholarship_id="S2", official_url="", amount="", deadline="2027-02-15")])
+
+    lines = apply_scholarship_sheet(sheet, data_dir)
+
+    assert lines == ["2 row(s) applied, 2 value(s) changed",
+                     "S1: amount 30000 -> 32000",
+                     "S2: deadline 2027-02-01 -> 2027-02-15"]
+
+
+def test_written_file_uses_unix_line_endings(tmp_path, data_dir):
+    apply_scholarship_sheet(write_sheet(tmp_path, [sheet_row()]), data_dir)
+
+    assert b"\r\n" not in (data_dir / "scholarships.csv").read_bytes()
+
+def test_line_break_inside_quoted_cells_is_kept(tmp_path, data_dir):
+    # Both files are read with newline="" as the csv module asks, so a \r\n inside a quoted
+    # cell stays exactly as it is instead of becoming \n.
+    (data_dir / "scholarships.csv").write_text(
+        SCHOLARSHIPS.replace("Second Scholarship", '"Second\r\nScholarship"'), newline="")
+    sheet = write_sheet(tmp_path, [sheet_row(notes="first\r\nsecond")])
+
+    apply_scholarship_sheet(sheet, data_dir)
+
+    assert scholarship(data_dir, "S2").name == "Second\r\nScholarship"
+    with open(data_dir / "SOURCES.md", newline="", encoding="utf-8") as file:
+        assert "| first\r\nsecond |" in file.read()
+
 # ---- Rows that are skipped ----
 # Why: an unchecked row must never change data, and an empty sheet must not rewrite the files.
 
@@ -147,6 +176,12 @@ def test_unchecked_rows_are_skipped_even_if_bad(tmp_path, data_dir):
     assert apply_scholarship_sheet(sheet, data_dir) == ["0 row(s) applied, 0 value(s) changed"]
     assert files(data_dir) == before
 
+
+def test_an_unchecked_row_before_a_checked_row_does_not_stop_it(tmp_path, data_dir):
+    sheet = write_sheet(tmp_path, [sheet_row(scholarship_id="S2", checked_by=""), sheet_row()])
+
+    assert apply_scholarship_sheet(sheet, data_dir)[0] == "1 row(s) applied, 3 value(s) changed"
+    assert scholarship(data_dir, "S1").amount == 32000.0
 
 # ---- Invalid classes: one kind of mistake each ----
 # Why: each mistake must be reported, and any mistake means nothing is written.
