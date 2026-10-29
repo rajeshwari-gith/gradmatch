@@ -1,0 +1,11 @@
+program_id,university,program_name,name,required,limit_text,prompt_text,source_url,checked_by,checked_on,notes
+GT-PHDCS,Georgia Institute of Technology,PhD in Computer Science,,,,,,,,
+PURDUE-MSCS,Purdue University,MS in Computer Science,,,,,,,,
+PURDUE-PHDCS,Purdue University,PhD in Computer Science,,,,,,,,
+IPEDS-198419-PHD-14.0501,Duke University,PhD in Biomedical Engineering,,,,,,,,
+IPEDS-114549-PHD-42.2801,Fielding Graduate University,PhD in Clinical Psychology,,,,,,,,
+IPEDS-139755-PHD-14.1001,Georgia Institute of Technology-Main Campus,PhD in Electrical Engineering,,,,,,,,
+IPEDS-139755-PHD-14.0501,Georgia Institute of Technology-Main Campus,PhD in Biomedical Engineering,,,,,,,,
+IPEDS-139755-PHD-14.0201,Georgia Institute of Technology-Main Campus,PhD in Aerospace Engineering,,,,,,,,
+IPEDS-166027-PHD-26.0102,Harvard University,PhD in Biomedical Sciences,,,,,,,,
+IPEDS-193405-PHD-26.0102,Icahn School of Medicine at Mount Sinai,PhD in Biomedical Sciences,,,,,,,,
