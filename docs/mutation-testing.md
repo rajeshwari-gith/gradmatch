@@ -232,3 +232,27 @@ Equivalent survivors (left on purpose):
 |---|---|---|
 | `safe_link` 3 | `url or ""` became `url or "XXXX"` | both give a value that is not an http(s) link, so the result is `None` either way |
 | `result_card_html` 9, `_title_html` 6 | `escape(link, quote=True)` became `escape(link)` | `html.escape` escapes quotes by default, so the output is identical |
+
+## `data_report.py`
+
+Moved from `also_copy` to `source_paths`, then run with `mutmut run "gradmatch.data_report.*"`.
+
+| Run | Mutants | Killed | Survived |
+|---|---:|---:|---:|
+| First run | 303 | 257 | 46 |
+| After 5 new tests | 303 | **296** | 7 (equivalent, see below) |
+
+The 39 real survivors came from text the tests only matched in part (titles, blank lines, the
+`, ` separator, the `(blank)` label), from default values that only matter when a column is
+missing, from a file with exactly one imported row (`rows[0]` became `rows[1]`), and from
+`newline=""`. The new tests compare the whole printed report, load files with missing columns,
+use one imported row (boundary value), and put a line break inside a quoted cell.
+
+Equivalent mutants (7, not killed on purpose):
+- **`encoding` (5).** `encoding=None`, no `encoding` argument, or `"UTF-8"` instead of `"utf-8"`
+  when reading the CSV files and `SOURCES.md`. Python runs in UTF-8 mode here and the names are the
+  same codec.
+- **`"XXXX"` instead of `""` when `SOURCES.md` is missing (1).** The "Verified" patterns cannot
+  match either text, so both give "not found".
+- **`"XXXX"` instead of `""` as the default website (1).** Neither starts with `https://`, so the
+  row is listed as non-https either way.
