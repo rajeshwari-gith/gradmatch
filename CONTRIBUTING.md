@@ -9,6 +9,8 @@ opportunities and deadlines. Stack: Python 3.11+, Streamlit, FastAPI, SQLite, py
 - Each member commits ONLY their own components (see Ownership) from their own GitHub account.
 - Work on a branch `<name>/<feature>` (e.g. `sai/scholarships`), open a pull request, the other member reviews it.
 - Every line must be explainable by its owner. Keep code simple; no clever tricks.
+- Commit messages say what changed in a short imperative line (for example "Add property-based tests for search").
+- Before the first commit on a new machine, check `git config user.name` and `git config user.email` are your own.
 
 ## Repository layout
 ```
