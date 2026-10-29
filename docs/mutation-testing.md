@@ -120,6 +120,12 @@ the command run with only the sheet (default `data` folder) and its printed line
   from the ends of the line. Table lines start and end with `|`, and the first and last cells are
   separated from it by spaces, so the extra `X` never touches a cell.
 
+## Scholarship kinds: `scholarships.py`
+
+Run again after `kind_of` and `fellowship_count` were added: **44 of 44 mutants killed** (35
+before). The tests check each of the five types once, an unknown type (exact message), and a
+count where eligible and not eligible fellowships, assistantships and scholarships are mixed.
+
 ## Bachelor's data: `fit.py` score rules, `data_loader._percentiles`, `ipeds_import.py`
 
 Run after the BS degree, the SAT/ACT columns and the official-data importer were added.

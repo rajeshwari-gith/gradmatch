@@ -102,6 +102,10 @@ Every row needs a real `website` (official source). Data is an estimate; UI show
   includes the window), `later` (> 90) and `passed` (< 0); unpublished deadlines are not counted.
 - **Scholarship eligibility**: ALL must hold: degree in degree_levels; field in fields or "Any";
   gpa >= min_gpa; citizenship in list or "Any"; home_state in states or "Any"; every `special` item in profile.special.
+- **Scholarship kind** (`kind_of`): the five `type` values are shown as three kinds. `scholarship` → Scholarship;
+  `fee_waiver` → Scholarship (money off the cost, no work in return); `fellowship` → Fellowship; `assistantship` →
+  Assistantship; `research` → Assistantship (paid research work). Any other type is an error.
+  `fellowship_count` counts the eligible scholarships whose kind is Fellowship or Assistantship.
 - **Tuition**: in-state rate if profile.home_state == program.state, else out-of-state. **International students (citizenship "International") are never residents of a state and always pay the out-of-state rate.**
 - **Tuition charged**: a PhD program with `stipend > 0` waives tuition (charged 0); MS programs always charge tuition.
 - **Yearly cost** = tuition charged + living cost of program state − stipend (never below 0).
