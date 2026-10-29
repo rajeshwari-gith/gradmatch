@@ -1,25 +1,14 @@
 # This file only changes colours. Nothing here affects how the app calculates anything.
-# GradMatch themes. The student switches between them in the app menu
-# (top right, three dots -> Settings -> Theme), or follows the computer's setting.
+# The Sage & Cream design is a light design; the rest of the look is in app/theme.py.
 
-[theme.light]
-primaryColor = "#1B7A94"
-backgroundColor = "#FAFAF9"
-secondaryBackgroundColor = "#F1F4F7"
-textColor = "#1F2A37"
-headingFont = "serif"
-baseRadius = "0.75rem"
-greenColor = "#1BB89A"
-yellowColor = "#F5C469"
-redColor = "#F0705F"
-
-[theme.dark]
-primaryColor = "#4FB3CC"
-backgroundColor = "#0F1720"
-secondaryBackgroundColor = "#17212C"
-textColor = "#E6EDF3"
-headingFont = "serif"
-baseRadius = "0.75rem"
-greenColor = "#2ED3AE"
-yellowColor = "#F7D07E"
-redColor = "#F58A7B"
+[theme]
+base = "light"
+primaryColor = "#5E7D63"
+backgroundColor = "#FBF8F1"
+secondaryBackgroundColor = "#F5F1E7"
+textColor = "#2B2B26"
+font = "sans serif"
+baseRadius = "0.85rem"
+greenColor = "#3A9D55"
+yellowColor = "#D9A441"
+redColor = "#9A3F22"
