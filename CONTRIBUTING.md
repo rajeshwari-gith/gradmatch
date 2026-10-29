@@ -92,13 +92,21 @@ class Scholarship:
 - `programs.csv`: columns = Program fields in order. Dates `YYYY-MM-DD`. Empty cell = None.
 - `scholarships.csv`: columns = Scholarship fields; list fields use `;` (e.g. `MS;PhD`).
 - `living_costs.csv`: `state,annual_living_cost`.
+- `requirements.csv`: `program_id,name,required,limit_text,prompt_text,source_url,checked_by,checked_on`; `required` is `yes`/`no`; only rows checked on the official page (blank limit or prompt = not stated).
 Every row needs a real `website` (official source). Data is an estimate; UI shows "verify on the official site".
 
 ## Business rules (tests are written against these – do not change silently)
 - **Deadline status** (today is ALWAYS passed in as a parameter, never `date.today()` inside logic):
   days_left = (deadline - today).days; `< 0` → "closed"; `0–14` → "urgent"; `15–30` → "soon"; `> 30` → "later".
+  The warning window (14 by default) is `urgent_days`, a whole number from 0 to 90: `0–urgent_days` → "urgent",
+  then "soon" up to 30, then "later". `glance_counts` counts `within_window` (0–urgent_days), `within_90` (0–90,
+  includes the window), `later` (> 90) and `passed` (< 0); unpublished deadlines are not counted.
 - **Scholarship eligibility**: ALL must hold: degree in degree_levels; field in fields or "Any";
   gpa >= min_gpa; citizenship in list or "Any"; home_state in states or "Any"; every `special` item in profile.special.
+- **Scholarship kind** (`kind_of`): the five `type` values are shown as three kinds. `scholarship` → Scholarship;
+  `fee_waiver` → Scholarship (money off the cost, no work in return); `fellowship` → Fellowship; `assistantship` →
+  Assistantship; `research` → Assistantship (paid research work). Any other type is an error.
+  `fellowship_count` counts the eligible scholarships whose kind is Fellowship or Assistantship.
 - **Tuition**: in-state rate if profile.home_state == program.state, else out-of-state. **International students (citizenship "International") are never residents of a state and always pay the out-of-state rate.**
 - **Tuition charged**: a PhD program with `stipend > 0` waives tuition (charged 0); MS programs always charge tuition.
 - **Yearly cost** = tuition charged + living cost of program state − stipend (never below 0).

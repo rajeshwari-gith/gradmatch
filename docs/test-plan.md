@@ -53,7 +53,8 @@ page shows the live ones.
 | Deadlines and urgent warning | `deadlines.py` | `tests/unit/test_deadlines.py`, story 3 |
 | CSV and calendar downloads | `exports.py` | `tests/unit/test_exports.py`, `tests/integration/test_pipeline.py` |
 | Reading data, bad-row messages, "not published" cells | `data_loader.py` | `tests/unit/test_data_loader.py`, `tests/system/test_data_errors.py` |
-| Cards, colours, safe links | `presentation.py` | `tests/unit/test_presentation.py` |
+| Rows, cards, badges, colours, safe links | `screens.py`, `components.py`, `presentation.py`, `app/theme.py` | `tests/unit/test_screens.py`, `tests/unit/test_components.py`, `tests/unit/test_presentation.py`, `tests/unit/test_theme.py` |
+| Stars, warning window, your own deadlines | `starred.py`, `deadlines.py`, app | `tests/unit/test_starred.py`, `tests/unit/test_deadlines.py`, `tests/system/test_results_page.py` |
 | Official-data import (130 fields, three degree levels) | `ipeds_import.py` | `tests/unit/test_ipeds_import.py`, `tests/unit/test_ipeds_import_cli.py` |
 | Verified-row tool | `apply_lookup.py` | `tests/unit/test_apply_lookup.py` |
 | Bachelor's search | `search.py`, app | `tests/system/test_bachelors.py`, story 4 |
