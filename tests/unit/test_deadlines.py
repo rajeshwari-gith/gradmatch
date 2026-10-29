@@ -128,6 +128,12 @@ def test_glance_counts_window_moves_only_within_window(urgent_days, within_windo
     assert counts == dict(within_window=within_window, within_90=5, later=1, passed=1)
 
 
+
+def test_glance_counts_adds_up_several_items_in_every_count():
+    counts = glance_counts(items_at(-5, -1, 3, 10, 50, 91, 200), TODAY)
+
+    assert counts == dict(within_window=2, within_90=3, later=2, passed=2)
+
 def test_glance_counts_mixes_programs_and_scholarships_and_skips_unpublished():
     items = [make_program(application_deadline=None), make_scholarship("S", in_days(3)),
              make_program(application_deadline=in_days(40))]
