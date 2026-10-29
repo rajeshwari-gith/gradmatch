@@ -207,3 +207,28 @@ lines are folded at 76 bytes; the CSV property fails without quoting; the loader
 when a blank cell is read as 0. A property does not replace the example tests: for instance,
 swapping `and` for `or` in the eligibility rule keeps "stricter never adds" true, and only the
 decision-table tests catch it.
+
+## Cards: `presentation.py`
+
+`presentation.py` was added to `source_paths`. The configuration also now copies
+`data_report.py` and `api.py` into mutmut's work folder (the unit tests import the data report, and
+without it the run could not start).
+
+| Run | Mutants | Killed | Survived |
+|---|---:|---:|---:|
+| First run | 322 | 295 | 27 |
+| After new tests | 322 | **319** | **3** (equivalent) |
+
+The earlier card tests checked that words appeared somewhere in the HTML, so a changed label, a
+missing colour or text glued between two pieces went unnoticed. The new tests at the end of
+`tests/unit/test_presentation.py` compare exact pieces: the stats side by side, the chips with
+their colours, the plain-text title when there is no safe link, half a SAT/ACT range (not shown),
+the scholarship amount at 0 and 1, a quote in a scholarship link, the deadline row's link, any
+minimum GPA above zero, and a citizenship code with no friendly wording.
+
+Equivalent survivors (left on purpose):
+
+| Mutant | Change | Why nothing can notice it |
+|---|---|---|
+| `safe_link` 3 | `url or ""` became `url or "XXXX"` | both give a value that is not an http(s) link, so the result is `None` either way |
+| `result_card_html` 9, `_title_html` 6 | `escape(link, quote=True)` became `escape(link)` | `html.escape` escapes quotes by default, so the output is identical |

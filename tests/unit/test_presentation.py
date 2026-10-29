@@ -330,3 +330,73 @@ def test_card_shows_the_middle_half_of_sat_and_act_when_published():
 def test_card_has_no_test_score_stats_when_not_published():
     html = result_card_html(make_result(), TODAY)
     assert "SAT" not in html and "ACT" not in html
+
+
+# ---- Exact pieces of each card ----
+# Why: found by mutation testing. The earlier checks looked for words anywhere in the card, so a
+# changed label, a missing colour or text glued between pieces went unnoticed. These compare the
+# exact HTML piece the card must contain.
+
+from gradmatch.presentation import stat
+
+
+def test_card_stats_are_exact_and_side_by_side():
+    html = result_card_html(make_result(), TODAY)
+    assert stat("$27,000", "per year") + stat("$54,000", "2 yr total") in html
+
+
+def test_card_chips_are_exact_and_side_by_side():
+    html = result_card_html(make_result(fit=SAFETY, funding=FULLY_FUNDED), TODAY)
+    status, text = deadline_label(date(2027, 1, 15), TODAY)
+    assert (chip(SAFETY, FIT_COLORS[SAFETY]) + chip(FULLY_FUNDED, FUNDING_COLORS[FULLY_FUNDED])
+            + chip(text, DEADLINE_COLORS[status])) in html
+
+
+def test_card_without_a_safe_link_shows_the_title_as_plain_text():
+    html = result_card_html(make_result(website="not a link"), TODAY)
+    assert '<span class="gm-title">Test University – MS in Computer Science</span>' in html
+
+
+def test_test_score_stats_are_exact():
+    html = result_card_html(make_result(sat_25=1110, sat_75=1350, act_25=24, act_75=31), TODAY)
+    assert stat("1110–1350", "SAT mid 50%") + stat("24–31", "ACT mid 50%") in html
+
+
+@pytest.mark.parametrize("changes", [dict(sat_25=1100), dict(sat_75=1300), dict(act_25=24), dict(act_75=31)])
+def test_half_a_test_score_range_is_not_shown(changes):
+    html = result_card_html(make_result(**changes), TODAY)
+    assert "mid 50%" not in html and "None" not in html
+
+
+def test_scholarship_card_pieces_are_exact():
+    html = scholarship_card_html(make_scholarship(), TODAY)
+    status, text = deadline_label(date(2026, 12, 5), TODAY)
+    assert stat("$30,000", "award") in html
+    assert chip("Fellowship", BLUE) + chip(text, DEADLINE_COLORS[status]) in html
+
+
+@pytest.mark.parametrize("amount, shown", [(0, "Non-monetary"), (1, "$1")])
+def test_scholarship_amount_boundary_at_zero(amount, shown):
+    html = scholarship_card_html(make_scholarship(amount=amount), TODAY)
+    assert stat(shown, "award") in html
+
+
+def test_a_quote_in_a_scholarship_website_cannot_break_out_of_the_link():
+    html = scholarship_card_html(make_scholarship(website='https://a.org/"x'), TODAY)
+    assert 'href="https://a.org/&quot;x"' in html
+
+
+def test_deadline_row_chips_are_exact_and_the_row_links_to_the_website():
+    html = deadline_item_html(make_program(), TODAY)
+    status, text = deadline_label(date(2027, 1, 15), TODAY)
+    assert chip("Program", BLUE) + chip(text, DEADLINE_COLORS[status]) in html
+    assert 'href="https://example.edu/ms-cs"' in html
+
+
+@pytest.mark.parametrize("min_gpa, shown", [(0.0, False), (0.5, True), (1.0, True)])
+def test_summary_shows_any_minimum_gpa_above_zero(min_gpa, shown):
+    assert ("GPA" in eligibility_summary(make_scholarship(min_gpa=min_gpa))) is shown
+
+
+def test_summary_keeps_a_citizenship_code_it_has_no_words_for():
+    assert "Refugee" in eligibility_summary(make_scholarship(citizenship=("US", "Refugee")))
