@@ -112,7 +112,7 @@ def phd_checklist(program: Program, funding: str) -> list[tuple[str, bool]]:
     else:
         waiver = ("No stipend listed, so tuition is charged", False)
         living = ("No stipend listed", False)
-    return [waiver, living, ("Health insurance: check the program page", False)]
+    return [waiver, living, ("Health insurance: see program page", False)]
 
 
 def phd_card_html(result: ProgramResult) -> str:
@@ -235,3 +235,20 @@ def glance_html(counts: dict, urgent_days: int = 14) -> str:
     body = "".join(f'<div class="gm-glance-row"><span>{label}</span><b class="{css}">{n}</b></div>'
                    for label, n, css in rows)
     return f'<div class="gm-soft"><div class="gm-serif gm-name">At a glance</div>{body}</div>'
+
+
+def count_deadlines(items, today: date, urgent_days: int = 14) -> dict:
+    """How many dated items fall in each 'At a glance' group. 'Within 90 days' includes the window."""
+    counts = {"within_window": 0, "within_90": 0, "later": 0, "passed": 0}
+    for item in items:
+        days_left = (deadline_of(item) - today).days
+        if days_left < 0:
+            counts["passed"] += 1
+            continue
+        if days_left <= urgent_days:
+            counts["within_window"] += 1
+        if days_left <= WITHIN_90:
+            counts["within_90"] += 1
+        else:
+            counts["later"] += 1
+    return counts

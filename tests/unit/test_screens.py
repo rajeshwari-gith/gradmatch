@@ -14,7 +14,7 @@ from conftest import make_profile, make_program, make_scholarship
 from gradmatch.components import PASSED, chance_badge, check_item, date_tile, funding_bar, official_link, tag
 from gradmatch.fit import MATCH, REACH, SAFETY, UNKNOWN
 from gradmatch.funding import FULLY_FUNDED, FUNDING_UNKNOWN, PARTIALLY_FUNDED, SELF_FUNDED
-from gradmatch.screens import (DISCLAIMER, RESULTS_COLUMNS, cost_info_html, days_left_text, deadline_face,
+from gradmatch.screens import (DISCLAIMER, RESULTS_COLUMNS, cost_info_html, count_deadlines, days_left_text, deadline_face,
                                deadline_row_html, due_text, faces_info_html, funding_legend_html,
                                glance_html, header_pills_html, item_kind, item_name, page_title_html,
                                phd_card_html, phd_checklist, profile_summary_html, program_row_html,
@@ -111,7 +111,7 @@ def test_info_cards_and_disclaimer():
 ])
 def test_phd_checklist(stipend, funding, waiver, living):
     lines = phd_checklist(make_program(degree="PhD", stipend=stipend), funding)
-    assert lines == [waiver, living, ("Health insurance: check the program page", False)]
+    assert lines == [waiver, living, ("Health insurance: see program page", False)]
 
 
 def test_phd_card_shows_bar_school_stipend_badge_and_checklist():
@@ -230,3 +230,23 @@ def test_glance_card():
     assert '<span>Within 90 days</span><b class="">4</b>' in html
     assert '<span>Passed</span><b class="gm-sub">1</b>' in html
     assert "Within 7 days" in glance_html({"within_window": 0, "within_90": 0, "later": 0, "passed": 0}, 7)
+
+
+# ---- 'At a glance' counts: boundary values ----
+
+def dated(day):
+    item = Custom()
+    item.deadline = day
+    return item
+
+
+def test_count_deadlines_boundaries():
+    days = [-1, 0, 14, 15, 90, 91]
+    items = [dated(date.fromordinal(TODAY.toordinal() + d)) for d in days]
+    assert count_deadlines(items, TODAY) == {"within_window": 2, "within_90": 4, "later": 1, "passed": 1}
+
+
+def test_count_deadlines_follows_the_window_and_handles_nothing():
+    items = [dated(date.fromordinal(TODAY.toordinal() + d)) for d in (5, 10)]
+    assert count_deadlines(items, TODAY, 7)["within_window"] == 1
+    assert count_deadlines([], TODAY) == {"within_window": 0, "within_90": 0, "later": 0, "passed": 0}
