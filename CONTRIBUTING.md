@@ -92,6 +92,7 @@ class Scholarship:
 - `programs.csv`: columns = Program fields in order. Dates `YYYY-MM-DD`. Empty cell = None.
 - `scholarships.csv`: columns = Scholarship fields; list fields use `;` (e.g. `MS;PhD`).
 - `living_costs.csv`: `state,annual_living_cost`.
+- `requirements.csv`: `program_id,name,required,limit_text,prompt_text,source_url,checked_by,checked_on`; `required` is `yes`/`no`; only rows checked on the official page (blank limit or prompt = not stated).
 Every row needs a real `website` (official source). Data is an estimate; UI shows "verify on the official site".
 
 ## Business rules (tests are written against these – do not change silently)
