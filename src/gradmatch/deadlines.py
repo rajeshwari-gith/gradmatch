@@ -9,6 +9,10 @@ Rule (CONTRIBUTING.md): days_left = (deadline - today).days
 The warning window (14 days by default) can be set from 0 to 90 days with
 `urgent_days`. glance_counts() gives the four numbers of the "at a glance" row.
 
+A CustomDeadline is a deadline the student types in themselves (for example a
+recommendation letter due date). It works everywhere a program or scholarship
+deadline does: deadline_of, upcoming, glance_counts and exports.to_ics.
+
 `today` is always passed in by the caller; this module never calls
 date.today(), so tests can use any fixed date.
 """
@@ -18,9 +22,23 @@ date.today(), so tests can use any fixed date.
 # test written today would give a different answer next week. Passing the date in lets every
 # test use a fixed day, and lets the app show "as of" any date for a demo.
 
-from datetime import date
+from dataclasses import dataclass
+from datetime import date, datetime
 
 from gradmatch.models import Program, Scholarship
+
+
+# A deadline the student adds by hand. It is not in any data file; the screen keeps it.
+# frozen=True like the shared models, so a deadline cannot change after it is made.
+@dataclass(frozen=True)
+class CustomDeadline:
+    name: str                 # e.g. "Recommendation letters for MSU"
+    deadline: date
+    website: str = ""         # optional link
+    note: str = ""            # optional short note
+
+
+DATE_FORMAT = "%Y-%m-%d"
 
 # The four labels the app shows, kept as constants so a typo cannot create a fifth one.
 CLOSED = "closed"
@@ -54,10 +72,11 @@ def deadline_status(deadline: date, today: date, urgent_days: int = URGENT_MAX_D
 
 # The list for the Deadlines tab and the calendar: drop programs with no published deadline
 # (None cannot be compared to a date), drop closed ones, and sort the rest soonest first.
-def upcoming(items: list[Program | Scholarship], today: date) -> list[Program | Scholarship]:
+def upcoming(items: list[Program | Scholarship | CustomDeadline],
+             today: date) -> list[Program | Scholarship | CustomDeadline]:
     """Return the items that are not closed, earliest deadline first.
 
-    Items can be Programs, Scholarships, or a mix of both. A program whose
+    Items can be Programs, Scholarships, CustomDeadlines, or a mix. A program whose
     deadline is not published (None) is left out.
     """
     dated = [item for item in items if deadline_of(item) is not None]
@@ -69,7 +88,7 @@ def upcoming(items: list[Program | Scholarship], today: date) -> list[Program | 
 # "within_90" includes the warning window, so with the default window a deadline in 5 days is
 # counted in both "within_window" and "within_90". "later" is more than 90 days away, "passed" is
 # before today. Programs with no published deadline are not counted anywhere.
-def glance_counts(items: list[Program | Scholarship], today: date,
+def glance_counts(items: list[Program | Scholarship | CustomDeadline], today: date,
                   urgent_days: int = URGENT_MAX_DAYS) -> dict:
     """Return {"within_window", "within_90", "later", "passed"} counts for the dated items."""
     _check_window(urgent_days)
@@ -100,12 +119,38 @@ def _check_window(urgent_days: int):
 
 
 # Programs and scholarships name their deadline field differently. This one helper hides
-# that, so the code above can treat both the same way.
-def deadline_of(item: Program | Scholarship) -> date | None:
-    """Programs call their deadline application_deadline; scholarships call it deadline.
+# that, so the code above can treat both the same way. Scholarships and custom deadlines both
+# call it `deadline`.
+def deadline_of(item: Program | Scholarship | CustomDeadline) -> date | None:
+    """Programs call their deadline application_deadline; scholarships and custom deadlines call it deadline.
 
     A program's deadline is None when it is not published.
     """
     if isinstance(item, Program):
         return item.application_deadline
     return item.deadline
+
+
+# Check what the student typed before a CustomDeadline is made, and return every problem (an
+# empty list means it is fine), like validate_profile does for the profile form. `day` can be a
+# date from a date picker or text in YYYY-MM-DD; "2026-02-30" is not a real date and is refused.
+def validate_custom_deadline(name, day) -> list[str]:
+    """Return the problems with a custom deadline's name and date; [] if both are fine."""
+    errors = []
+    if not isinstance(name, str) or not name.strip():
+        errors.append("Name is required.")
+    if not _is_real_date(day):
+        errors.append("Date must be a real date (YYYY-MM-DD).")
+    return errors
+
+
+def _is_real_date(day) -> bool:
+    if isinstance(day, datetime):
+        return False                     # a date and time, not a day
+    if isinstance(day, date):
+        return True
+    try:
+        datetime.strptime(day, DATE_FORMAT)
+        return True
+    except (TypeError, ValueError):
+        return False

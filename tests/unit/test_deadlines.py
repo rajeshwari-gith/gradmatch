@@ -11,14 +11,14 @@ February 29 is counted as a real day.
 # list of open deadlines. Every test uses the same fixed "today", so the results never change
 # from one day to the next. That is only possible because the code takes `today` as an argument.
 
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 
 import pytest
 from hypothesis import given, strategies as st
 
 from conftest import make_program
-from gradmatch.deadlines import (CLOSED, LATER, SOON, URGENT, deadline_of, deadline_status, glance_counts,
-                                 upcoming)
+from gradmatch.deadlines import (CLOSED, LATER, SOON, URGENT, CustomDeadline, deadline_of, deadline_status,
+                                 glance_counts, upcoming, validate_custom_deadline)
 from gradmatch.models import Scholarship
 
 pytestmark = pytest.mark.unit
@@ -223,6 +223,62 @@ def test_upcoming_only_unpublished_deadlines_gives_empty_list():
 
     assert upcoming(items, TODAY) == []
 
+
+
+# ---- Custom deadlines the student adds ----
+# Why: a custom deadline must work everywhere a program or scholarship deadline does.
+
+def test_custom_deadline_defaults_and_deadline_of():
+    item = CustomDeadline("Essay draft", in_days(3))
+
+    assert (item.website, item.note) == ("", "")
+    assert deadline_of(item) == in_days(3)
+
+
+def test_custom_deadline_cannot_be_changed():
+    item = CustomDeadline("Essay draft", in_days(3))
+
+    with pytest.raises(AttributeError):
+        item.name = "Other"
+
+
+def test_upcoming_mixes_custom_deadlines_and_drops_closed_ones():
+    custom = CustomDeadline("Essay draft", in_days(1))
+    old = CustomDeadline("Old", in_days(-1))
+    program = make_program(application_deadline=in_days(10))
+
+    assert upcoming([program, old, custom], TODAY) == [custom, program]
+
+
+def test_glance_counts_counts_custom_deadlines():
+    items = [CustomDeadline("A", in_days(2)), CustomDeadline("B", in_days(-2)),
+             make_scholarship("S", in_days(100))]
+
+    assert glance_counts(items, TODAY) == dict(within_window=1, within_90=1, later=1, passed=1)
+
+
+# ---- validate_custom_deadline() ----
+# Why (equivalence classes): a good name and date, each kind of bad name, and each kind of bad date.
+
+@pytest.mark.parametrize("day", [date(2026, 11, 1), "2026-11-01", "2028-02-29"])
+def test_valid_custom_deadline_has_no_errors(day):
+    assert validate_custom_deadline("Essay draft", day) == []
+
+
+@pytest.mark.parametrize("name", ["", "   ", None, 5])
+def test_custom_deadline_name_is_required(name):
+    assert validate_custom_deadline(name, TODAY) == ["Name is required."]
+
+
+@pytest.mark.parametrize("day", [None, "", "2026-02-30", "2027-02-29", "11/01/2026", "soon",
+                                 20261101, datetime(2026, 11, 1, 9, 0)])
+def test_custom_deadline_date_must_be_a_real_date(day):
+    assert validate_custom_deadline("Essay draft", day) == ["Date must be a real date (YYYY-MM-DD)."]
+
+
+def test_custom_deadline_lists_both_problems():
+    assert validate_custom_deadline(" ", "2026-13-01") == ["Name is required.",
+                                                         "Date must be a real date (YYYY-MM-DD)."]
 
 # ---- Property-based test (Hypothesis) ----
 # Why (property-based): instead of a few chosen days, Hypothesis tries hundreds of random pairs of
