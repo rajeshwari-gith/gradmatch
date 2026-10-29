@@ -105,6 +105,22 @@ div[data-testid="stRadio"].st-key-page div[role="radiogroup"] {{ gap: 6px; flex-
 .gm-urgent {{ color: var(--urgent-strong); font-weight:700; }}
 .gm-passed {{ text-decoration: line-through; color: var(--muted); }}
 
+/* Rows and cards built by gradmatch.screens. */
+.gm-grid {{ display:grid; grid-template-columns: minmax(240px,3fr) 1.3fr 1fr 1fr 1.1fr 1.2fr; gap:10px;
+  align-items:center; padding:12px 14px; }}
+.gm-cell-name {{ display:flex; gap:12px; align-items:center; }}
+.gm-name {{ font-weight:700; font-size:15px; }}
+.gm-face-row {{ display:flex; gap:8px; align-items:center; margin:6px 0; }}
+.gm-legend {{ display:inline-flex; gap:16px; align-items:center; flex-wrap:wrap; background:var(--surface);
+  border:1px solid var(--border); border-radius:999px; padding:6px 14px; font-size:12.5px; }}
+.gm-legend i {{ display:inline-block; width:26px; height:8px; border-radius:999px; vertical-align:middle; }}
+.gm-amount {{ text-align:right; }} .gm-big {{ font-size:22px; }}
+.gm-right {{ margin-left:auto; }}
+.gm-glance-row {{ display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid var(--row-line); }}
+[class*="st-key-row-"], [class*="st-key-card-"], [class*="st-key-sch-"], [class*="st-key-dl-"] {{
+  background: var(--surface); border:1px solid var(--border); border-radius:18px; box-shadow: {CARD_SHADOW};
+  padding: 10px 14px; position:relative; overflow:hidden; }}
+
 /* Buttons: soft raised, lift on hover, press down when clicked. */
 .stButton > button, .stFormSubmitButton > button, .stDownloadButton > button {{
   border-radius: 13px; min-height: 44px; box-shadow: {BUTTON_SHADOW};
