@@ -470,9 +470,12 @@ def show_deadlines_page(items, today):
     with side:
         st.markdown(glance_html(glance_counts(items, today, warn_days), warn_days), unsafe_allow_html=True)
         open_items = [item for item in items if deadline_of(item) >= today]
-        stamp = datetime.combine(today, time(0, 0))
-        st.download_button("Add these deadlines to my calendar (.ics)", to_ics(open_items, stamp),
-                           file_name="gradmatch_deadlines.ics", mime="text/calendar", width="stretch")
+        if open_items:
+            stamp = datetime.combine(today, time(0, 0))
+            st.download_button("Add these deadlines to my calendar (.ics)", to_ics(open_items, stamp),
+                               file_name="gradmatch_deadlines.ics", mime="text/calendar", width="stretch")
+        else:
+            st.info("No open deadlines left: every one of these has passed.")
         st.caption("Deadlines come from official program and scholarship pages. Always confirm the "
                    "date with the school.")
 
