@@ -233,6 +233,13 @@ when a blank cell is read as 0. A property does not replace the example tests: f
 swapping `and` for `or` in the eligibility rule keeps "stricter never adds" true, and only the
 decision-table tests catch it.
 
+## Application requirements: `requirements.py`
+
+`requirements.py` was added to `source_paths` (the unit tests import it, so mutmut cannot start
+without it): **82 of 82 mutants killed** on the first run. The tests compare the whole loaded
+object, check every error message exactly with its line number, and cover `yes`, `no`, blank and
+wrongly written values of `required`.
+
 ## Cards: `presentation.py`
 
 `presentation.py` was added to `source_paths`. The configuration also now copies

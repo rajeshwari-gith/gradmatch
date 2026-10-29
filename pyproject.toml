@@ -29,6 +29,7 @@ show_missing = true
 # source_paths = the files to break; also_copy = the extra files its copy of the project needs.
 [tool.mutmut]
 source_paths = ["src/gradmatch/cost.py", "src/gradmatch/fit.py", "src/gradmatch/funding.py",
+                "src/gradmatch/requirements.py",
                 "src/gradmatch/validation.py", "src/gradmatch/search.py",
                 "src/gradmatch/starred.py",
                 "src/gradmatch/data_loader.py", "src/gradmatch/scholarships.py",
