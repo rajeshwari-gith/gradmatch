@@ -30,6 +30,7 @@ show_missing = true
 [tool.mutmut]
 source_paths = ["src/gradmatch/cost.py", "src/gradmatch/fit.py", "src/gradmatch/funding.py",
                 "src/gradmatch/validation.py", "src/gradmatch/search.py",
+                "src/gradmatch/starred.py",
                 "src/gradmatch/data_loader.py", "src/gradmatch/scholarships.py",
                 "src/gradmatch/deadlines.py", "src/gradmatch/exports.py",
                 "src/gradmatch/apply_lookup.py", "src/gradmatch/ipeds_import.py",
