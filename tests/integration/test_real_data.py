@@ -205,6 +205,30 @@ def test_bachelors_rows_are_four_years_with_no_stipend(programs):
     assert bad == []
 
 
+# ---- Essay and statement requirements ----
+# Why: every requirement must belong to a real program, and the blank sheet must list real
+# programs with exactly the columns of requirements.csv (plus two to help the reader).
+
+def test_every_requirement_belongs_to_a_program(programs):
+    ids = {p.program_id for p in programs}
+    requirements = load_requirements("data/requirements.csv")
+    assert [r.program_id for r in requirements if r.program_id not in ids] == []
+
+
+def test_requirements_sheet_lists_real_programs_unchecked(programs):
+    by_id = {p.program_id: p for p in programs}
+    with open("data/requirements_sheet.csv", newline="", encoding="utf-8") as file:
+        reader = csv.DictReader(file)
+        rows = list(reader)
+
+    assert reader.fieldnames == ["program_id", "university", "program_name", *REQUIREMENT_COLUMNS[1:], "notes"]
+    assert len(rows) == 10
+    for row in rows:
+        program = by_id[row["program_id"]]
+        assert (row["university"], row["program_name"]) == (program.university, program.program_name)
+        assert all(row[name] == "" for name in REQUIREMENT_COLUMNS[1:])     # nothing filled in yet
+
+
 # ---- The API on the real data (45,000+ rows) ----
 # Why: the API must stay fast with the full file; 5 seconds is a generous limit for a search.
 # The test once failed when the computer was busy with other work, although the code was fine.
@@ -250,27 +274,3 @@ def test_programs_on_real_data_is_paged(real_data_api):
 
     assert len(first) == 100
     assert 0 < len(last) <= 1000
-
-
-# ---- Essay and statement requirements ----
-# Why: every requirement must belong to a real program, and the blank sheet must list real
-# programs with exactly the columns of requirements.csv (plus two to help the reader).
-
-def test_every_requirement_belongs_to_a_program(programs):
-    ids = {p.program_id for p in programs}
-    requirements = load_requirements("data/requirements.csv")
-    assert [r.program_id for r in requirements if r.program_id not in ids] == []
-
-
-def test_requirements_sheet_lists_real_programs_unchecked(programs):
-    by_id = {p.program_id: p for p in programs}
-    with open("data/requirements_sheet.csv", newline="", encoding="utf-8") as file:
-        reader = csv.DictReader(file)
-        rows = list(reader)
-
-    assert reader.fieldnames == ["program_id", "university", "program_name", *REQUIREMENT_COLUMNS[1:], "notes"]
-    assert len(rows) == 10
-    for row in rows:
-        program = by_id[row["program_id"]]
-        assert (row["university"], row["program_name"]) == (program.university, program.program_name)
-        assert all(row[name] == "" for name in REQUIREMENT_COLUMNS[1:])     # nothing filled in yet
