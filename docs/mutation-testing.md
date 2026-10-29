@@ -215,6 +215,11 @@ without it): **82 of 82 mutants killed** on the first run. The tests compare the
 object, check every error message exactly with its line number, and cover `yes`, `no`, blank and
 wrongly written values of `required`.
 
+After `essay_key`, `checklist` and `progress` were added for the Essays screen: **108 of 108
+mutants killed**. The tests compare whole checklist lines, and the progress tests cover nothing
+done, all done, an optional item that is done (never counted), and ticks for another program or
+an unknown name.
+
 ## Cards: `presentation.py`
 
 `presentation.py` was added to `source_paths`. The configuration also now copies
