@@ -129,3 +129,26 @@ and adds it to the table below, where it is counted in the "Verified" line.
 | IPEDS-139755-PHD-14.0201 | Georgia Institute of Technology-Main Campus | PhD in Aerospace Engineering | verified by Rajeshwari Galugu on 2026-10-27 | https://grad.gatech.edu/hiring-supervision | Institute TOEFL minimum 90 (iBT, before Jan 2026). Stipend is monthly and depends on appointment, so it is left blank. |
 | IPEDS-166027-PHD-26.0102 | Harvard University | PhD in Biomedical Sciences | verified by Rajeshwari Galugu on 2026-10-27 | https://bbsphd.hms.harvard.edu/apply | Deadline Dec 1, 2026; TOEFL 100 on the old scale (tests before Jan 21, 2026). Full support, but the stipend amount is not on the page. |
 | IPEDS-193405-PHD-26.0102 | Icahn School of Medicine at Mount Sinai | PhD in Biomedical Sciences | verified by Rajeshwari Galugu on 2026-10-27 | https://icahn.mssm.edu/education/admissions/graduate-education/phd-biomedical-sciences | 2026-27 cost-of-attendance document: compensation 52,000 a year, tuition and fees 0. Deadline not confirmed. |
+
+## Scholarships (13)
+
+Every row in `scholarships.csv` is listed here. A person checks the scholarship on its official page,
+fills in `data/scholarship_lookup_sheet.csv`, and `apply_scholarship_sheet` copies the values and
+marks the row "verified by <name> on <date>". The "Scholarships verified" count at the top counts
+these rows.
+
+| scholarship_id | Name | Status | Source (official page) | Notes |
+|---|---|---|---|---|
+| NSF-GRFP | NSF Graduate Research Fellowship Program | needs lookup |  | amount, deadline and website are estimates |
+| NDSEG | DoD National Defense Science and Engineering Graduate Fellowship | needs lookup |  | amount, deadline and website are estimates |
+| DOE-CSGF | DOE Computational Science Graduate Fellowship | needs lookup |  | amount, deadline and website are estimates |
+| HERTZ | Hertz Foundation Graduate Fellowship | needs lookup |  | amount, deadline and website are estimates |
+| SOROS | Paul and Daisy Soros Fellowships for New Americans | needs lookup |  | amount, deadline and website are estimates |
+| GOOGLE-PHD | Google PhD Fellowship | needs lookup |  | amount, deadline and website are estimates |
+| SMART | DoD SMART Scholarship | needs lookup |  | amount, deadline and website are estimates |
+| GEM | GEM Fellowship | needs lookup |  | amount, deadline and website are estimates |
+| AAUW-INTL | AAUW International Fellowship | needs lookup |  | amount, deadline and website are estimates |
+| SWE | Society of Women Engineers Graduate Scholarship | needs lookup |  | amount, deadline and website are estimates |
+| MSGC | Michigan Space Grant Consortium Graduate Fellowship | needs lookup |  | amount, deadline and website are estimates |
+| GVSU-GA | GVSU Graduate Assistantship | needs lookup |  | amount, deadline and website are estimates |
+| MCNAIR-WAIVER | Graduate Application Fee Waiver for McNair Scholars | needs lookup |  | amount, deadline and website are estimates |
