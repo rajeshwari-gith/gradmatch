@@ -24,7 +24,7 @@ def find_programs(programs: list[Program], student: Student) -> list[Result]:
         if cost > student.budget:
             continue
         results.append(Result(program, cost, chance(student.gpa, program.acceptance_rate)))
-    results.sort(key=lambda result: result.cost)
+    results.sort(key=lambda result: (result.cost, result.program.university))
     return results
 
 
