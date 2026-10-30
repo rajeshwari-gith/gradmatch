@@ -47,5 +47,5 @@ def deadlines(today: date | None = None):
 
 def deadline_list():
     dates = [(s.name, s.deadline) for s in SCHOLARSHIPS]
-    dates += [(f"{p.university} ({p.program})", p.deadline) for p in PROGRAMS if p.deadline]
+    dates += [(f"{p.university} ({p.program})", p.deadline) for p in PROGRAMS]
     return dates

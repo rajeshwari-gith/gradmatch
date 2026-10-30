@@ -13,9 +13,9 @@ class Program:
     tuition_out_state: int
     living_cost: int
     acceptance_rate: float
-    stipend: int | None
-    avg_gre: int | None
-    deadline: date | None
+    stipend: int
+    avg_gre: int
+    deadline: date
     website: str
 
 

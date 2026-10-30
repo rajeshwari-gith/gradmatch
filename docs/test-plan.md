@@ -9,7 +9,7 @@
 3. Yearly cost is tuition + living cost, using in-state tuition if the student is from that state.
    A PhD stipend waives tuition and is taken off the living cost (never below $0).
    Funding: stipend at least the living cost = Fully funded, less = Partly funded,
-   0 = No funding, blank = Not listed. PhD results are listed best funded first.
+   0 = No funding. PhD results are listed best funded first.
 4. Chance is worked out from the school's acceptance rate and the student's GPA (table below).
    If the student gives a GRE score and the program lists its average GRE, a GRE 5 or more points
    above the average moves the chance one step easier, and more than 5 below one step harder.
@@ -56,4 +56,4 @@ and property-based tests with Hypothesis.
 Run with `pytest --cov`. GitHub Actions runs the tests on every push and saves the HTML
 coverage report (download "coverage-report" from the run's page).
 
-Current result: 152 tests passing, 100% line and branch coverage.
+Current result: 149 tests passing, 100% line and branch coverage.

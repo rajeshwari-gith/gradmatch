@@ -10,7 +10,7 @@ SCHOLARSHIPS = ROOT / "data" / "scholarships.csv"
 
 PROGRAM_HEADER = ("university,program,degree,field,state,tuition_in_state,tuition_out_state,"
                   "living_cost,acceptance_rate,stipend,avg_gre,deadline,website")
-PROGRAM_ROW = "Test University,MS in CS,MS,Computer Science,MI,10000,20000,15000,0.5,,,,https://example.edu"
+PROGRAM_ROW = "Test University,MS in CS,MS,Computer Science,MI,10000,20000,15000,0.5,0,310,2027-02-01,https://example.edu"
 SCHOLARSHIP_HEADER = "name,amount,degrees,fields,min_gpa,citizenship,deadline,website"
 SCHOLARSHIP_ROW = "Test Award,5000,MS;PhD,Any,3.0,US;PR,2026-12-01,https://example.org"
 
@@ -18,8 +18,8 @@ SCHOLARSHIP_ROW = "Test Award,5000,MS;PhD,Any,3.0,US;PR,2026-12-01,https://examp
 def make_program(**changes):
     values = dict(university="Test University", program="MS in Computer Science", degree="MS",
                   field="Computer Science", state="MI", tuition_in_state=10000,
-                  tuition_out_state=20000, living_cost=15000, acceptance_rate=0.5, stipend=None,
-                  avg_gre=None, deadline=None,
+                  tuition_out_state=20000, living_cost=15000, acceptance_rate=0.5, stipend=0,
+                  avg_gre=310, deadline=date(2027, 2, 1),
                   website="https://example.edu")
     values.update(changes)
     return Program(**values)
