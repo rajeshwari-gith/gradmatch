@@ -1,3 +1,4 @@
+# Runs the tests with coverage on every push
 name: Tests
 
 on: [push, pull_request]
