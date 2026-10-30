@@ -1,6 +1,6 @@
 [project]
 name = "gradmatch"
-version = "0.1.0"
+version = "0.2.0"
 description = "Find master's programs a student can afford."
 requires-python = ">=3.11"
 

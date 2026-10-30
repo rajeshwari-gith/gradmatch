@@ -10,7 +10,7 @@ def test_chance(gpa, expected):
     assert chance(gpa, 3.5) == expected
 
 
-# edges: diff of +0.20 and -0.15
+# on and next to the +0.20 and -0.15 edges
 @pytest.mark.parametrize("gpa, expected", [
     (3.70, SAFETY),
     (3.69, MATCH),

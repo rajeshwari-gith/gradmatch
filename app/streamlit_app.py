@@ -16,6 +16,7 @@ STATES = ["AL", "AK", "AZ", "AR", "CA", "CO", "CT", "DC", "DE", "FL", "GA", "HI"
           "NH", "NJ", "NM", "NV", "NY", "OH", "OK", "OR", "PA", "RI", "SC", "SD", "TN", "TX", "UT",
           "VA", "VT", "WA", "WI", "WV", "WY"]
 
+st.set_page_config(page_title="GradMatch")
 st.title("GradMatch")
 st.write("Find master's programs that fit your budget, and see a rough chance of getting in.")
 
