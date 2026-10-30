@@ -7,10 +7,10 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
 from gradmatch import data_loader  # noqa: E402
-from gradmatch import deadlines as dl  # noqa: E402
+from gradmatch import deadlines  # noqa: E402
+from gradmatch.database import create_database, get_fields, get_programs  # noqa: E402
 from gradmatch.models import Student  # noqa: E402
 from gradmatch.scholarships import find_scholarships  # noqa: E402
-from gradmatch.database import create_database, get_fields, get_programs  # noqa: E402
 from gradmatch.search import find_programs  # noqa: E402
 
 DATA = ROOT / "data"
@@ -64,7 +64,8 @@ if submitted:
     else:
         st.info("No programs fit your budget. Try a bigger budget.")
     st.caption("Yearly cost = tuition + living cost, minus any PhD stipend (which comes with a "
-               "tuition waiver). Chance is an estimate from the school's acceptance rate and your GPA.")
+               "tuition waiver). Chance is an estimate from the school's acceptance rate, your GPA and "
+               "your GRE.")
 
     st.subheader("Scholarships")
     found = find_scholarships(scholarships, student)
@@ -81,12 +82,12 @@ if submitted:
     dates = [(s.name, s.deadline) for s in found]
     dates += [(f"{r.program.university} ({r.program.program})", r.program.deadline)
               for r in results if r.program.deadline]
-    deadlines = dl.upcoming(dates, dl.today())
-    for d in deadlines:
+    coming = deadlines.upcoming(dates, deadlines.today())
+    for d in coming:
         if d.soon:
             st.warning(f"{d.name} is due in {d.days_left} days ({d.date:%b %d}).")
-    if deadlines:
+    if coming:
         st.dataframe([{"Name": d.name, "Date": d.date.isoformat(), "Days left": d.days_left}
-                      for d in deadlines], hide_index=True)
+                      for d in coming], hide_index=True)
     else:
         st.info("No upcoming deadlines.")

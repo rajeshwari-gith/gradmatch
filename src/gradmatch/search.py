@@ -28,11 +28,10 @@ def find_programs(programs: list[Program], student: Student) -> list[Result]:
         cost = yearly_cost(program, student.home_state)
         if cost > student.budget:
             continue
-        results.append(Result(program, cost, chance(student.gpa, program.acceptance_rate,
-                                                     student.gre, program.avg_gre),
-                              funding(program)))
+        label = chance(student.gpa, program.acceptance_rate, student.gre, program.avg_gre)
+        results.append(Result(program, cost, label, funding(program)))
     results.sort(key=lambda result: (result.cost, result.program.university))
-    if student.degree == "PhD":
+    if student.degree == "PhD":  # best funded first, same funding stays cheapest first
         results.sort(key=lambda result: -(result.program.stipend or 0))
     return results
 
