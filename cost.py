@@ -1,4 +1,4 @@
-from gradmatch.models import Program
+from models import Program
 
 
 def yearly_cost(program: Program, home_state: str) -> int:

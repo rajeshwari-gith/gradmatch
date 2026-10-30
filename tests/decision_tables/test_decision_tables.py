@@ -1,7 +1,7 @@
 import pytest
 
-from gradmatch.fit import MATCH, REACH, SAFETY, chance
-from gradmatch.scholarships import qualifies
+from fit import MATCH, REACH, SAFETY, chance
+from scholarships import qualifies
 from helpers import make_scholarship, make_student
 
 

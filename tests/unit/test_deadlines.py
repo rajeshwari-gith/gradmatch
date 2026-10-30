@@ -1,6 +1,6 @@
 from datetime import date
 
-from gradmatch.deadlines import today, upcoming
+from deadlines import today, upcoming
 
 
 def test_upcoming():

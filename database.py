@@ -1,7 +1,7 @@
 import sqlite3
 from datetime import date
 
-from gradmatch.models import Program, Scholarship
+from models import Program, Scholarship
 
 # STRICT makes SQLite refuse a value of the wrong type, and CHECK refuses bad values
 SCHEMA = """

@@ -1,4 +1,4 @@
-from gradmatch.models import Scholarship, Student
+from models import Scholarship, Student
 
 
 def qualifies(scholarship: Scholarship, student: Student) -> bool:

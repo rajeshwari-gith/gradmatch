@@ -1,18 +1,14 @@
-import sys
 from pathlib import Path
 
 import streamlit as st
 
-ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT / "src"))
+import deadlines
+from database import connect, get_programs, get_scholarships
+from models import Student
+from scholarships import find_scholarships
+from search import find_programs
 
-from gradmatch import deadlines  # noqa: E402
-from gradmatch.database import connect, get_programs, get_scholarships  # noqa: E402
-from gradmatch.models import Student  # noqa: E402
-from gradmatch.scholarships import find_scholarships  # noqa: E402
-from gradmatch.search import find_programs  # noqa: E402
-
-DATABASE = ROOT / "data" / "gradmatch.db"
+DATABASE = Path(__file__).parent / "data" / "gradmatch.db"
 STATES = ["AL", "AK", "AZ", "AR", "CA", "CO", "CT", "DC", "DE", "FL", "GA", "HI", "IA", "ID", "IL",
           "IN", "KS", "KY", "LA", "MA", "MD", "ME", "MI", "MN", "MO", "MS", "MT", "NC", "ND", "NE",
           "NH", "NJ", "NM", "NV", "NY", "OH", "OK", "OR", "PA", "RI", "SC", "SD", "TN", "TX", "UT",

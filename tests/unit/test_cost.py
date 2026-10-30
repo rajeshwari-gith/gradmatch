@@ -1,4 +1,4 @@
-from gradmatch.cost import yearly_cost
+from cost import yearly_cost
 from helpers import make_program
 
 

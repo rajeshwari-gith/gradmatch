@@ -2,10 +2,10 @@ from datetime import date
 
 import pytest
 
-from gradmatch.deadlines import upcoming
-from gradmatch.fit import MATCH, REACH, SAFETY, chance, check_gpa
-from gradmatch.scholarships import find_scholarships, qualifies
-from gradmatch.search import find_programs
+from deadlines import upcoming
+from fit import MATCH, REACH, SAFETY, chance, check_gpa
+from scholarships import find_scholarships, qualifies
+from search import find_programs
 from helpers import make_program, make_scholarship, make_student
 
 

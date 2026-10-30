@@ -3,7 +3,7 @@ from contextlib import closing
 
 import pytest
 
-from gradmatch.database import add_programs, add_scholarships, connect, get_programs, get_scholarships
+from database import add_programs, add_scholarships, connect, get_programs, get_scholarships
 from helpers import DATABASE, make_program, make_scholarship
 
 

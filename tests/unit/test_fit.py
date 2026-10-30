@@ -1,4 +1,4 @@
-from gradmatch.fit import MATCH, chance
+from fit import MATCH, chance
 
 
 def test_chance():

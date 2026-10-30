@@ -1,5 +1,5 @@
-from gradmatch.fit import SAFETY
-from gradmatch.search import find_programs
+from fit import SAFETY
+from search import find_programs
 from helpers import make_program, make_student
 
 # follows each value in find_programs() from where it is set to where it is used

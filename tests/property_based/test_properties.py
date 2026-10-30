@@ -1,7 +1,7 @@
 from hypothesis import given
 from hypothesis import strategies as st
 
-from gradmatch.search import find_programs
+from search import find_programs
 from helpers import make_program, make_student
 
 money = st.integers(0, 100000)

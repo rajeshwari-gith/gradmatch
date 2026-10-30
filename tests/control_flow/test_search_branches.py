@@ -1,6 +1,6 @@
 import pytest
 
-from gradmatch.search import find_programs
+from search import find_programs
 from helpers import make_program, make_student
 
 # covers every branch of find_programs() in search.py

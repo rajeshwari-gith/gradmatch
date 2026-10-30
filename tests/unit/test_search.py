@@ -1,5 +1,5 @@
-from gradmatch.fit import MATCH
-from gradmatch.search import find_programs
+from fit import MATCH
+from search import find_programs
 from helpers import make_program, make_student
 
 
