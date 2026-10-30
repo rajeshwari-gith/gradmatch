@@ -52,6 +52,11 @@ def test_cheapest_first():
     assert names(find_programs(programs, make_student())) == ["A", "B"]
 
 
+def test_same_cost_sorted_by_name():
+    programs = [make_program(university="Zeta"), make_program(university="Alpha")]
+    assert names(find_programs(programs, make_student())) == ["Alpha", "Zeta"]
+
+
 def test_home_state_changes_the_cost():
     in_state = find_programs([make_program()], make_student(home_state="MI"))[0]
     out_of_state = find_programs([make_program()], make_student(home_state="OH"))[0]
