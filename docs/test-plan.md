@@ -3,7 +3,8 @@
 ## Requirements
 
 1. Only programs with the chosen degree and field are shown.
-2. Only programs with a yearly cost at or under the budget are shown, cheapest first.
+2. Only programs with a yearly cost at or under the budget are shown, cheapest first
+   (same cost: A-Z by university).
 3. Yearly cost is tuition + living cost, using in-state tuition if the student is from that state.
 4. Chance is worked out from the school's acceptance rate and the student's GPA (table below).
 5. A scholarship is shown only if the student's degree, field, citizenship and GPA all fit, biggest amount first and A-Z by name when amounts are the same.
@@ -46,4 +47,4 @@ and property-based tests with Hypothesis.
 
 Run with `pytest --cov`. GitHub Actions runs the tests on every push.
 
-Current result: 109 tests passing, 100% line and branch coverage.
+Current result: 110 tests passing, 100% line and branch coverage.
