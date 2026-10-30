@@ -137,7 +137,9 @@ def match(body: ProfileIn, limit: int = Query(MATCH_LIMIT, ge=1, le=MAX_LIMIT)):
     """Programs and scholarships for a student; 422 with the validation messages if invalid.
 
     `programs` holds the first `limit` results in the search's order (default 50) and
-    `total_programs` says how many matched in all.
+    `total_programs` says how many matched in all. Each program's `fit` is Safety, Match
+    or Reach. Without a published average GPA it is estimated from the acceptance rate
+    (the program's own, or its university's); a program with neither is left out.
     """
     profile = StudentProfile(
         degree_sought=body.degree_sought,

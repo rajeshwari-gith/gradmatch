@@ -133,6 +133,18 @@ def test_deadlines_row_in_the_table_names_the_real_keys(client):
     assert all(f'"{key}"' in row for key in answer)                    # urgent_days, glance, deadlines
     assert all(f"`{key}`" in row for key in answer["glance"])         # the four counts
 
+
+def test_match_row_names_the_fit_values_the_api_really_gives(client):
+    row = next(line for line in api_section().split("\n") if line.startswith("| `POST /match"))
+    documented = set(re.findall(r'`"(Safety|Match|Reach|Unknown)"`', row))
+    body = dict(degree_sought="MS", gpa=3.5, field="Computer Science", home_state="MI",
+                citizenship="US", annual_budget=100000)
+
+    fits = {p["fit"] for p in client.post("/match", json=body).json()["programs"]}
+
+    assert documented == {"Safety", "Match", "Reach", "Unknown"}      # "never Unknown" is said
+    assert fits and fits <= {"Safety", "Match", "Reach"}
+
 def test_the_uvicorn_command_names_the_real_app():
     command = re.search(r"uvicorn (\S+):(\S+)", api_section())
     module, name = command.groups()

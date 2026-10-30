@@ -76,7 +76,7 @@ The examples below are run by `tests/integration/test_readme_examples.py`, so th
 |---|---|
 | `GET /health` | `{"status": "ok"}` |
 | `GET /programs?field=&degree=&state=&limit=&offset=` | programs in file order, filtered by exact field, degree (`BS`, `MS`, `PhD`) and state; at most `limit` (1–1000, default 100) after skipping `offset` (default 0) |
-| `POST /match?limit=` | `{"total_programs": n, "programs": [...], "scholarships": [...]}` for a student profile; the first `limit` programs (1–1000, default 50) with cost, fit and funding |
+| `POST /match?limit=` | `{"total_programs": n, "programs": [...], "scholarships": [...]}` for a student profile; the first `limit` programs (1–1000, default 50) with cost, fit and funding. `fit` is `"Safety"`, `"Match"` or `"Reach"`, never `"Unknown"`: with no published average GPA it is estimated from the acceptance rate (the program's own, or its university's), and a program with neither is left out (rule in `CONTRIBUTING.md`) |
 | `GET /deadlines?today=YYYY-MM-DD&urgent_days=` | `{"urgent_days": n, "glance": {...}, "deadlines": [...]}`: open program and scholarship deadlines, soonest first, each with its status for the warning window `urgent_days` (0–90, default 14), and the counts `within_window`, `within_90`, `later` and `passed` |
 | `GET /starred` | the starred keys, sorted |
 | `POST /starred` | star one item; the body is `{"key": "program:<id>"}` (or `scholarship:<id>`, `deadline:<name>`); returns the starred keys |
