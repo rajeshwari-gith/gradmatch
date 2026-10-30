@@ -22,7 +22,7 @@ jobs:
         run: python -m pip install -r requirements.txt
 
       - name: Run tests and coverage
-        run: python -m pytest -v --cov=app --cov=programs --cov=scholarships --cov=database --cov-branch --cov-report=term-missing --cov-report=html
+        run: python -m pytest -v --cov=app --cov=programs --cov=scholarships --cov=database --cov-branch --cov-fail-under=100 --cov-report=term-missing --cov-report=html
 
       - name: Upload coverage report
         if: always()

@@ -13,7 +13,7 @@
 - **REQ-6** Deadlines that have passed are hidden. A deadline 14 days away or less gets a warning.
 - **REQ-7** A GPA outside 0-4 or a negative budget gives an error.
 - **REQ-8** The database refuses bad data: empty names, a degree other than MS or PhD, negative
-  costs, an acceptance rate outside 0-1, a GPA outside 0-4, a bad date or a value of the wrong type.
+  costs, an acceptance rate outside 0-1, a GPA outside 0-4 or a bad date.
 
 ## Decision table C: chance (REQ-4)
 

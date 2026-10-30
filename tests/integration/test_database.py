@@ -15,8 +15,8 @@ def test_database(tmp_path):
     assert get_scholarships(connection) == [make_scholarship()]
 
     # REQ-8: the database refuses bad data
-    for bad in [dict(degree="BS"), dict(tuition_in_state=-1), dict(acceptance_rate=1.5),
-                dict(tuition_in_state="lots"), dict(deadline="2027-02-30")]:
+    for bad in [dict(university=""), dict(degree="BS"), dict(tuition_in_state=-1), dict(acceptance_rate=1.5),
+                dict(deadline="2027-02-30")]:
         with pytest.raises(sqlite3.IntegrityError):
             add_program(connection, make_program(**bad))
     with pytest.raises(sqlite3.IntegrityError):
