@@ -5,7 +5,7 @@
 1. Only programs in the chosen field are shown.
 2. Only programs with a yearly cost at or under the budget are shown.
 3. Yearly cost is tuition + living cost, using in-state tuition if the student is from that state.
-4. Results are sorted cheapest first.
+4. Results are sorted cheapest first, and programs with the same cost are sorted by university name.
 5. Chance: GPA at least 0.20 above the average is Safety, down to 0.15 below is Match, lower is Reach.
 6. A GPA outside 0-4 or a negative budget gives an error.
 7. A bad row in the data file gives an error with the line number.
@@ -22,4 +22,4 @@
 
 Run with `pytest --cov`. GitHub Actions runs the tests on every push.
 
-Current result: 61 tests passing, 100% line and branch coverage.
+Current result: 62 tests passing, 100% line and branch coverage.
