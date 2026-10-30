@@ -1,3 +1,4 @@
+# System test of the whole app
 from datetime import date
 from tests.helpers import open_app, search, table
 
