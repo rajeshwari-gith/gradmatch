@@ -7,7 +7,7 @@ GradMatch helps students plan for graduate school. Students enter their degree, 
 home state and budget, and the app shows programs they can afford, their chance of getting in,
 scholarships, and deadlines. The data is stored in a SQLite database.
 
-Live app: https://gradmatch-rg.streamlit.app
+Live app: https://gradmatch-app.streamlit.app
 
 ## Install
 
