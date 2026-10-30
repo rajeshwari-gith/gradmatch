@@ -14,5 +14,5 @@ def test_every_branch_of_find_programs():
     programs = [make_program(degree="PhD"), make_program(field="Statistics"),
                 make_program(state="WI"), make_program(living_cost=90000),
                 make_program(university="Kept")]
-    found = find_programs(programs, make_student(states=("MI",)))
-    assert [r.program.university for r in found] == ["Kept"]
+    found = find_programs(programs, make_student(states=["MI"]))
+    assert [r["program"]["university"] for r in found] == ["Kept"]
