@@ -57,4 +57,4 @@ Coverage: `pytest --cov` measures line and branch coverage and fails below 100%.
 runs every test on each push and saves the HTML coverage report (download "coverage-report"
 from the run's page).
 
-Current result: 108 tests passing, 100% line and branch coverage.
+Current result: 110 tests passing, 100% line and branch coverage.
