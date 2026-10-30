@@ -6,7 +6,7 @@
 2. Only programs with a yearly cost at or under the budget are shown, cheapest first.
 3. Yearly cost is tuition + living cost, using in-state tuition if the student is from that state.
 4. Chance is worked out from the school's acceptance rate and the student's GPA (table below).
-5. A scholarship is shown only if the student's degree, field, citizenship and GPA all fit.
+5. A scholarship is shown only if the student's degree, field, citizenship and GPA all fit, biggest amount first and A-Z by name when amounts are the same.
 6. Deadlines that have passed are hidden. A deadline 14 days away or less gets a warning.
 7. A GPA outside 0-4 or a negative budget gives an error.
 8. A bad row in a data file gives an error with the line number.
@@ -46,4 +46,4 @@ and property-based tests with Hypothesis.
 
 Run with `pytest --cov`. GitHub Actions runs the tests on every push.
 
-Current result: 108 tests passing, 100% line and branch coverage.
+Current result: 109 tests passing, 100% line and branch coverage.

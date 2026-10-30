@@ -13,5 +13,5 @@ def qualifies(scholarship: Scholarship, student: Student) -> bool:
 
 def find_scholarships(scholarships: list[Scholarship], student: Student) -> list[Scholarship]:
     found = [s for s in scholarships if qualifies(s, student)]
-    found.sort(key=lambda s: s.amount, reverse=True)
+    found.sort(key=lambda s: (-s.amount, s.name))
     return found
