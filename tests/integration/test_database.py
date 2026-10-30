@@ -29,12 +29,18 @@ def test_real_database():
 
 
 def test_req8_database_refuses_bad_data():
-    bad_programs = [dict(university=""), dict(degree="BS"), dict(tuition_in_state=-1),
-                    dict(acceptance_rate=1.5), dict(tuition_in_state="lots")]
+    bad_programs = [dict(university=""), dict(degree="BS"), dict(state="OHI"),
+                    dict(tuition_in_state=-1), dict(living_cost=-1), dict(acceptance_rate=1.5),
+                    dict(tuition_in_state="lots")]
+    bad_scholarships = [dict(name=""), dict(amount=-5), dict(min_gpa=4.5)]
     with closing(connect(":memory:")) as connection:
         for bad in bad_programs:
             with pytest.raises(sqlite3.IntegrityError):
                 add_programs(connection, [make_program(**bad)])
+        for bad in bad_scholarships:
+            with pytest.raises(sqlite3.IntegrityError):
+                add_scholarships(connection, [make_scholarship(**bad)])
         with pytest.raises(sqlite3.IntegrityError):
-            add_scholarships(connection, [make_scholarship(min_gpa=4.5)])
+            connection.execute("INSERT INTO scholarships VALUES "
+                               "('A', 1, 'MS', 'Any', 3.0, 'Everyone', '2027-02-30', 'x')")
         assert get_programs(connection) == []

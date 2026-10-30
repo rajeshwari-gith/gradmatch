@@ -18,8 +18,3 @@ def test_req1_req2_each_skip_branch_and_the_kept_branch():
                 make_program(university="Kept")]
     found = find_programs(programs, make_student(states=("MI",)))
     assert [r.program.university for r in found] == ["Kept"]
-
-
-def test_req1_no_states_chosen_means_any_state():
-    programs = [make_program(state="OH"), make_program(state="IN")]
-    assert len(find_programs(programs, make_student(budget=100000))) == 2

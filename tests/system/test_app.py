@@ -3,15 +3,12 @@ from datetime import date
 from helpers import open_app, search, table
 
 
-def test_page_opens():
+def test_search_shows_programs_and_scholarships():
     at = open_app()
     assert at.title[0].value == "GradMatch"
     assert at.selectbox(key="field").options == [
         "Computer Science", "Electrical Engineering", "Mechanical Engineering", "Statistics"]
-
-
-def test_search_shows_programs_and_scholarships():
-    at = search(open_app(), states=["OH"], budget=100000, today=date(2026, 12, 2))
+    search(at, states=["OH"], budget=100000, today=date(2026, 12, 2))
     assert set(table(at, "Programs")["State"]) == {"OH"}
     scholarships = table(at, "Scholarships")
     assert dict(zip(scholarships["Name"], scholarships["Open to"]))["DoD SMART Scholarship"] == "US citizens"

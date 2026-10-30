@@ -17,11 +17,8 @@ def test_req7_gpa_must_be_0_to_4():
             check_gpa(bad)
 
 
-def test_req4_chance_gpa_edges():
+def test_req4_chance_edges():
     assert [chance(gpa, 0.40) for gpa in [2.99, 3.0, 3.69, 3.7]] == [REACH, MATCH, MATCH, SAFETY]
-
-
-def test_req4_chance_acceptance_rate_edges():
     rates = [0.09, 0.10, 0.24, 0.25, 0.59, 0.60]
     assert [chance(3.5, rate) for rate in rates] == [REACH, REACH, REACH, MATCH, MATCH, SAFETY]
 
