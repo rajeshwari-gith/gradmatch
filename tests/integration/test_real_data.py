@@ -6,10 +6,6 @@ across files, and works with the modules that use it. When a data row is
 added or changed, these tests catch mistakes the loader cannot see on its
 own (a state with no living cost, a duplicate id, a misspelled field).
 """
-# In plain words: the other tests use tiny made-up data. These tests read the REAL files in
-# data/ (45,000+ programs) and check that every row follows the rules: unique ids, a living
-# cost for every state, https links, allowed fields and degrees, score ranges in order. They
-# also run the search and the API on the real data, so a bad row added later is caught here.
 
 import csv
 import time

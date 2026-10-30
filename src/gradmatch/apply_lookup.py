@@ -12,11 +12,6 @@ rows with a name in `checked_by` are applied. For each one:
 
 Run it with:  PYTHONPATH=src python -m gradmatch.apply_lookup <sheet.csv> [data_dir]
 """
-# In plain words: we cannot open university websites from our development tools, so a person
-# opens each official program page by hand and types what they found into a "lookup sheet"
-# (a CSV). This script copies those checked values into programs.csv and marks the row as
-# "verified by <name> on <date>" in SOURCES.md. It is careful on purpose: it checks every row
-# first and writes nothing at all if any row is wrong, so the data is never half-updated.
 
 import csv
 import io

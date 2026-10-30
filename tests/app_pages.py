@@ -1,8 +1,4 @@
 """Helpers the system and acceptance tests share to drive the app and read its screens.
-
-In plain words: the app draws its rows and cards as HTML. These helpers open the app, press
-buttons, switch screens and pull out what a student would read (names, costs, chance labels,
-days left), so each test can say what it checks in one line.
 """
 import re
 from pathlib import Path
@@ -66,7 +62,7 @@ def rows(at) -> list[str]:
 def row_names(at) -> list[str]:
     names = []
     for row in rows(at):
-        school, program = re.search(r'class="gm-name">([^<]+)</div><div class="gm-sub">([^<]+?) ·', row).groups()
+        school, program = re.search(r'class="gm-name">([^<]+)</div><div class="gm-sub">([^<]+)</div>', row).groups()
         names.append(f"{school} – {program}")
     return names
 
@@ -122,7 +118,7 @@ def scholarship_amounts(at) -> list[str]:
 # ---- Deadlines ----
 
 def deadline_rows(at) -> list[str]:
-    return [b for b in _blocks(at, 'class="gm-datetile"') if 'class="gm-cell-name"' in b]
+    return [b for b in _blocks(at, 'class="gm-datetile"') if 'class="gm-cell-name gm-dl"' in b]
 
 
 def deadline_names(at) -> list[str]:

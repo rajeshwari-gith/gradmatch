@@ -5,9 +5,6 @@ tables there), never on the real data/ folder. These tests check status
 codes, the JSON shape, validation errors and ordering, and that the API
 gives the same answers as the modules it calls.
 """
-# In plain words: these tests call the REST API the way another program would, through FastAPI's
-# TestClient, but on a tiny made-up data folder. They check the status codes (200, 404, 422),
-# the shape of the JSON, the order of the results and the paging limits.
 
 import pytest
 from fastapi.testclient import TestClient

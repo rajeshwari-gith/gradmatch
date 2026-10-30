@@ -12,10 +12,6 @@ done mark, and progress() counts the required ones that are done. The done
 set holds essay_key(program_id, name) keys, so the same essay name at two
 programs is ticked off separately.
 """
-# In plain words: students want to know which essays each program asks for, how long they may
-# be and what the question is. Nobody may make that up, so this file only reads rows that a
-# person copied from the official page, and it refuses a row without the page link, the
-# checker's name or the date. The prompt is kept word for word as it was typed.
 
 from dataclasses import dataclass, fields
 from datetime import date

@@ -19,10 +19,6 @@ from app_pages import (DEADLINES, PHD, SCHOLARSHIPS, SEARCH, banner, captions, c
 
 pytestmark = pytest.mark.system
 
-# In plain words: these tests run the whole app on a tiny fixed data set, press "Find programs",
-# and check each screen: the results table, the PhD cards, the scholarships, the deadlines, the
-# stars, the charts and the downloads. Because the data and "today" are fixed, every answer is stable.
-
 CHEAP = "Cheap State University – MS in Computer Science"
 MIDDLE = "Middle University – MS in Computer Science"
 PRICEY = "Pricey Tech – MS in Computer Science"

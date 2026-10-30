@@ -1,8 +1,4 @@
 """The look of the app: colours, fonts, background, cards and button effects (Sage & Cream).
-
-In plain words: Streamlit draws its own widgets, so to match the design we add one block of CSS
-at the top of every page. Everything visual lives here, in one place, so it is easy to change and
-easy to test. It changes how things look, never what the app calculates.
 """
 
 FONTS_URL = ("https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800"
@@ -98,7 +94,7 @@ a:hover, .gm-link:hover {{ color: var(--accent-dark); }}
 .gm-tile {{ width:46px; height:46px; border-radius:14px; background:var(--tile); color:var(--ink);
   display:inline-flex; align-items:center; justify-content:center; font-weight:800; font-size:14px; flex:0 0 46px; }}
 .gm-fundbar {{ height:8px; border-radius:999px; margin:2px 0 12px; }}
-.gm-stipend {{ background:var(--surface-soft); border-radius:14px; padding:12px 14px; display:flex;
+.gm-stipend {{ background:var(--surface-soft); border-radius:14px; padding:12px 14px; display:flex; flex-wrap:wrap;
   align-items:center; justify-content:space-between; gap:10px; margin:10px 0; }}
 .gm-stipend-label {{ font-size:12px; color:var(--muted); font-weight:600; }}
 .gm-stipend-amount {{ font-size:32px; font-weight:800; color:var(--accent); line-height:1.1; }}
@@ -112,6 +108,7 @@ a:hover, .gm-link:hover {{ color: var(--accent-dark); }}
 .gm-check {{ list-style:none; padding:0; margin:8px 0; font-size:14px; }}
 .gm-ok {{ color: var(--ok-text); font-weight:800; }} .gm-warn {{ color: var(--urgent-strong); font-weight:800; }}
 .gm-urgent {{ color: var(--urgent-strong); font-weight:700; }}
+.gm-dim {{ color: var(--muted); }}
 .gm-passed {{ text-decoration: line-through; color: var(--muted); }}
 
 /* Rows and cards built by gradmatch.screens. */
@@ -132,7 +129,7 @@ a:hover, .gm-link:hover {{ color: var(--accent-dark); }}
 .gm-glance-row {{ display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid var(--row-line); }}
 [class*="st-key-row-"], [class*="st-key-card-"], [class*="st-key-sch-"], [class*="st-key-dl-"] {{
   background: var(--surface); border:1px solid var(--border); border-radius:18px; box-shadow: {CARD_SHADOW};
-  padding: 12px 16px; position:relative; height:auto !important; overflow:visible; }}
+  padding: 12px 16px 18px; position:relative; height:auto !important; overflow:visible; }}
 /* The column that holds a star keeps the star's full width instead of a squeezed share, and the
    row it sits in never wraps the star onto a line of its own. */
 [data-testid="stColumn"]:has(> [data-testid="stVerticalBlock"] > [class*="st-key-star-"]) {{
@@ -142,15 +139,41 @@ a:hover, .gm-link:hover {{ color: var(--accent-dark); }}
 [data-testid="stHorizontalBlock"]:has(> [data-testid="stColumn"] > [data-testid="stVerticalBlock"] > [class*="st-key-star-"]) > [data-testid="stColumn"] {{
   min-width: 0 !important; }}
 
-/* A scholarship's amount and due date never break in the middle. */
-[data-testid="stColumn"]:has(> [data-testid="stVerticalBlock"] > [data-testid="stElementContainer"] .gm-amount) {{
-  flex: 0 0 150px !important; width: 150px !important; min-width: 150px !important; }}
+/* Scholarship cards: the text and the amount sit side by side, and the amount moves below the text
+   when the card is narrow, so a long name never breaks letter by letter. */
+.gm-sch {{ display:flex; flex-wrap:wrap; align-items:center; gap:8px 20px; }}
+.gm-sch-info {{ flex: 1 1 260px; min-width: 0; }}
 .gm-amount {{ white-space: nowrap; }}
-
-/* "Track deadline" keeps its whole label. */
-[data-testid="stColumn"]:has(> [data-testid="stVerticalBlock"] > [class*="st-key-track-"]) {{
-  flex: 0 0 160px !important; width: 160px !important; min-width: 160px !important; }}
+[class*="st-key-track-"] {{ display:flex; justify-content:flex-end; }}
 [class*="st-key-track-"] button {{ white-space: nowrap; }}
+
+/* Deadline rows: the days-left badge moves below the name when the row is narrow. */
+.gm-dl {{ flex-wrap: wrap; }}
+.gm-dl-text {{ flex: 1 1 200px; min-width: 0; }}
+
+/* Narrow windows: side-by-side columns move onto a new line instead of squeezing their contents. */
+[class*="st-key-wrap-"] > [data-testid="stLayoutWrapper"] > [data-testid="stHorizontalBlock"] {{
+  flex-wrap: wrap !important; row-gap: 12px; }}
+[class*="st-key-wrap-"] > [data-testid="stLayoutWrapper"] > [data-testid="stHorizontalBlock"] > [data-testid="stColumn"] {{
+  min-width: 200px !important; }}
+.st-key-wrap-header > [data-testid="stLayoutWrapper"] > [data-testid="stHorizontalBlock"] > [data-testid="stColumn"]:nth-child(2) {{
+  min-width: 430px !important; }}
+.st-key-wrap-search > [data-testid="stLayoutWrapper"] > [data-testid="stHorizontalBlock"] > [data-testid="stColumn"]:first-child {{
+  min-width: 270px !important; }}
+.st-key-wrap-search > [data-testid="stLayoutWrapper"] > [data-testid="stHorizontalBlock"] > [data-testid="stColumn"]:nth-child(2),
+.st-key-wrap-scholarships > [data-testid="stLayoutWrapper"] > [data-testid="stHorizontalBlock"] > [data-testid="stColumn"]:nth-child(2),
+.st-key-wrap-deadlines > [data-testid="stLayoutWrapper"] > [data-testid="stHorizontalBlock"] > [data-testid="stColumn"]:first-child {{
+  min-width: 380px !important; }}
+.st-key-wrap-phd-grid > [data-testid="stLayoutWrapper"] > [data-testid="stHorizontalBlock"] > [data-testid="stColumn"] {{
+  min-width: 290px !important; }}
+.st-key-wrap-results-filters > [data-testid="stLayoutWrapper"] > [data-testid="stHorizontalBlock"] > [data-testid="stColumn"] {{
+  min-width: 150px !important; }}
+@media (max-width: 640px) {{
+  /* :nth-child(n) twice makes this rule stronger than every minimum width above, so on a phone each
+     column simply takes the full width. */
+  [class*="st-key-wrap-"] > [data-testid="stLayoutWrapper"] > [data-testid="stHorizontalBlock"] > [data-testid="stColumn"]:nth-child(n):nth-child(n) {{
+    min-width: 100% !important; }}
+}}
 
 /* Buttons: soft raised, lift on hover, press down when clicked. */
 .stButton > button, .stFormSubmitButton > button, .stDownloadButton > button {{
@@ -163,6 +186,7 @@ a:hover, .gm-link:hover {{ color: var(--accent-dark); }}
 .stButton > button[kind="primary"], .stFormSubmitButton > button[kind="primaryFormSubmit"] {{
   background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 800; }}
 .stButton > button[kind="primary"]:active {{ background: var(--accent-dark); }}
+.stDownloadButton > button {{ white-space: normal; height: auto; }}   /* long labels wrap, never cut */
 
 /* The PhD screen's fellowships line is a plain link, not a raised button. */
 .st-key-phd_fellowships button {{ box-shadow:none !important; color: var(--accent); font-weight:700;

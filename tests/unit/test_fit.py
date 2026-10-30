@@ -11,10 +11,6 @@ from gradmatch.fit import MATCH, REACH, SAFETY, UNKNOWN, classify_fit, rate_fit
 
 pytestmark = pytest.mark.unit
 
-# In plain words: Safety / Match / Reach is the label students look at first, so the cut-offs must
-# be exactly right. We test the GPA difference right at +0.20 and -0.15, the 10% acceptance rule,
-# and what happens when the data has no GPA or no test scores.
-
 # make_program(): avg_gpa = 3.40, acceptance_rate = 0.40
 
 

@@ -15,9 +15,6 @@ from gradmatch import data_loader
 
 pytestmark = pytest.mark.system
 
-# In plain words: a program from government data has blanks (no GPA, stipend or deadline). The app
-# must still show it, with a chance estimated from its acceptance rate, instead of crashing.
-
 APP = str(Path(__file__).resolve().parents[2] / "app" / "streamlit_app.py")
 
 

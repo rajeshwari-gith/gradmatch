@@ -14,10 +14,6 @@ from gradmatch.search import matches_filters, school_rates, search_programs, tui
 
 pytestmark = pytest.mark.unit
 
-# In plain words: search is the heart of the app. These tests give it a handful of tiny programs
-# and check three things: the right programs are kept, the wrong ones are dropped, and the
-# order is right (MS cheapest first, PhD best funded first).
-
 LIVING = {"MI": 12000, "CA": 25000, "TX": 14000, "OH": 11000}
 
 

@@ -13,9 +13,6 @@ from gradmatch.presentation import (ESTIMATE_NOTE, eligibility_summary, format_d
 
 pytestmark = pytest.mark.unit
 
-# In plain words: these helpers turn numbers, dates and scholarship rules into short text. We check
-# the exact words, that only normal web links are allowed, and the TOEFL warning around the minimum.
-
 
 # ---- number and date formatting ----
 
