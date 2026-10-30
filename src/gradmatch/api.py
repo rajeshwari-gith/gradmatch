@@ -6,6 +6,7 @@ from fastapi import FastAPI, HTTPException, Query
 from gradmatch.data_loader import load_programs, load_scholarships
 from gradmatch.database import create_database, get_programs
 from gradmatch.deadlines import upcoming
+from gradmatch.fit import check_gpa
 from gradmatch.models import Student
 from gradmatch.scholarships import find_scholarships
 from gradmatch.search import find_programs
@@ -34,6 +35,10 @@ def programs(degree: str, field: str, gpa: float, home_state: str, budget: int,
 
 @app.get("/scholarships")
 def scholarships(degree: str, field: str, gpa: float, citizenship: str):
+    try:
+        check_gpa(gpa)
+    except ValueError as error:
+        raise HTTPException(status_code=400, detail=str(error))
     student = Student(degree, field, gpa, "", 0, citizenship)
     return [{"name": s.name, "amount": s.amount, "deadline": s.deadline.isoformat()}
             for s in find_scholarships(SCHOLARSHIPS, student)]
