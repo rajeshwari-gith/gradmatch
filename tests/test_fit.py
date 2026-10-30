@@ -5,20 +5,32 @@ from hypothesis import strategies as st
 from gradmatch.fit import MATCH, REACH, SAFETY, chance, check_gpa
 
 
-@pytest.mark.parametrize("gpa, expected", [(3.9, SAFETY), (3.5, MATCH), (3.0, REACH)])
-def test_chance(gpa, expected):
-    assert chance(gpa, 3.5) == expected
-
-
-# on and next to the +0.20 and -0.15 edges
-@pytest.mark.parametrize("gpa, expected", [
-    (3.70, SAFETY),
-    (3.69, MATCH),
-    (3.35, MATCH),
-    (3.34, REACH),
+# decision table: acceptance rate (rows) x GPA (columns)
+@pytest.mark.parametrize("rate, gpa, expected", [
+    (0.05, 4.0, REACH), (0.05, 3.5, REACH), (0.05, 2.5, REACH),
+    (0.15, 4.0, MATCH), (0.15, 3.5, REACH), (0.15, 2.5, REACH),
+    (0.40, 4.0, SAFETY), (0.40, 3.5, MATCH), (0.40, 2.5, REACH),
+    (0.80, 4.0, SAFETY), (0.80, 3.5, SAFETY), (0.80, 2.5, MATCH),
 ])
-def test_chance_at_the_edges(gpa, expected):
-    assert chance(gpa, 3.5) == expected
+def test_decision_table(rate, gpa, expected):
+    assert chance(gpa, rate) == expected
+
+
+@pytest.mark.parametrize("rate, expected", [
+    (0.09, REACH), (0.10, REACH),
+    (0.24, REACH), (0.25, MATCH),
+    (0.59, MATCH), (0.60, SAFETY),
+])
+def test_rate_edges(rate, expected):
+    assert chance(3.5, rate) == expected
+
+
+@pytest.mark.parametrize("gpa, expected", [
+    (2.99, REACH), (3.0, MATCH),
+    (3.69, MATCH), (3.7, SAFETY),
+])
+def test_gpa_edges(gpa, expected):
+    assert chance(gpa, 0.40) == expected
 
 
 @pytest.mark.parametrize("gpa", [0.0, 2.0, 4.0])
@@ -34,9 +46,9 @@ def test_invalid_gpa(gpa):
 
 def test_chance_rejects_invalid_gpa():
     with pytest.raises(ValueError):
-        chance(5.0, 3.5)
+        chance(5.0, 0.5)
 
 
-@given(st.floats(0, 4), st.floats(0, 4))
-def test_chance_is_always_one_of_three(gpa, avg_gpa):
-    assert chance(gpa, avg_gpa) in {SAFETY, MATCH, REACH}
+@given(st.floats(0, 4), st.floats(0, 1))
+def test_chance_is_always_one_of_three(gpa, rate):
+    assert chance(gpa, rate) in {SAFETY, MATCH, REACH}

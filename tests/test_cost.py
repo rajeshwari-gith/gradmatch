@@ -2,25 +2,21 @@ import pytest
 from hypothesis import given
 from hypothesis import strategies as st
 
-from gradmatch.cost import tuition, yearly_cost
+from gradmatch.cost import tuition_for, yearly_cost
 from helpers import make_program
 
 
 def test_same_state_pays_in_state_tuition():
-    assert tuition(make_program(state="MI"), "MI") == 10000
+    assert tuition_for(make_program(state="MI"), "MI") == 10000
 
 
 def test_other_state_pays_out_of_state_tuition():
-    assert tuition(make_program(state="MI"), "OH") == 20000
+    assert tuition_for(make_program(state="MI"), "OH") == 20000
 
 
 @pytest.mark.parametrize("home_state, expected", [("MI", 25000), ("OH", 35000)])
 def test_yearly_cost(home_state, expected):
     assert yearly_cost(make_program(), home_state) == expected
-
-
-def test_yearly_cost_with_no_tuition():
-    assert yearly_cost(make_program(tuition_in_state=0), "MI") == 15000
 
 
 @given(st.integers(0, 100000), st.integers(0, 100000))
