@@ -77,7 +77,10 @@ The examples below are run by `tests/integration/test_readme_examples.py`, so th
 | `GET /health` | `{"status": "ok"}` |
 | `GET /programs?field=&degree=&state=&limit=&offset=` | programs in file order, filtered by exact field, degree (`BS`, `MS`, `PhD`) and state; at most `limit` (1–1000, default 100) after skipping `offset` (default 0) |
 | `POST /match?limit=` | `{"total_programs": n, "programs": [...], "scholarships": [...]}` for a student profile; the first `limit` programs (1–1000, default 50) with cost, fit and funding |
-| `GET /deadlines?today=YYYY-MM-DD` | open program and scholarship deadlines, soonest first, each with its status |
+| `GET /deadlines?today=YYYY-MM-DD&urgent_days=` | `{"urgent_days": n, "glance": {...}, "deadlines": [...]}`: open program and scholarship deadlines, soonest first, each with its status for the warning window `urgent_days` (0–90, default 14), and the counts `within_window`, `within_90`, `later` and `passed` |
+| `GET /starred` | the starred keys, sorted |
+| `POST /starred` | star one item; the body is `{"key": "program:<id>"}` (or `scholarship:<id>`, `deadline:<name>`); returns the starred keys |
+| `DELETE /starred?key=` | take the star away from one item; returns the starred keys |
 
 Examples:
 
@@ -88,8 +91,18 @@ curl -X POST "http://127.0.0.1:8000/match?limit=3" -H "Content-Type: application
      -d '{"degree_sought": "BS", "gpa": 3.6, "field": "Computer Science", "home_state": "MI",
           "citizenship": "US", "annual_budget": 40000, "sat": 1300}'
 
-curl "http://127.0.0.1:8000/deadlines?today=2026-10-27"
+curl "http://127.0.0.1:8000/deadlines?today=2026-10-27&urgent_days=7"
+
+curl -X POST "http://127.0.0.1:8000/starred" -H "Content-Type: application/json" \
+     -d '{"key": "program:GVSU-MSCS"}'
+
+curl -X DELETE "http://127.0.0.1:8000/starred?key=program:GVSU-MSCS"
 ```
+
+The starred items are kept in the server's memory only: everyone using the same server shares
+them, and they are gone when the server restarts. Starring an item twice, or removing a star that
+is not there, is not an error. A key that does not start with `program:`, `scholarship:` or
+`deadline:` gives 422.
 
 The profile fields are `degree_sought`, `gpa`, `field`, `home_state`, `citizenship` (`US`, `PR` or
 `International`) and `annual_budget`, plus optional `preferred_states`, `gre`, `toefl`, `sat`, `act`
@@ -112,7 +125,7 @@ earlier import, so running it again gives the same file, and never touches hand-
 ## Run the tests
 
 ```
-pytest                                   # all tests (about 820)
+pytest                                   # all tests (about 1,050)
 pytest -m unit                           # one level: unit, integration, system or acceptance
 pytest --cov --cov-report=term-missing   # with line and branch coverage
 ```

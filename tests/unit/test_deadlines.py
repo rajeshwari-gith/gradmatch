@@ -11,13 +11,14 @@ February 29 is counted as a real day.
 # list of open deadlines. Every test uses the same fixed "today", so the results never change
 # from one day to the next. That is only possible because the code takes `today` as an argument.
 
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 
 import pytest
 from hypothesis import given, strategies as st
 
 from conftest import make_program
-from gradmatch.deadlines import CLOSED, LATER, SOON, URGENT, deadline_of, deadline_status, upcoming
+from gradmatch.deadlines import (CLOSED, LATER, SOON, URGENT, CustomDeadline, deadline_of, deadline_status,
+                                 glance_counts, upcoming, validate_custom_deadline)
 from gradmatch.models import Scholarship
 
 pytestmark = pytest.mark.unit
@@ -69,6 +70,79 @@ def test_deadline_status_far_past_is_closed():
 def test_deadline_status_far_future_is_later():
     assert deadline_status(in_days(365), TODAY) == LATER
 
+
+
+# ---- The warning window (urgent_days) ----
+# Why (boundary values): the window moves the urgent/soon cut-off, so each window is tested on
+# both sides of its own cut-off, plus the fixed 30-day cut-off and the allowed range 0-90.
+
+@pytest.mark.parametrize("urgent_days, days_left, expected", [
+    (7, 7, URGENT), (7, 8, SOON),            # a shorter window
+    (30, 30, URGENT), (30, 31, LATER),       # window of 30: no "soon" left
+    (0, 0, URGENT), (0, 1, SOON),            # window of 0: only "due today" is urgent
+    (90, 90, URGENT), (90, 91, LATER),       # the longest window
+    (7, -1, CLOSED),
+])
+def test_deadline_status_with_a_warning_window(urgent_days, days_left, expected):
+    assert deadline_status(in_days(days_left), TODAY, urgent_days=urgent_days) == expected
+
+
+def test_deadline_status_default_window_is_14_days():
+    assert [deadline_status(in_days(d), TODAY) for d in (14, 15)] == [URGENT, SOON]
+
+
+@pytest.mark.parametrize("urgent_days", [-1, 91, 7.5, True, "14"])
+def test_warning_window_outside_0_to_90_whole_days_is_refused(urgent_days):
+    with pytest.raises(ValueError, match="urgent_days must be a whole number from 0 to 90"):
+        deadline_status(TODAY, TODAY, urgent_days=urgent_days)
+    with pytest.raises(ValueError, match="urgent_days must be a whole number from 0 to 90"):
+        glance_counts([], TODAY, urgent_days=urgent_days)
+
+
+# ---- glance_counts() ----
+# Why (boundary values): one item at each of -1, 0, 7, 14, 15, 30, 90 and 91 days shows exactly
+# which count each edge falls into.
+
+def items_at(*days):
+    return [make_program(program_id=f"P{d}", application_deadline=in_days(d)) for d in days]
+
+
+@pytest.mark.parametrize("days_left, expected", [
+    (-1, dict(within_window=0, within_90=0, later=0, passed=1)),
+    (0, dict(within_window=1, within_90=1, later=0, passed=0)),
+    (7, dict(within_window=1, within_90=1, later=0, passed=0)),
+    (14, dict(within_window=1, within_90=1, later=0, passed=0)),
+    (15, dict(within_window=0, within_90=1, later=0, passed=0)),
+    (30, dict(within_window=0, within_90=1, later=0, passed=0)),
+    (90, dict(within_window=0, within_90=1, later=0, passed=0)),
+    (91, dict(within_window=0, within_90=0, later=1, passed=0)),
+])
+def test_glance_counts_boundaries_with_the_default_window(days_left, expected):
+    assert glance_counts(items_at(days_left), TODAY) == expected
+
+
+@pytest.mark.parametrize("urgent_days, within_window", [(0, 1), (7, 2), (14, 3), (30, 4), (90, 5)])
+def test_glance_counts_window_moves_only_within_window(urgent_days, within_window):
+    counts = glance_counts(items_at(-1, 0, 7, 14, 30, 90, 91), TODAY, urgent_days=urgent_days)
+
+    assert counts == dict(within_window=within_window, within_90=5, later=1, passed=1)
+
+
+
+def test_glance_counts_adds_up_several_items_in_every_count():
+    counts = glance_counts(items_at(-5, -1, 3, 10, 50, 91, 200), TODAY)
+
+    assert counts == dict(within_window=2, within_90=3, later=2, passed=2)
+
+def test_glance_counts_mixes_programs_and_scholarships_and_skips_unpublished():
+    items = [make_program(application_deadline=None), make_scholarship("S", in_days(3)),
+             make_program(application_deadline=in_days(40))]
+
+    assert glance_counts(items, TODAY) == dict(within_window=1, within_90=2, later=0, passed=0)
+
+
+def test_glance_counts_of_nothing_is_all_zero():
+    assert glance_counts([], TODAY) == dict(within_window=0, within_90=0, later=0, passed=0)
 
 # ---- Leap year ----
 # Why: February 29 is a real day in 2028; counting it wrong would move a deadline from "soon" to "later".
@@ -155,6 +229,62 @@ def test_upcoming_only_unpublished_deadlines_gives_empty_list():
 
     assert upcoming(items, TODAY) == []
 
+
+
+# ---- Custom deadlines the student adds ----
+# Why: a custom deadline must work everywhere a program or scholarship deadline does.
+
+def test_custom_deadline_defaults_and_deadline_of():
+    item = CustomDeadline("Essay draft", in_days(3))
+
+    assert (item.website, item.note) == ("", "")
+    assert deadline_of(item) == in_days(3)
+
+
+def test_custom_deadline_cannot_be_changed():
+    item = CustomDeadline("Essay draft", in_days(3))
+
+    with pytest.raises(AttributeError):
+        item.name = "Other"
+
+
+def test_upcoming_mixes_custom_deadlines_and_drops_closed_ones():
+    custom = CustomDeadline("Essay draft", in_days(1))
+    old = CustomDeadline("Old", in_days(-1))
+    program = make_program(application_deadline=in_days(10))
+
+    assert upcoming([program, old, custom], TODAY) == [custom, program]
+
+
+def test_glance_counts_counts_custom_deadlines():
+    items = [CustomDeadline("A", in_days(2)), CustomDeadline("B", in_days(-2)),
+             make_scholarship("S", in_days(100))]
+
+    assert glance_counts(items, TODAY) == dict(within_window=1, within_90=1, later=1, passed=1)
+
+
+# ---- validate_custom_deadline() ----
+# Why (equivalence classes): a good name and date, each kind of bad name, and each kind of bad date.
+
+@pytest.mark.parametrize("day", [date(2026, 11, 1), "2026-11-01", "2028-02-29"])
+def test_valid_custom_deadline_has_no_errors(day):
+    assert validate_custom_deadline("Essay draft", day) == []
+
+
+@pytest.mark.parametrize("name", ["", "   ", None, 5])
+def test_custom_deadline_name_is_required(name):
+    assert validate_custom_deadline(name, TODAY) == ["Name is required."]
+
+
+@pytest.mark.parametrize("day", [None, "", "2026-02-30", "2027-02-29", "11/01/2026", "soon",
+                                 20261101, datetime(2026, 11, 1, 9, 0)])
+def test_custom_deadline_date_must_be_a_real_date(day):
+    assert validate_custom_deadline("Essay draft", day) == ["Date must be a real date (YYYY-MM-DD)."]
+
+
+def test_custom_deadline_lists_both_problems():
+    assert validate_custom_deadline(" ", "2026-13-01") == ["Name is required.",
+                                                         "Date must be a real date (YYYY-MM-DD)."]
 
 # ---- Property-based test (Hypothesis) ----
 # Why (property-based): instead of a few chosen days, Hypothesis tries hundreds of random pairs of

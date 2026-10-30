@@ -22,7 +22,7 @@ from fastapi.testclient import TestClient
 from conftest import make_profile
 from gradmatch.cost import yearly_cost
 from gradmatch.deadlines import upcoming
-from gradmatch.scholarships import eligible_scholarships
+from gradmatch.scholarships import eligible_scholarships, kind_of
 
 pytestmark = pytest.mark.integration
 
@@ -141,6 +141,11 @@ def test_imported_program_ids_are_unique(programs):
     ids = [p.program_id for p in programs]
     assert len(ids) == len(set(ids))
 
+
+
+def test_every_scholarship_type_has_a_kind(scholarships):
+    # kind_of raises for a type it does not know, so a typo in the type column fails here.
+    assert {kind_of(s) for s in scholarships} <= {"Scholarship", "Fellowship", "Assistantship"}
 
 # ---- The modules run on the real data ----
 # Why: real data has cases our small tests may not think of; the code must not crash on any of them.

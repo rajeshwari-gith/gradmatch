@@ -6,6 +6,9 @@ their results into JSON. It has no business rules of its own.
 Run it with:  PYTHONPATH=src uvicorn gradmatch.api:app --reload
 
 The data folder is GRADMATCH_DATA_DIR if it is set, otherwise data/.
+
+The starred items (/starred) are kept in this server's memory only: they are
+shared by everyone using the server and are lost when it restarts.
 """
 # In plain words: the same search as the website, but for other programs to call over HTTP
 # and get JSON back (for example a phone app). This file has no rules of its own: it only
@@ -13,6 +16,7 @@ The data folder is GRADMATCH_DATA_DIR if it is set, otherwise data/.
 # JSON. Keeping the rules in one place means the website and the API can never disagree.
 
 import os
+import threading
 from dataclasses import asdict
 from datetime import date
 from pathlib import Path
@@ -21,10 +25,12 @@ from fastapi import FastAPI, HTTPException, Query
 from pydantic import BaseModel
 
 from gradmatch.data_loader import load_living_costs, load_programs, load_scholarships
-from gradmatch.deadlines import deadline_of, deadline_status, upcoming
+from gradmatch.deadlines import (GLANCE_DAYS, URGENT_MAX_DAYS, deadline_of, deadline_status, glance_counts,
+                                 upcoming)
 from gradmatch.models import Program, Scholarship, StudentProfile
 from gradmatch.scholarships import eligible_scholarships
 from gradmatch.search import ProgramResult, search_programs
+from gradmatch.starred import is_star_key
 from gradmatch.validation import validate_profile
 
 # The real data folder, found from this file's own location so it works from any folder.
@@ -38,6 +44,11 @@ DEFAULT_DATA_DIR = Path(__file__).resolve().parents[2] / "data"
 PROGRAMS_LIMIT, MATCH_LIMIT, MAX_LIMIT = 100, 50, 1000
 
 app = FastAPI(title="GradMatch", description="Graduate programs, scholarships and deadlines.")
+
+# The starred keys, in memory. The lock makes "read the set, change it, store it" one step, so two
+# requests at the same moment cannot lose each other's star (uvicorn runs requests in threads).
+_starred: frozenset = frozenset()
+_starred_lock = threading.Lock()
 
 
 # The shape of the JSON a caller sends to POST /match. FastAPI checks the types for us (a GPA
@@ -57,6 +68,11 @@ class ProfileIn(BaseModel):
     sat: int | None = None
     act: int | None = None
     special: list[str] = []
+
+
+# The JSON body of POST /starred, e.g. {"key": "program:GVSU-MS-CS"}.
+class StarIn(BaseModel):
+    key: str
 
 
 # ---- Endpoints ----
@@ -126,21 +142,61 @@ def match(body: ProfileIn, limit: int = Query(MATCH_LIMIT, ge=1, le=MAX_LIMIT)):
             "scholarships": [asdict(s) for s in scholarships]}
 
 
-# Open deadlines, soonest first, each with its closed/urgent/soon/later label. `today` can be
-# sent by the caller (handy for tests and demos); only when it is missing do we read the clock,
-# here at the edge of the program, so the logic in deadlines.py stays free of date.today().
+# Open deadlines, soonest first, each with its closed/urgent/soon/later label, plus the four
+# "at a glance" counts. `today` can be sent by the caller (handy for tests and demos); only when
+# it is missing do we read the clock, here at the edge of the program, so the logic in
+# deadlines.py stays free of date.today(). `urgent_days` is the student's warning window.
 @app.get("/deadlines")
-def deadlines(today: date | None = None):
-    """Open program and scholarship deadlines, soonest first.
+def deadlines(today: date | None = None,
+              urgent_days: int = Query(URGENT_MAX_DAYS, ge=0, le=GLANCE_DAYS)):
+    """Open program and scholarship deadlines, soonest first, and the glance counts.
 
     `today` is a query parameter (YYYY-MM-DD); FastAPI answers 422 if it is not a date.
     Only when it is left out does the API use the server's date: this is the edge of
     the program, like the UI, so the logic modules still never call date.today().
+    `urgent_days` (0-90, default 14) sets the warning window for the status and the counts.
     """
     today = today or date.today()
     folder = data_dir()
     items = load_programs(folder / "programs.csv") + load_scholarships(folder / "scholarships.csv")
-    return [deadline_json(item, today) for item in upcoming(items, today)]
+    return {"urgent_days": urgent_days,
+            "glance": glance_counts(items, today, urgent_days),
+            "deadlines": [deadline_json(item, today, urgent_days) for item in upcoming(items, today)]}
+
+
+# The starred keys, sorted so the answer is the same every time.
+@app.get("/starred")
+def get_starred():
+    return sorted(_starred)
+
+
+# Star one item. Starring it again changes nothing (so a repeated request is harmless).
+# The key must look like "program:<id>", "scholarship:<id>" or "deadline:<name>"; the API does
+# not check that the id exists, because a custom deadline only exists on the student's screen.
+@app.post("/starred")
+def add_starred(body: StarIn):
+    global _starred
+    _check_star_key(body.key)
+    with _starred_lock:
+        _starred = _starred | {body.key}
+        return sorted(_starred)
+
+
+# Take the star away from one item: DELETE /starred?key=program:GVSU-MS-CS. Removing a key that
+# is not starred is not an error, for the same reason as above.
+@app.delete("/starred")
+def remove_starred(key: str):
+    global _starred
+    _check_star_key(key)
+    with _starred_lock:
+        _starred = _starred - {key}
+        return sorted(_starred)
+
+
+def _check_star_key(key: str):
+    if not is_star_key(key):
+        raise HTTPException(status_code=422,
+                            detail=["key must be program:<id>, scholarship:<id> or deadline:<name>"])
 
 
 # ---- Helpers ----
@@ -159,11 +215,11 @@ def program_result_json(result: ProgramResult) -> dict:
 
 
 # One deadline as JSON. "kind" says if it is a program or a scholarship, because both are in one list.
-def deadline_json(item: Program | Scholarship, today: date) -> dict:
+def deadline_json(item: Program | Scholarship, today: date, urgent_days: int = URGENT_MAX_DAYS) -> dict:
     if isinstance(item, Program):
         kind, item_id, name = "program", item.program_id, f"{item.university} – {item.program_name}"
     else:
         kind, item_id, name = "scholarship", item.scholarship_id, item.name
     deadline = deadline_of(item)
     return {"kind": kind, "id": item_id, "name": name, "deadline": deadline,
-            "status": deadline_status(deadline, today), "website": item.website}
+            "status": deadline_status(deadline, today, urgent_days), "website": item.website}
