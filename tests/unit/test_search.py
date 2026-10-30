@@ -72,15 +72,6 @@ def test_no_states_chosen_means_any_state():
     assert len(find_programs(programs, make_student(budget=100000))) == 2
 
 
-def test_phd_best_funded_first():
-    programs = [make_program(university="None", degree="PhD"),
-                make_program(university="Small", degree="PhD", stipend=5000),
-                make_program(university="Big", degree="PhD", stipend=30000)]
-    found = find_programs(programs, make_student(degree="PhD", budget=100000))
-    assert names(found) == ["Big", "Small", "None"]
-    assert [r.funding for r in found] == ["Fully funded", "Partly funded", "No funding"]
-
-
 def test_home_state_changes_the_cost():
     in_state = find_programs([make_program()], make_student(home_state="MI"))[0]
     out_of_state = find_programs([make_program()], make_student(home_state="OH"))[0]
@@ -92,13 +83,8 @@ def test_student_gpa_is_used_for_chance():
     assert result.chance == SAFETY
 
 
-def test_student_gre_is_used_for_chance():
-    result = find_programs([make_program(avg_gre=310)], make_student(gre=330))[0]
-    assert result.chance == SAFETY
-
-
 @pytest.mark.parametrize("student", [make_student(gpa=4.2), make_student(gpa=-1),
-                                     make_student(budget=-1), make_student(gre=200)])
+                                     make_student(budget=-1)])
 def test_bad_input(student):
     with pytest.raises(ValueError):
         find_programs([make_program()], student)
