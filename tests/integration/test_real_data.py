@@ -22,7 +22,9 @@ from fastapi.testclient import TestClient
 from conftest import make_profile
 from gradmatch.cost import yearly_cost
 from gradmatch.deadlines import upcoming
+from gradmatch.fit import UNKNOWN
 from gradmatch.scholarships import eligible_scholarships, kind_of
+from gradmatch.search import search_programs
 
 pytestmark = pytest.mark.integration
 
@@ -233,6 +235,22 @@ def test_requirements_sheet_lists_real_programs_unchecked(programs):
         assert (row["university"], row["program_name"]) == (program.university, program.program_name)
         assert all(row[name] == "" for name in REQUIREMENT_COLUMNS[1:])     # nothing filled in yet
 
+
+
+# ---- The fit rule on the real data ----
+# Why: most imported programs publish no average GPA, so their chance is estimated from the
+# acceptance rate (their own or their university's). A program with neither is left out of the
+# search, so the default search must never show "Unknown".
+
+def test_default_ms_computer_science_search_has_no_unknown_fits(programs, living_costs):
+    profile = make_profile()                 # MS, Computer Science, GPA 3.5, MI, $40,000
+
+    results = search_programs(profile, programs, living_costs)
+
+    assert results                           # the search still finds programs
+    assert [r.program.program_id for r in results if r.fit == UNKNOWN] == []
+    # Programs with no published average GPA are still shown, with a chance from a rate.
+    assert any(r.program.avg_gpa is None for r in results)
 
 # ---- The API on the real data (45,000+ rows) ----
 # Why: the API must stay fast with the full file; 5 seconds is a generous limit for a search.
