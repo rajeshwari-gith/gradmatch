@@ -13,6 +13,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from data_fixtures import TODAY, write_fixture_data
+from gradmatch import api
 from gradmatch.api import app
 
 pytestmark = pytest.mark.integration
@@ -150,7 +151,7 @@ def test_deadlines_are_open_items_soonest_first_with_status(client):
     response = client.get(f"/deadlines?today={TODAY}")
 
     assert response.status_code == 200
-    items = response.json()
+    items = response.json()["deadlines"]
     assert [i["id"] for i in items] == ["SCH2", "CHEAP", "SCH1", "PHD1", "PHD2", "SCH5", "MID",
                                         "DS1", "SCH4"]
     assert items[0] == {"kind": "scholarship", "id": "SCH2", "name": "First-Gen Grant",
@@ -161,7 +162,7 @@ def test_deadlines_are_open_items_soonest_first_with_status(client):
 
 
 def test_deadlines_leave_out_closed_items(client):
-    ids = [i["id"] for i in client.get(f"/deadlines?today={TODAY}").json()]
+    ids = [i["id"] for i in client.get(f"/deadlines?today={TODAY}").json()["deadlines"]]
 
     assert "PRICEY" not in ids and "SCH3" not in ids
 
@@ -170,7 +171,8 @@ def test_deadlines_after_every_deadline_gives_empty_list(client):
     response = client.get("/deadlines?today=2030-01-01")
 
     assert response.status_code == 200
-    assert response.json() == []
+    assert response.json()["deadlines"] == []
+    assert response.json()["glance"] == {"within_window": 0, "within_90": 0, "later": 0, "passed": 11}
 
 
 @pytest.mark.parametrize("bad", ["tomorrow", "2026-13-01", "2027-02-29"])
@@ -182,8 +184,89 @@ def test_deadlines_without_today_uses_the_server_date(client):
     response = client.get("/deadlines")
 
     assert response.status_code == 200
-    assert isinstance(response.json(), list)
+    assert isinstance(response.json()["deadlines"], list)
 
+
+
+# ---- GET /deadlines: the warning window and the glance counts ----
+# Why (boundary values on urgent_days): the default, a smaller and a larger window, the edges
+# 0 and 90, and one past each edge (422). The fixture deadlines are 8, 12, 42, 52, 73, 78, 83,
+# 100 and 128 days away, and two have passed.
+
+def test_deadlines_glance_counts_with_the_default_window(client):
+    answer = client.get(f"/deadlines?today={TODAY}").json()
+
+    assert answer["urgent_days"] == 14
+    assert answer["glance"] == {"within_window": 2, "within_90": 7, "later": 2, "passed": 2}
+
+
+@pytest.mark.parametrize("urgent_days, within_window, sch2, sch1", [
+    (0, 0, "soon", "later"), (7, 0, "soon", "later"), (8, 1, "urgent", "later"),
+    (45, 3, "urgent", "urgent"), (90, 7, "urgent", "urgent"),
+])
+def test_deadlines_window_changes_status_and_count(client, urgent_days, within_window, sch2, sch1):
+    answer = client.get(f"/deadlines?today={TODAY}&urgent_days={urgent_days}").json()
+    status = {i["id"]: i["status"] for i in answer["deadlines"]}
+
+    assert answer["glance"] == {"within_window": within_window, "within_90": 7, "later": 2, "passed": 2}
+    assert (status["SCH2"], status["SCH1"]) == (sch2, sch1)
+
+
+@pytest.mark.parametrize("bad", ["-1", "91", "two", "7.5"])
+def test_deadlines_bad_urgent_days_gives_422(client, bad):
+    assert client.get(f"/deadlines?today={TODAY}&urgent_days={bad}").status_code == 422
+
+
+# ---- /starred ----
+# Why: stars are added, listed sorted, removed, and a repeated add or remove is harmless.
+# A bad key gives 422. The stars live in the server's memory, so each test starts empty.
+
+@pytest.fixture
+def starred_client(client, monkeypatch):
+    monkeypatch.setattr(api, "_starred", frozenset())
+    return client
+
+
+def test_starred_starts_empty(starred_client):
+    assert starred_client.get("/starred").json() == []
+
+
+def test_star_add_list_and_remove(starred_client):
+    assert starred_client.post("/starred", json={"key": "scholarship:SCH1"}).json() == ["scholarship:SCH1"]
+    assert starred_client.post("/starred", json={"key": "program:CHEAP"}).json() == [
+        "program:CHEAP", "scholarship:SCH1"]
+    assert starred_client.post("/starred", json={"key": "program:CHEAP"}).json() == [
+        "program:CHEAP", "scholarship:SCH1"]                       # adding again changes nothing
+    assert starred_client.get("/starred").json() == ["program:CHEAP", "scholarship:SCH1"]
+
+    assert starred_client.delete("/starred?key=program:CHEAP").json() == ["scholarship:SCH1"]
+    assert starred_client.delete("/starred?key=program:CHEAP").json() == ["scholarship:SCH1"]
+    assert starred_client.get("/starred").json() == ["scholarship:SCH1"]
+
+
+def test_star_a_custom_deadline_by_name(starred_client):
+    response = starred_client.post("/starred", json={"key": "deadline:Rec letters"})
+
+    assert response.json() == ["deadline:Rec letters"]
+
+
+@pytest.mark.parametrize("key", ["", "program:", "progam:CHEAP", "CHEAP"])
+def test_star_bad_key_gives_422_and_changes_nothing(starred_client, key):
+    post = starred_client.post("/starred", json={"key": key})
+    delete = starred_client.delete("/starred", params={"key": key})
+
+    assert (post.status_code, delete.status_code) == (422, 422)
+    assert post.json()["detail"] == ["key must be program:<id>, scholarship:<id> or deadline:<name>"]
+    assert starred_client.get("/starred").json() == []
+
+
+@pytest.mark.parametrize("call", ["post_without_body", "delete_without_key"])
+def test_star_missing_key_gives_422(starred_client, call):
+    if call == "post_without_body":
+        response = starred_client.post("/starred", json={})
+    else:
+        response = starred_client.delete("/starred")
+    assert response.status_code == 422
 
 # ---- Unknown route ----
 # Why: a wrong address must give 404, not crash.
@@ -237,7 +320,7 @@ def test_programs_blank_source_cell_is_estimate(client_with_blanks):
 
 
 def test_deadlines_leave_out_unpublished_deadline(client_with_blanks):
-    ids = [i["id"] for i in client_with_blanks.get(f"/deadlines?today={TODAY}").json()]
+    ids = [i["id"] for i in client_with_blanks.get(f"/deadlines?today={TODAY}").json()["deadlines"]]
 
     assert "IPEDS1" not in ids
     assert ids[:2] == ["SCH2", "CHEAP"]      # the rest is unchanged
