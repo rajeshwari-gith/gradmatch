@@ -1,6 +1,5 @@
-from fit import MATCH
-from search import find_programs
 from helpers import make_program, make_student
+from programs import MATCH, find_programs
 
 
 def test_find_programs():

@@ -1,18 +1,16 @@
 import pytest
 
-from search import find_programs
 from helpers import make_program, make_student
+from programs import find_programs
 
-# covers every branch of find_programs() in search.py
 
-
-def test_req7_bad_input_stops_the_search():
+def test_every_branch_of_find_programs():
+    # REQ-7: bad GPA and negative budget stop the search
     for student in [make_student(gpa=4.2), make_student(budget=-1)]:
         with pytest.raises(ValueError):
             find_programs([make_program()], student)
 
-
-def test_req1_req2_each_skip_branch_and_the_kept_branch():
+    # REQ-1, REQ-2: wrong degree, wrong field, state not chosen and too expensive are skipped
     programs = [make_program(degree="PhD"), make_program(field="Statistics"),
                 make_program(state="WI"), make_program(living_cost=90000),
                 make_program(university="Kept")]

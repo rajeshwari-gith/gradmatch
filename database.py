@@ -1,7 +1,33 @@
 import sqlite3
+from dataclasses import dataclass
 from datetime import date
 
-from models import Program, Scholarship
+
+@dataclass(frozen=True)
+class Program:
+    university: str
+    degree: str
+    field: str
+    state: str
+    tuition_in_state: int
+    tuition_out_state: int
+    living_cost: int
+    acceptance_rate: float
+    deadline: date
+    website: str
+
+
+@dataclass(frozen=True)
+class Scholarship:
+    name: str
+    amount: int
+    degrees: tuple[str, ...]
+    fields: tuple[str, ...]
+    min_gpa: float
+    open_to: str
+    deadline: date
+    website: str
+
 
 # STRICT makes SQLite refuse a value of the wrong type, and CHECK refuses bad values
 SCHEMA = """

@@ -4,7 +4,8 @@ from unittest.mock import Mock, patch
 
 from streamlit.testing.v1 import AppTest
 
-from models import Program, Scholarship, Student
+from database import Program, Scholarship
+from programs import Student
 
 ROOT = Path(__file__).resolve().parents[1]
 APP = str(ROOT / "app.py")
@@ -48,7 +49,7 @@ def search(at, degree="MS", field="Computer Science", gpa=3.5, home_state="MI", 
     at.selectbox(key="home_state").set_value(home_state)
     at.number_input(key="budget").set_value(budget)
     at.multiselect(key="states").set_value(list(states))
-    with patch("deadlines.today", Mock(return_value=today)):
+    with patch("scholarships.today", Mock(return_value=today)):
         at.button[0].click().run()
     assert not at.exception
     return at

@@ -2,11 +2,9 @@ from pathlib import Path
 
 import streamlit as st
 
-import deadlines
 from database import connect, get_programs, get_scholarships
-from models import Student
-from scholarships import find_scholarships
-from search import find_programs
+from programs import Student, find_programs
+from scholarships import find_scholarships, today, upcoming
 
 DATABASE = Path(__file__).parent / "data" / "gradmatch.db"
 STATES = ["AL", "AK", "AZ", "AR", "CA", "CO", "CT", "DC", "DE", "FL", "GA", "HI", "IA", "ID", "IL",
@@ -68,7 +66,7 @@ if submitted:
     dates = [(s.name, s.deadline) for s in found]
     dates += [(f"{r.program.university} application", r.program.deadline)
               for r in results]
-    coming = deadlines.upcoming(dates, deadlines.today())
+    coming = upcoming(dates, today())
     for d in coming:
         if d.soon:
             st.warning(f"{d.name} is due in {d.days_left} days ({d.date:%b %d}).")
