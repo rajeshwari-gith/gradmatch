@@ -1,40 +1,56 @@
 # GradMatch
 
-SE 413/513 Software Testing project, Fall 2026
-Rajeshwari Galugu and Sai Nishith Jangili
+**Course:** SE 413/513 – Software Testing, Fall 2026
+**Track:** B – Testing a Newly-Developed System
+**Team Members:** Rajeshwari Galugu and Sai Nishith Jangili
 
-A Streamlit app for students planning grad school. You enter your degree (MS or PhD), field,
-GPA, home state, the states you'd like and your yearly budget. The app shows:
+## Project Description
 
-- programs you can afford, cheapest first, with a Safety / Match / Reach chance
-- scholarships and fellowships you can apply for
+GradMatch is a simple Python app that helps students plan for graduate school. A student enters
+their degree (MS or PhD), field, GPA, home state, the states they like and a yearly budget. The
+app shows:
+
+- programs they can afford, cheapest first, with a Safety / Match / Reach chance
+- scholarships and fellowships they can apply for
 - program and scholarship deadlines, with a warning when one is 2 weeks away or less
 
 Live app: https://gradmatch-rg.streamlit.app
 
 ## Features
 
-| Feature | File | Who |
+| Feature | File | Owner |
 |---|---|---|
 | Program search and yearly cost | `search.py`, `cost.py` | Rajeshwari |
 | Admission chance | `fit.py` | Rajeshwari |
 | Scholarships | `scholarships.py` | Sai Nishith |
 | Deadline tracker | `deadlines.py` | Sai Nishith |
 
-Also: the page `app/streamlit_app.py` and CI (Rajeshwari), and the SQLite database
-`database.py` (Sai Nishith). All code is in `src/gradmatch/`. The tests are in `tests/`, one
-folder per testing technique. See [TEST_PLAN.md](TEST_PLAN.md).
+Also: the page `app.py` and CI (Rajeshwari), and the SQLite database `database.py`
+(Sai Nishith). `models.py` has the data classes.
 
-## Running
+## Technologies Used
 
-Python 3.11 or newer.
+Python, Streamlit, SQLite, pytest, pytest-cov and Hypothesis.
 
-```
-pip install -r requirements.txt
-streamlit run app/streamlit_app.py
-pytest --cov              # all tests, with coverage (report in htmlcov/index.html)
-pytest tests/unit         # only one folder
-```
+## Installation
+
+`python -m pip install -r requirements.txt`
+
+## Run the Application
+
+`python -m streamlit run app.py`
+
+## Run Automated Tests
+
+`python -m pytest -v`
+
+The tests are in `tests/`, one folder per testing technique. See [TEST_PLAN.md](TEST_PLAN.md).
+
+## Generate Coverage Report
+
+`python -m pytest --cov --cov-report=term-missing --cov-report=html`
+
+The HTML report is saved in `htmlcov/index.html`.
 
 ## Data
 
@@ -42,19 +58,22 @@ All data is in one SQLite database, `data/gradmatch.db`, with two tables, `progr
 `scholarships`. The table rules in `database.py` refuse bad values, like a negative cost or a
 GPA above 4.
 
-**Programs**
-- 159 MS and PhD programs.
-- 4 subjects: Computer Science, Electrical Engineering, Mechanical Engineering, Statistics.
-- 5 states: Illinois, Indiana, Michigan, Ohio, Wisconsin.
-- Tuition, school names, websites and acceptance rates: government data (IPEDS 2024).
-  The acceptance rate is the whole school's rate, not the program's.
-- Living cost: the MERIC cost of living index for each state.
-- Deadline: our estimate, because the government data does not have it.
-  December 15, 2026 for PhD and February 1, 2027 for MS.
-
-**Scholarships**
-- 7 national scholarships and fellowships.
-- Each one says who can apply (for example "US citizens" or "Everyone").
-- The amounts and deadlines are estimates.
+- **Programs:** 159 MS and PhD programs in Computer Science, Electrical Engineering, Mechanical
+  Engineering and Statistics, in Illinois, Indiana, Michigan, Ohio and Wisconsin. Tuition,
+  school names, websites and acceptance rates come from government data (IPEDS 2024); the
+  acceptance rate is the whole school's rate. Living cost comes from the MERIC cost of living
+  index. Deadlines are our estimate: December 15, 2026 for PhD and February 1, 2027 for MS.
+- **Scholarships:** 7 national scholarships and fellowships. Each one says who can apply. The
+  amounts and deadlines are estimates.
 
 All results are estimates. They do not promise admission.
+
+## Current Testing Results
+
+41 automated tests pass, with 100% line and branch coverage. GitHub Actions runs them on
+every push and saves the coverage report.
+
+## Project Status
+
+The app, the database and the unit, integration, system and acceptance tests are done.
+Next: keep the defect log up to date, then the final report and the presentation.
