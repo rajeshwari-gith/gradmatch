@@ -92,6 +92,7 @@ class Scholarship:
 - `programs.csv`: columns = Program fields in order. Dates `YYYY-MM-DD`. Empty cell = None.
 - `scholarships.csv`: columns = Scholarship fields; list fields use `;` (e.g. `MS;PhD`).
 - `living_costs.csv`: `state,annual_living_cost`.
+- `requirements.csv`: `program_id,name,required,limit_text,prompt_text,source_url,checked_by,checked_on`; `required` is `yes`/`no`; only rows checked on the official page (blank limit or prompt = not stated).
 Every row needs a real `website` (official source). Data is an estimate; UI shows "verify on the official site".
 
 ## Business rules (tests are written against these – do not change silently)
@@ -102,6 +103,10 @@ Every row needs a real `website` (official source). Data is an estimate; UI show
   includes the window), `later` (> 90) and `passed` (< 0); unpublished deadlines are not counted.
 - **Scholarship eligibility**: ALL must hold: degree in degree_levels; field in fields or "Any";
   gpa >= min_gpa; citizenship in list or "Any"; home_state in states or "Any"; every `special` item in profile.special.
+- **Scholarship kind** (`kind_of`): the five `type` values are shown as three kinds. `scholarship` → Scholarship;
+  `fee_waiver` → Scholarship (money off the cost, no work in return); `fellowship` → Fellowship; `assistantship` →
+  Assistantship; `research` → Assistantship (paid research work). Any other type is an error.
+  `fellowship_count` counts the eligible scholarships whose kind is Fellowship or Assistantship.
 - **Tuition**: in-state rate if profile.home_state == program.state, else out-of-state. **International students (citizenship "International") are never residents of a state and always pay the out-of-state rate.**
 - **Tuition charged**: a PhD program with `stipend > 0` waives tuition (charged 0); MS programs always charge tuition.
 - **Yearly cost** = tuition charged + living cost of program state − stipend (never below 0).
@@ -127,7 +132,11 @@ never a guess). The rules:
   and format. The tuition columns, state, degree, field and website stay required.
 - **New optional column `source`:** `estimate` (hand-drafted values, the default when blank),
   `official-page` (checked by a person on the program's official page) or `ipeds` (imported).
-- **Fit:** `avg_gpa` is `None` -> `Unknown`; but an acceptance rate below 10% is still `Reach`.
+- **Fit:** `avg_gpa` is `None` -> estimated from the acceptance rate (the program's own, else its university's
+  overall rate from the `BS` rows of the same university and state): `rate >= 0.60` Safety; `0.25 <= rate < 0.60`
+  Match; `rate < 0.25` Reach; then `gpa >= 3.7` one step easier and `gpa < 3.0` one step harder, never past
+  Safety or Reach. A rate below 10% is always `Reach`. No GPA and no rate at all -> `Unknown`, and the
+  search leaves that program out.
 - **Funding:** `stipend` is `None` -> `Funding unknown`. For the cost, an unknown stipend counts as 0
   (the cautious choice), so an unknown PhD stipend means tuition is not waived.
 - **Deadlines:** a `None` deadline is left out of the Deadlines tab, the calendar file and
@@ -141,5 +150,5 @@ never a guess). The rules:
 - `degree` can be `BS`, `MS` or `PhD`. `BS` rows are colleges for undergraduate applicants.
 - A `BS` row uses undergraduate tuition (in-state and out-of-state), `duration_years` 4 and `stipend` 0.
 - The same cost rule applies: tuition charged + living cost - stipend, in-state only for US/PR students of that state.
-- GRE does not apply to a bachelor's search. The fit uses the same rules as above, so a `BS` row without a published average GPA shows fit Unknown.
+- GRE does not apply to a bachelor's search. The fit uses the same rules as above, so a `BS` row without a published average GPA gets a chance estimated from its acceptance rate.
 - Undergraduate scholarships go in `scholarships.csv` with `BS` in `degree_levels`. Add one only after checking it on the provider's official page.

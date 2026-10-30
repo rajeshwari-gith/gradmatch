@@ -126,7 +126,7 @@ earlier import, so running it again gives the same file, and never touches hand-
 ## Run the tests
 
 ```
-pytest                                   # all tests (about 820)
+pytest                                   # all tests (about 1,050)
 pytest -m unit                           # one level: unit, integration, system or acceptance
 pytest --cov --cov-report=term-missing   # with line and branch coverage
 ```

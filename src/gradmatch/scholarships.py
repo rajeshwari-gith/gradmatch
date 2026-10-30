@@ -7,6 +7,10 @@ Eligibility rule (CONTRIBUTING.md) - ALL of these must hold:
   4. profile.citizenship is in scholarship.citizenship, or it contains "Any"
   5. profile.home_state is in scholarship.states, or it contains "Any"
   6. every item in scholarship.special is in profile.special
+
+kind_of() groups the five data types into the three kinds the app shows
+(CONTRIBUTING.md): scholarship and fee_waiver -> "Scholarship",
+fellowship -> "Fellowship", assistantship and research -> "Assistantship".
 """
 # In plain words: a student should only see scholarships they can actually apply for. This
 # file checks a student's profile against each scholarship's rules and lists the matches, the
@@ -16,6 +20,16 @@ from gradmatch.models import Scholarship, StudentProfile
 
 # "Any" in a list means there is no limit on that rule (any field, any state, ...).
 ANY = "Any"
+
+# The three kinds the app shows, and which data type goes into which kind.
+SCHOLARSHIP, FELLOWSHIP, ASSISTANTSHIP = "Scholarship", "Fellowship", "Assistantship"
+KINDS = {
+    "scholarship": SCHOLARSHIP,
+    "fee_waiver": SCHOLARSHIP,       # money off what the student pays, with no work in return
+    "fellowship": FELLOWSHIP,
+    "assistantship": ASSISTANTSHIP,
+    "research": ASSISTANTSHIP,       # paid research work, like a research assistantship
+}
 
 
 # True only when the student meets EVERY rule of the scholarship. Why ALL and not "most":
@@ -55,3 +69,21 @@ def eligible_scholarships(profile: StudentProfile,
 def _allows(allowed: tuple[str, ...], value: str) -> bool:
     """True if the list says "Any" or contains the value."""
     return ANY in allowed or value in allowed
+
+
+# In plain words: the data has five types, but the screen shows only three kinds, so two types
+# are put with the closest kind (see KINDS above). An unknown type is an error, not a guess,
+# so a typo in the data is noticed instead of being shown as the wrong kind.
+def kind_of(scholarship: Scholarship) -> str:
+    """Return "Scholarship", "Fellowship" or "Assistantship" for the scholarship's type."""
+    try:
+        return KINDS[scholarship.type]
+    except KeyError:
+        raise ValueError(f"unknown scholarship type '{scholarship.type}'") from None
+
+
+# How many of the scholarships this student is eligible for are fellowships or assistantships
+# (the ones that usually pay a stipend). It uses the same eligibility rules as the list.
+def fellowship_count(profile: StudentProfile, scholarships: list[Scholarship]) -> int:
+    return sum(1 for s in eligible_scholarships(profile, scholarships)
+               if kind_of(s) in (FELLOWSHIP, ASSISTANTSHIP))
