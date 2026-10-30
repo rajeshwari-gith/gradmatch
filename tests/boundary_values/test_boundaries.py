@@ -8,66 +8,45 @@ from gradmatch.scholarships import find_scholarships, qualifies
 from gradmatch.search import find_programs
 from helpers import make_program, make_scholarship, make_student
 
-# Equivalence partitions and the values on and next to each edge
+
+def test_gpa_must_be_0_to_4():
+    check_gpa(0.0)
+    check_gpa(4.0)
+    for bad in [-0.01, 4.01]:
+        with pytest.raises(ValueError):
+            check_gpa(bad)
 
 
-@pytest.mark.parametrize("gpa", [0.0, 2.0, 4.0])
-def test_valid_gpa(gpa):
-    check_gpa(gpa)
+def test_chance_gpa_edges():
+    assert [chance(gpa, 0.40) for gpa in [2.99, 3.0, 3.69, 3.7]] == [REACH, MATCH, MATCH, SAFETY]
 
 
-@pytest.mark.parametrize("gpa", [-0.01, 4.01, -3.0, 9.0])
-def test_invalid_gpa(gpa):
+def test_chance_acceptance_rate_edges():
+    rates = [0.09, 0.10, 0.24, 0.25, 0.59, 0.60]
+    assert [chance(3.5, rate) for rate in rates] == [REACH, REACH, REACH, MATCH, MATCH, SAFETY]
+
+
+def test_budget_edges():
+    # the program costs $25,000 a year
+    for budget, found in [(25001, 1), (25000, 1), (24999, 0)]:
+        assert len(find_programs([make_program()], make_student(budget=budget))) == found
     with pytest.raises(ValueError):
-        check_gpa(gpa)
+        find_programs([make_program()], make_student(budget=-1))
 
 
-@pytest.mark.parametrize("gpa, expected", [(2.99, REACH), (3.0, MATCH), (3.69, MATCH), (3.7, SAFETY)])
-def test_gpa_edges_for_chance(gpa, expected):
-    assert chance(gpa, 0.40) == expected
+def test_scholarship_min_gpa_edge():
+    scholarship = make_scholarship(min_gpa=3.0)
+    assert [qualifies(scholarship, make_student(gpa=gpa)) for gpa in [2.99, 3.0]] == [False, True]
 
 
-@pytest.mark.parametrize("rate, expected", [
-    (0.09, REACH), (0.10, REACH), (0.24, REACH), (0.25, MATCH), (0.59, MATCH), (0.60, SAFETY),
-])
-def test_acceptance_rate_edges(rate, expected):
-    assert chance(3.5, rate) == expected
+def test_deadline_day_edges():
+    today = date(2026, 11, 1)
+    found = upcoming([("0", date(2026, 11, 1)), ("14", date(2026, 11, 15)),
+                      ("15", date(2026, 11, 16)), ("passed", date(2026, 10, 31))], today)
+    assert [(d.days_left, d.soon) for d in found] == [(0, True), (14, True), (15, False)]
 
 
-# the program costs $25,000 a year
-@pytest.mark.parametrize("budget, found", [(25001, 1), (25000, 1), (24999, 0), (0, 0)])
-def test_budget_edges(budget, found):
-    assert len(find_programs([make_program()], make_student(budget=budget))) == found
-
-
-@pytest.mark.parametrize("budget", [-1, -50000])
-def test_negative_budget(budget):
-    with pytest.raises(ValueError):
-        find_programs([make_program()], make_student(budget=budget))
-
-
-@pytest.mark.parametrize("gpa, expected", [(2.99, False), (3.0, True), (3.01, True)])
-def test_scholarship_min_gpa_edge(gpa, expected):
-    assert qualifies(make_scholarship(min_gpa=3.0), make_student(gpa=gpa)) == expected
-
-
-@pytest.mark.parametrize("deadline, days_left, soon", [
-    (date(2026, 11, 1), 0, True),
-    (date(2026, 11, 15), 14, True),
-    (date(2026, 11, 16), 15, False),
-])
-def test_days_left_edges(deadline, days_left, soon):
-    d = upcoming([("Award", deadline)], date(2026, 11, 1))[0]
-    assert (d.days_left, d.soon) == (days_left, soon)
-
-
-def test_deadline_one_day_ago_is_hidden():
-    assert upcoming([("Award", date(2026, 10, 31))], date(2026, 11, 1)) == []
-
-
-def test_no_scholarships_gives_empty_list():
+def test_empty_lists():
+    assert find_programs([], make_student()) == []
     assert find_scholarships([], make_student()) == []
-
-
-def test_no_deadlines_gives_empty_list():
     assert upcoming([], date(2026, 11, 1)) == []

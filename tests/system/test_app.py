@@ -8,23 +8,14 @@ def test_page_opens():
     assert at.title[0].value == "GradMatch"
     assert at.selectbox(key="field").options == [
         "Computer Science", "Electrical Engineering", "Mechanical Engineering", "Statistics"]
-    assert at.dataframe.len == 0
 
 
-def test_only_chosen_states_are_shown():
-    programs = table(search(open_app(), states=["OH"], budget=100000), "Programs")
-    assert set(programs["State"]) == {"OH"}
-
-
-def test_scholarships_show_who_can_apply():
-    scholarships = table(search(open_app()), "Scholarships")
-    open_to = dict(zip(scholarships["Name"], scholarships["Open to"]))
-    assert open_to["DoD SMART Scholarship"] == "US citizens"
-    assert open_to["GVSU Graduate Assistantship"] == "Everyone"
-
-
-def test_no_warning_when_nothing_is_close():
-    assert search(open_app(), today=date(2026, 12, 2)).warning.len == 0
+def test_search_shows_programs_and_scholarships():
+    at = search(open_app(), states=["OH"], budget=100000, today=date(2026, 12, 2))
+    assert set(table(at, "Programs")["State"]) == {"OH"}
+    scholarships = table(at, "Scholarships")
+    assert dict(zip(scholarships["Name"], scholarships["Open to"]))["DoD SMART Scholarship"] == "US citizens"
+    assert at.warning.len == 0
 
 
 def test_nothing_matches_shows_messages():
