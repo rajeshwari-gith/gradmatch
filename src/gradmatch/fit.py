@@ -1,11 +1,9 @@
-"""A rough chance of getting in: Safety, Match or Reach."""
-
 SAFETY = "Safety"
 MATCH = "Match"
 REACH = "Reach"
 
-SAFETY_MARGIN = 0.20   # GPA this much above the average or more -> Safety
-REACH_MARGIN = -0.15   # GPA more than this below the average -> Reach
+SAFETY_MARGIN = 0.20
+REACH_MARGIN = -0.15
 
 
 def check_gpa(gpa: float) -> None:
@@ -15,8 +13,7 @@ def check_gpa(gpa: float) -> None:
 
 def chance(gpa: float, avg_gpa: float) -> str:
     check_gpa(gpa)
-    # round() so that 3.7 - 3.5 counts as 0.20 and not 0.1999999.
-    diff = round(gpa - avg_gpa, 2)
+    diff = round(gpa - avg_gpa, 2)  # so 3.7 - 3.5 is 0.2, not 0.19999
     if diff >= SAFETY_MARGIN:
         return SAFETY
     if diff >= REACH_MARGIN:
