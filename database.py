@@ -1,33 +1,4 @@
 import sqlite3
-from dataclasses import dataclass
-from datetime import date
-
-
-@dataclass(frozen=True)
-class Program:
-    university: str
-    degree: str
-    field: str
-    state: str
-    tuition_in_state: int
-    tuition_out_state: int
-    living_cost: int
-    acceptance_rate: float
-    deadline: date
-    website: str
-
-
-@dataclass(frozen=True)
-class Scholarship:
-    name: str
-    amount: int
-    degrees: tuple[str, ...]
-    fields: tuple[str, ...]
-    min_gpa: float
-    open_to: str
-    deadline: date
-    website: str
-
 
 # STRICT makes SQLite refuse a value of the wrong type, and CHECK refuses bad values
 SCHEMA = """
@@ -57,35 +28,32 @@ CREATE TABLE IF NOT EXISTS scholarships (
 """
 
 
-def connect(path) -> sqlite3.Connection:
+def connect(path):
     connection = sqlite3.connect(path)
+    connection.row_factory = sqlite3.Row  # rows can be read by column name
     connection.executescript(SCHEMA)
     return connection
 
 
-def add_programs(connection: sqlite3.Connection, programs: list[Program]) -> None:
-    rows = [(p.university, p.degree, p.field, p.state, p.tuition_in_state,
-             p.tuition_out_state, p.living_cost, p.acceptance_rate, p.deadline.isoformat(),
-             p.website) for p in programs]
-    connection.executemany("INSERT INTO programs VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", rows)
+def add_program(connection, program):
+    connection.execute(
+        "INSERT INTO programs VALUES (:university, :degree, :field, :state, :tuition_in_state, "
+        ":tuition_out_state, :living_cost, :acceptance_rate, :deadline, :website)", program)
     connection.commit()
 
 
-def add_scholarships(connection: sqlite3.Connection, scholarships: list[Scholarship]) -> None:
-    rows = [(s.name, s.amount, ";".join(s.degrees), ";".join(s.fields), s.min_gpa, s.open_to,
-             s.deadline.isoformat(), s.website) for s in scholarships]
-    connection.executemany("INSERT INTO scholarships VALUES (?, ?, ?, ?, ?, ?, ?, ?)", rows)
+def add_scholarship(connection, scholarship):
+    connection.execute(
+        "INSERT INTO scholarships VALUES (:name, :amount, :degrees, :fields, :min_gpa, :open_to, "
+        ":deadline, :website)", scholarship)
     connection.commit()
 
 
-def get_programs(connection: sqlite3.Connection) -> list[Program]:
+def get_programs(connection):
     rows = connection.execute("SELECT * FROM programs ORDER BY university")
-    return [Program(*row[:8], date.fromisoformat(row[8]), row[9]) for row in rows]
+    return [dict(row) for row in rows]
 
 
-def get_scholarships(connection: sqlite3.Connection) -> list[Scholarship]:
+def get_scholarships(connection):
     rows = connection.execute("SELECT * FROM scholarships ORDER BY name")
-    return [Scholarship(name, amount, tuple(degrees.split(";")), tuple(fields.split(";")), min_gpa,
-                        open_to, date.fromisoformat(deadline), website)
-            for name, amount, degrees, fields, min_gpa, open_to, deadline, website in rows]
-
+    return [dict(row) for row in rows]

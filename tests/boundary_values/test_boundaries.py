@@ -2,7 +2,7 @@ from datetime import date
 
 import pytest
 
-from helpers import make_program, make_scholarship, make_student
+from tests.helpers import make_program, make_scholarship, make_student
 from programs import MATCH, REACH, SAFETY, chance, check_gpa, find_programs
 from scholarships import qualifies, upcoming
 
@@ -26,6 +26,6 @@ def test_boundary_values():
     assert [qualifies(make_scholarship(min_gpa=3.0), make_student(gpa=g)) for g in [2.99, 3.0]] == [False, True]
 
     # REQ-6: warning at 14 days, not at 15; a passed deadline is hidden
-    found = upcoming([("14", date(2026, 11, 15)), ("15", date(2026, 11, 16)),
-                      ("passed", date(2026, 10, 31))], date(2026, 11, 1))
-    assert [(d.days_left, d.soon) for d in found] == [(14, True), (15, False)]
+    found = upcoming([("14", "2026-11-15"), ("15", "2026-11-16"),
+                      ("passed", "2026-10-31")], date(2026, 11, 1))
+    assert [(d["days_left"], d["soon"]) for d in found] == [(14, True), (15, False)]

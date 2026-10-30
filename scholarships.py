@@ -1,44 +1,36 @@
-from dataclasses import dataclass
 from datetime import date
-
-from database import Scholarship
-from programs import Student
 
 SOON_DAYS = 14
 
 
-@dataclass(frozen=True)
-class Deadline:
-    name: str
-    date: date
-    days_left: int
-    soon: bool
-
-
-def qualifies(scholarship: Scholarship, student: Student) -> bool:
-    if student.degree not in scholarship.degrees:
+def qualifies(scholarship, student):
+    if student["degree"] not in scholarship["degrees"].split(";"):
         return False
-    if "Any" not in scholarship.fields and student.field not in scholarship.fields:
+    fields = scholarship["fields"].split(";")
+    if "Any" not in fields and student["field"] not in fields:
         return False
-    return student.gpa >= scholarship.min_gpa
+    return student["gpa"] >= scholarship["min_gpa"]
 
 
-def find_scholarships(scholarships: list[Scholarship], student: Student) -> list[Scholarship]:
+def find_scholarships(scholarships, student):
     found = [s for s in scholarships if qualifies(s, student)]
-    found.sort(key=lambda s: (-s.amount, s.name))
+    # biggest amount first; same amount goes A-Z by name
+    found.sort(key=lambda s: (-s["amount"], s["name"]))
     return found
 
 
-def today() -> date:
+def today():
     return date.today()
 
 
-def upcoming(dates: list[tuple[str, date]], today: date) -> list[Deadline]:
-    deadlines = []
-    for name, day in dates:
-        days_left = (day - today).days
+def upcoming(deadlines, today):
+    # deadlines is a list of (name, "YYYY-MM-DD") pairs
+    coming = []
+    for name, day in deadlines:
+        days_left = (date.fromisoformat(day) - today).days
         if days_left < 0:
             continue
-        deadlines.append(Deadline(name, day, days_left, days_left <= SOON_DAYS))
-    deadlines.sort(key=lambda d: d.date)
-    return deadlines
+        coming.append({"name": name, "date": day, "days_left": days_left,
+                       "soon": days_left <= SOON_DAYS})
+    coming.sort(key=lambda d: d["date"])
+    return coming

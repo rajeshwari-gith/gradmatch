@@ -3,12 +3,12 @@ from unittest.mock import Mock, patch
 
 from streamlit.testing.v1 import AppTest
 
-from helpers import APP, make_program, open_app, search, table
+from tests.helpers import APP, make_program, open_app, search, table
 
 
 def test_app_with_mocked_database_and_date():
     programs = Mock(return_value=[make_program(university="Mock University",
-                                               deadline=date(2026, 11, 25))])
+                                               deadline="2026-11-25")])
     with patch("database.get_programs", programs), \
          patch("database.get_scholarships", Mock(return_value=[])):
         at = search(open_app(), today=date(2026, 11, 20))

@@ -74,7 +74,7 @@ One test for each technique, in its own folder:
 Each test has a comment naming the requirement it checks. Expected values come from the
 requirements and tables above, not from running the code.
 
-Run with `python -m pytest -v`. Coverage: `python -m pytest --cov` measures line and branch
+Run with `python -m pytest -v`. Coverage: `python -m pytest --cov=app --cov=programs --cov=scholarships --cov=database --cov-branch` measures line and branch
 coverage. GitHub Actions runs every test on each push and saves the HTML coverage report.
 
 Current result: 15 tests passing, 100% line and branch coverage.

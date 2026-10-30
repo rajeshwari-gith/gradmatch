@@ -1,6 +1,6 @@
 from datetime import date
 
-from helpers import open_app, search, table
+from tests.helpers import open_app, search, table
 
 
 def test_whole_app():

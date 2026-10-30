@@ -1,41 +1,22 @@
-from dataclasses import dataclass
-
-from database import Program
-
 SAFETY = "Safety"
 MATCH = "Match"
 REACH = "Reach"
 
 
-@dataclass(frozen=True)
-class Student:
-    degree: str
-    field: str
-    gpa: float
-    home_state: str
-    budget: int
-    states: tuple[str, ...] = ()
+def yearly_cost(program, home_state):
+    if home_state == program["state"]:
+        tuition = program["tuition_in_state"]
+    else:
+        tuition = program["tuition_out_state"]
+    return tuition + program["living_cost"]
 
 
-@dataclass(frozen=True)
-class Result:
-    program: Program
-    cost: int
-    chance: str
-
-
-def yearly_cost(program: Program, home_state: str) -> int:
-    if home_state == program.state:
-        return program.tuition_in_state + program.living_cost
-    return program.tuition_out_state + program.living_cost
-
-
-def check_gpa(gpa: float) -> None:
+def check_gpa(gpa):
     if gpa < 0 or gpa > 4:
         raise ValueError(f"GPA must be between 0 and 4, got {gpa}")
 
 
-def chance(gpa: float, acceptance_rate: float) -> str:
+def chance(gpa, acceptance_rate):
     if acceptance_rate < 0.10:
         return REACH
 
@@ -57,19 +38,23 @@ def chance(gpa: float, acceptance_rate: float) -> str:
     return REACH
 
 
-def find_programs(programs: list[Program], student: Student) -> list[Result]:
-    check_gpa(student.gpa)
-    if student.budget < 0:
+def find_programs(programs, student):
+    check_gpa(student["gpa"])
+    if student["budget"] < 0:
         raise ValueError("budget can't be negative")
+
     results = []
     for program in programs:
-        if program.degree != student.degree or program.field != student.field:
+        if program["degree"] != student["degree"] or program["field"] != student["field"]:
             continue
-        if student.states and program.state not in student.states:
+        if student["states"] and program["state"] not in student["states"]:
             continue
-        cost = yearly_cost(program, student.home_state)
-        if cost > student.budget:
+        cost = yearly_cost(program, student["home_state"])
+        if cost > student["budget"]:
             continue
-        results.append(Result(program, cost, chance(student.gpa, program.acceptance_rate)))
-    results.sort(key=lambda result: (result.cost, result.program.university))
+        results.append({"program": program, "cost": cost,
+                        "chance": chance(student["gpa"], program["acceptance_rate"])})
+
+    # cheapest first; same cost goes A-Z by university
+    results.sort(key=lambda result: (result["cost"], result["program"]["university"]))
     return results

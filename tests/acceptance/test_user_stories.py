@@ -1,6 +1,6 @@
 from datetime import date
 
-from helpers import open_app, search, table
+from tests.helpers import open_app, search, table
 
 
 def test_story_1_student_finds_ms_programs_they_can_afford():

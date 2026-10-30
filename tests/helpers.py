@@ -4,8 +4,6 @@ from unittest.mock import Mock, patch
 
 from streamlit.testing.v1 import AppTest
 
-from database import Program, Scholarship
-from programs import Student
 
 ROOT = Path(__file__).resolve().parents[1]
 APP = str(ROOT / "app.py")
@@ -15,24 +13,25 @@ DATABASE = ROOT / "data" / "gradmatch.db"
 def make_program(**changes):
     values = dict(university="Test University", degree="MS",
                   field="Computer Science", state="MI", tuition_in_state=10000,
-                  tuition_out_state=20000, living_cost=15000, acceptance_rate=0.5, deadline=date(2027, 2, 1),
+                  tuition_out_state=20000, living_cost=15000, acceptance_rate=0.5, deadline="2027-02-01",
                   website="https://example.edu")
     values.update(changes)
-    return Program(**values)
+    return values
 
 
 def make_scholarship(**changes):
-    values = dict(name="Test Award", amount=5000, degrees=("MS", "PhD"), fields=("Any",),
-                  min_gpa=3.0, open_to="Everyone", deadline=date(2026, 12, 1),
+    values = dict(name="Test Award", amount=5000, degrees="MS;PhD", fields="Any",
+                  min_gpa=3.0, open_to="Everyone", deadline="2026-12-01",
                   website="https://example.org")
     values.update(changes)
-    return Scholarship(**values)
+    return values
 
 
 def make_student(**changes):
-    values = dict(degree="MS", field="Computer Science", gpa=3.5, home_state="MI", budget=40000)
+    values = dict(degree="MS", field="Computer Science", gpa=3.5, home_state="MI", budget=40000,
+                  states=[])
     values.update(changes)
-    return Student(**values)
+    return values
 
 
 def open_app():

@@ -48,7 +48,7 @@ The tests are in `tests/`, one folder per testing technique. See [TEST_PLAN.md](
 
 ## Generate Coverage Report
 
-`python -m pytest --cov --cov-report=term-missing --cov-report=html`
+`python -m pytest --cov=app --cov=programs --cov=scholarships --cov=database --cov-branch --cov-report=term-missing --cov-report=html`
 
 The HTML report is saved in `htmlcov/index.html`.
 

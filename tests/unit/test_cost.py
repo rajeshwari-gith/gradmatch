@@ -1,4 +1,4 @@
-from helpers import make_program
+from tests.helpers import make_program
 from programs import yearly_cost
 
 

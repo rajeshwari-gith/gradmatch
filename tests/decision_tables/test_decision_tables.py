@@ -1,4 +1,4 @@
-from helpers import make_scholarship, make_student
+from tests.helpers import make_scholarship, make_student
 from programs import MATCH, REACH, SAFETY, chance
 from scholarships import qualifies
 
@@ -11,9 +11,9 @@ def test_decision_tables():
         assert chance(gpa, rate) == expected
 
     # REQ-5: table S in TEST_PLAN.md (degree, field, GPA -> shown?)
-    table_s = [(make_scholarship(degrees=("PhD",)), 3.5, False),
-               (make_scholarship(fields=("Statistics",)), 3.5, False),
-               (make_scholarship(fields=("Computer Science",), min_gpa=3.0), 2.5, False),
-               (make_scholarship(fields=("Any",)), 3.5, True)]
+    table_s = [(make_scholarship(degrees="PhD"), 3.5, False),
+               (make_scholarship(fields="Statistics"), 3.5, False),
+               (make_scholarship(fields="Computer Science", min_gpa=3.0), 2.5, False),
+               (make_scholarship(fields="Any"), 3.5, True)]
     for scholarship, gpa, shown in table_s:
         assert qualifies(scholarship, make_student(gpa=gpa)) == shown
