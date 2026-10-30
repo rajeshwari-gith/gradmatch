@@ -24,8 +24,9 @@ def test_req4_chance_table(rate, gpa, expected):
 @pytest.mark.parametrize("scholarship, gpa, shown", [
     pytest.param(make_scholarship(degrees=("PhD",)), 3.5, False, id="S1-wrong-degree"),
     pytest.param(make_scholarship(fields=("Statistics",)), 3.5, False, id="S2-wrong-field"),
-    pytest.param(make_scholarship(min_gpa=3.0), 2.5, False, id="S3-gpa-too-low"),
-    pytest.param(make_scholarship(fields=("Computer Science",)), 3.5, True, id="S4-all-fit"),
+    pytest.param(make_scholarship(fields=("Computer Science",), min_gpa=3.0), 2.5, False,
+                 id="S3-gpa-too-low"),
+    pytest.param(make_scholarship(fields=("Any",)), 3.5, True, id="S4-all-fit-any-field"),
 ])
 def test_req5_scholarship_table(scholarship, gpa, shown):
     assert qualifies(scholarship, make_student(gpa=gpa)) == shown
