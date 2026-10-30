@@ -44,6 +44,8 @@ Python, Streamlit, SQLite, pytest and pytest-cov.
 
 `python -m pytest -v`
 
+Use `python -m pytest`, not plain `pytest`, so Python can find the code files.
+
 The tests are in `tests/`, one folder per testing technique. See [TEST_PLAN.md](TEST_PLAN.md), which also has the defect log.
 
 ## Generate Coverage Report
