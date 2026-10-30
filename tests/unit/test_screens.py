@@ -20,7 +20,7 @@ from gradmatch.screens import (DISCLAIMER, ESTIMATE_RULE, RESULTS_COLUMNS, cost_
                                deadline_row_html, due_text, faces_info_html, fellowships_note, funding_legend_html,
                                glance_html, header_pills_html, item_kind, item_name, page_title_html,
                                phd_card_html, phd_checklist, profile_summary_html, program_row_html,
-                               rate_note, results_header_html, score_ranges, scholarship_amount_html,
+                               rate_note, results_header_html, score_ranges, scholarship_amount_html, scholarship_card_body_html,
                                scholarship_info_html)
 from gradmatch.search import ProgramResult
 
@@ -113,7 +113,7 @@ def test_info_cards_and_disclaimer():
 ])
 def test_phd_checklist(stipend, funding, waiver, living):
     lines = phd_checklist(make_program(degree="PhD", stipend=stipend), funding)
-    assert lines == [waiver, living, ("Health insurance: see program page", False)]
+    assert lines == [waiver, living, ("Health insurance: see program\u00a0page", False)]
 
 
 def test_phd_card_shows_bar_school_stipend_badge_and_checklist():
@@ -131,7 +131,7 @@ def test_phd_card_with_no_published_stipend_says_so():
 
 def test_funding_legend_has_three_levels():
     html = funding_legend_html()
-    assert "Fully funded" in html and "Partly funded" in html and "Not funded or not published" in html
+    assert "Fully funded" in html and "Partially funded" in html and "Not funded or not published" in html
 
 
 # ---- Scholarship cards ----
@@ -231,7 +231,7 @@ def test_glance_card():
     html = glance_html({"within_window": 2, "within_90": 4, "later": 1, "passed": 1})
     assert '<span>Within 14 days</span><b class="gm-urgent">2</b>' in html
     assert '<span>Within 90 days</span><b class="">4</b>' in html
-    assert '<span>Passed</span><b class="gm-sub">1</b>' in html
+    assert '<span>Passed</span><b class="gm-dim">1</b>' in html
     assert "Within 7 days" in glance_html({"within_window": 0, "within_90": 0, "later": 0, "passed": 0}, 7)
 
 
@@ -295,7 +295,7 @@ def test_funding_legend_is_exact():
     assert funding_legend_html() == (
         '<div class="gm-legend"><b>Funding level</b>'
         '<span><i style="background:#5E7D63"></i> Fully funded: stipend covers living costs</span>'
-        '<span><i style="background:#9DB8AC"></i> Partly funded</span>'
+        '<span><i style="background:#9DB8AC"></i> Partially funded</span>'
         '<span><i style="background:#E2DDD0"></i> Not funded or not published</span></div>')
 
 
@@ -305,7 +305,7 @@ def test_glance_card_is_exact():
         '<div class="gm-glance-row"><span>Within 14 days</span><b class="gm-urgent">1</b></div>'
         '<div class="gm-glance-row"><span>Within 90 days</span><b class="">2</b></div>'
         '<div class="gm-glance-row"><span>Later</span><b class="">3</b></div>'
-        '<div class="gm-glance-row"><span>Passed</span><b class="gm-sub">4</b></div></div>')
+        '<div class="gm-glance-row"><span>Passed</span><b class="gm-dim">4</b></div></div>')
 
 
 # ---- Deadline rows: boundary values on the warning window ----
@@ -376,3 +376,23 @@ def test_each_number_in_a_row_is_labelled_for_phones():
     row = program_row_html(result(), "MI", 15000)
     for label in ("State", "Tuition", "Living", "Est. yearly"):
         assert f'data-label="{label}"' in row
+
+
+# ---- Layout pieces that must not leave stray text ----
+
+def test_the_program_name_has_no_dangling_dot_before_the_link():
+    row = program_row_html(result(), "MI", 15000)
+    assert '<div class="gm-sub">MS in Computer Science</div><div class="gm-sub"><a class="gm-link"' in row
+
+
+def test_a_scholarship_card_body_holds_the_text_and_the_amount():
+    s = make_scholarship(deadline=date(2026, 12, 5))
+    assert scholarship_card_body_html(s, True, TODAY) == (
+        f'<div class="gm-sch"><div class="gm-sch-info">{scholarship_info_html(s, True)}</div>'
+        f'{scholarship_amount_html(s, TODAY)}</div>')
+    in_10 = make_scholarship(deadline=date(2026, 11, 8))
+    assert "Due Nov 8, 2026" in scholarship_card_body_html(in_10, True, TODAY, 7)
+
+
+def test_program_page_stays_together_on_one_line():
+    assert "program\u00a0page" in phd_card_html(result(degree="PhD", stipend=40000.0, funding=FULLY_FUNDED))

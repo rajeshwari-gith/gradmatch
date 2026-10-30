@@ -66,7 +66,7 @@ def rows(at) -> list[str]:
 def row_names(at) -> list[str]:
     names = []
     for row in rows(at):
-        school, program = re.search(r'class="gm-name">([^<]+)</div><div class="gm-sub">([^<]+?) ·', row).groups()
+        school, program = re.search(r'class="gm-name">([^<]+)</div><div class="gm-sub">([^<]+)</div>', row).groups()
         names.append(f"{school} – {program}")
     return names
 
@@ -122,7 +122,7 @@ def scholarship_amounts(at) -> list[str]:
 # ---- Deadlines ----
 
 def deadline_rows(at) -> list[str]:
-    return [b for b in _blocks(at, 'class="gm-datetile"') if 'class="gm-cell-name"' in b]
+    return [b for b in _blocks(at, 'class="gm-datetile"') if 'class="gm-cell-name gm-dl"' in b]
 
 
 def deadline_names(at) -> list[str]:

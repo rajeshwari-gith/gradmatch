@@ -57,3 +57,10 @@ def test_on_a_phone_the_table_becomes_labelled_cards():
     assert "container-type: inline-size;" in css
     assert ".gm-table-head { display:none; }" in css
     assert "content: attr(data-label);" in css
+
+
+def test_narrow_windows_wrap_columns_instead_of_squeezing_them():
+    css = page_css()
+    assert 'flex-wrap: wrap !important; row-gap: 12px;' in css
+    assert ".gm-sch {" in css and ".gm-dl { flex-wrap: wrap; }" in css
+    assert ".stDownloadButton > button { white-space: normal; height: auto; }" in css
