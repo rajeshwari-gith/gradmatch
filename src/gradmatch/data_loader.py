@@ -1,16 +1,14 @@
-"""Read the programs from the CSV file and check each row."""
 import csv
-from pathlib import Path
 
 from gradmatch.models import Program
 
 
 class DataError(Exception):
-    """A row in the CSV file is missing a value or has a bad value."""
+    pass
 
 
 def parse_row(row: dict) -> Program:
-    # csv.DictReader fills a short row with None and puts extra values under the key None.
+    # DictReader uses None for missing values and as the key for extra ones
     if None in row.values() or None in row:
         raise ValueError("wrong number of values")
     program = Program(
@@ -33,10 +31,9 @@ def parse_row(row: dict) -> Program:
     return program
 
 
-def load_programs(path: str | Path) -> list[Program]:
+def load_programs(path) -> list[Program]:
     programs = []
     with open(path, newline="", encoding="utf-8") as file:
-        # Line 1 is the header, so the first program is on line 2.
         for line, row in enumerate(csv.DictReader(file), start=2):
             try:
                 programs.append(parse_row(row))

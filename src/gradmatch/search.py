@@ -1,4 +1,3 @@
-"""Find the programs that match a student, cheapest first."""
 from dataclasses import dataclass
 
 from gradmatch.cost import yearly_cost

@@ -1,11 +1,10 @@
-"""The GradMatch web page. Run it with: streamlit run app/streamlit_app.py"""
 import sys
 from pathlib import Path
 
 import streamlit as st
 
 ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT / "src"))  # so Python can find our gradmatch code
+sys.path.insert(0, str(ROOT / "src"))
 
 from gradmatch import data_loader  # noqa: E402
 from gradmatch.models import Student  # noqa: E402
