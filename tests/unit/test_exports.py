@@ -19,6 +19,7 @@ import pytest
 from hypothesis import given, strategies as st
 
 from conftest import make_program
+from gradmatch.deadlines import CustomDeadline
 from gradmatch.exports import CSV_COLUMNS, to_csv, to_ics
 from gradmatch.models import Scholarship
 from gradmatch.search import ProgramResult
@@ -350,3 +351,38 @@ def test_lone_carriage_return_in_a_name_is_escaped():
     lines = unfold(to_ics([make_scholarship(name="Line one\rLine two")], STAMP))
 
     assert "SUMMARY:Scholarship deadline: Line one\\nLine two" in lines
+
+
+# ---- Custom deadlines the student adds ----
+# Why (equivalence classes): a custom deadline with and without a link and a note, and a name
+# with characters that cannot go in a UID.
+
+def test_ics_custom_deadline_with_link_and_note():
+    item = CustomDeadline("Rec letters, MSU!", date(2026, 12, 1), website="https://example.edu/apply",
+                          note="Ask Dr. Lee; send CV")
+
+    lines = unfold(to_ics([item], STAMP))
+
+    assert lines[4:12] == ["BEGIN:VEVENT", "UID:deadline-20261201-rec-letters-msu@gradmatch",
+                           "DTSTAMP:20261024T150000Z", "DTSTART;VALUE=DATE:20261201",
+                           "SUMMARY:Deadline: Rec letters\\, MSU!",
+                           "DESCRIPTION:Ask Dr. Lee\\; send CV", "URL:https://example.edu/apply",
+                           "END:VEVENT"]
+
+
+def test_ics_custom_deadline_without_link_or_note_has_no_empty_lines():
+    lines = unfold(to_ics([CustomDeadline("Essay draft", date(2026, 11, 2))], STAMP))
+
+    assert lines[4:9] == ["BEGIN:VEVENT", "UID:deadline-20261102-essay-draft@gradmatch",
+                          "DTSTAMP:20261024T150000Z", "DTSTART;VALUE=DATE:20261102",
+                          "SUMMARY:Deadline: Essay draft"]
+    assert lines[9] == "END:VEVENT"
+
+
+def test_ics_mixes_custom_deadlines_with_programs_and_scholarships():
+    ics = to_ics([make_program(program_id="P1"), make_scholarship(),
+                  CustomDeadline("Essay draft", date(2026, 11, 2))], STAMP)
+
+    uids = [line for line in unfold(ics) if line.startswith("UID:")]
+    assert uids == ["UID:program-P1@gradmatch", "UID:scholarship-S1@gradmatch",
+                    "UID:deadline-20261102-essay-draft@gradmatch"]

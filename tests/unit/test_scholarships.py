@@ -29,7 +29,7 @@ from hypothesis import given, strategies as st
 
 from conftest import make_profile
 from gradmatch.models import Scholarship
-from gradmatch.scholarships import eligible_scholarships, is_eligible
+from gradmatch.scholarships import eligible_scholarships, fellowship_count, is_eligible, kind_of
 
 pytestmark = pytest.mark.unit
 
@@ -281,3 +281,39 @@ def test_stricter_scholarships_never_give_a_longer_list(student, data):
     tighter = [data.draw(stricter(s, data.draw(st.sampled_from(RULES)))) for s in offers]
 
     assert len(eligible_scholarships(student, tighter)) <= len(eligible_scholarships(student, offers))
+
+
+# ---- Kinds: kind_of() ----
+# Why (equivalence classes): each of the five data types once, plus one unknown type.
+
+@pytest.mark.parametrize("type_, kind", [
+    ("scholarship", "Scholarship"), ("fee_waiver", "Scholarship"), ("fellowship", "Fellowship"),
+    ("assistantship", "Assistantship"), ("research", "Assistantship"),
+])
+def test_kind_of_each_type(type_, kind):
+    assert kind_of(make_scholarship(type=type_)) == kind
+
+
+@pytest.mark.parametrize("type_", ["Fellowship", "grant", ""])
+def test_kind_of_unknown_type_is_an_error(type_):
+    with pytest.raises(ValueError, match=f"unknown scholarship type '{type_}'"):
+        kind_of(make_scholarship(type=type_))
+
+
+# ---- fellowship_count() ----
+# Why: only eligible scholarships count, and only the two kinds that pay a stipend.
+
+def test_fellowship_count_counts_eligible_fellowships_and_assistantships_only():
+    scholarships = [make_scholarship(scholarship_id="F", type="fellowship"),
+                    make_scholarship(scholarship_id="A", type="assistantship"),
+                    make_scholarship(scholarship_id="R", type="research"),
+                    make_scholarship(scholarship_id="S", type="scholarship"),
+                    make_scholarship(scholarship_id="W", type="fee_waiver"),
+                    make_scholarship(scholarship_id="X", type="fellowship", min_gpa=4.0)]   # not eligible
+
+    assert fellowship_count(make_profile(), scholarships) == 3
+
+
+def test_fellowship_count_with_nothing_eligible_is_zero():
+    assert fellowship_count(make_profile(), []) == 0
+    assert fellowship_count(make_profile(), [make_scholarship(type="scholarship")]) == 0

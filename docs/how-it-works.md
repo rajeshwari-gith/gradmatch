@@ -33,7 +33,7 @@ can pay $40,000 a year. (Illustrative numbers.)
 | 7. Funding | `funding.py` | Stipend covers living costs: Fully Funded. Some: Partially. None: Self-Funded. Blank: Funding unknown. |
 | 8. Scholarships | `scholarships.py` | Shown only if every condition matches: degree, field, GPA, citizenship, state, special group. |
 | 9. Deadlines | `deadlines.py` | Closed (past), Urgent (0 to 14 days), Soon (15 to 30), Later (31+). A Jan 15 deadline on Oct 27 is 80 days away: Later. |
-| 10. Show it | `presentation.py`, `app/streamlit_app.py` | Cards with a colour stripe for the fit, chips for funding and deadline, "n/a" where data is not published; three tabs and two charts. |
+| 10. Show it | `components.py`, `screens.py`, `presentation.py`, `app/theme.py`, `app/streamlit_app.py` | Four screens (program search, PhD funding, scholarships, deadlines): a results table with a face for each chance, PhD cards with a funding bar, scholarship cards, a deadline timeline with a warning window, stars, your own deadlines and two charts. |
 | 11. Extras | `exports.py`, `api.py` | CSV and calendar downloads; the same answers through a REST API. |
 
 ## Design choices worth knowing

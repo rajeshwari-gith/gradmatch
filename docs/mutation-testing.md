@@ -120,6 +120,12 @@ the command run with only the sheet (default `data` folder) and its printed line
   from the ends of the line. Table lines start and end with `|`, and the first and last cells are
   separated from it by spaces, so the extra `X` never touches a cell.
 
+## Scholarship kinds: `scholarships.py`
+
+Run again after `kind_of` and `fellowship_count` were added: **44 of 44 mutants killed** (35
+before). The tests check each of the five types once, an unknown type (exact message), and a
+count where eligible and not eligible fellowships, assistantships and scholarships are mixed.
+
 ## Bachelor's data: `fit.py` score rules, `data_loader._percentiles`, `ipeds_import.py`
 
 Run after the BS degree, the SAT/ACT columns and the official-data importer were added.
@@ -192,6 +198,25 @@ Result for the whole `[tool.mutmut]` set at this point: cost, fit, funding, vali
 had **no survivors**; the remaining survivors are the documented equivalents in `data_loader`,
 `apply_lookup` and `ipeds_import`.
 
+## Warning window, custom deadlines and starred items
+
+`starred.py` was added to `source_paths` (the unit tests import it, so mutmut cannot start
+without it). `deadlines.py` and `exports.py` were run again for the warning window, `glance_counts`,
+`CustomDeadline` and the calendar events for custom deadlines.
+
+| Module | Mutants | Killed (first run) | Survived (first run) | Killed (after new test) | Survived (after) |
+|---|---:|---:|---:|---:|---:|
+| `deadlines.py` | 95 | 93 | 2 | 95 | 0 |
+| `exports.py` | 130 | 129 | 1 | 129 | **1** (equivalent) |
+| `starred.py` | 22 | 22 | 0 | 22 | 0 |
+
+- **The 2 survivors in `deadlines.py`** were `counts["passed"] += 1` and `counts["later"] += 1`
+  becoming `= 1`. Every test had at most one passed and one later deadline. Added
+  `test_glance_counts_adds_up_several_items_in_every_count` (two in each count).
+- **The equivalent survivor in `exports.py`**: `_slug` ends with `.strip("-")`; the mutant is
+  `.strip("XX-XX")`. `strip` removes a set of characters, and the slug is already lower case, so it
+  never has an `X` at either end.
+
 ## Property-based tests and defect D-004 (2026-10-28)
 
 Property-based tests (Hypothesis) were added for the loader, deadlines, scholarships and exports.
@@ -207,6 +232,13 @@ lines are folded at 76 bytes; the CSV property fails without quoting; the loader
 when a blank cell is read as 0. A property does not replace the example tests: for instance,
 swapping `and` for `or` in the eligibility rule keeps "stricter never adds" true, and only the
 decision-table tests catch it.
+
+## Application requirements: `requirements.py`
+
+`requirements.py` was added to `source_paths` (the unit tests import it, so mutmut cannot start
+without it): **82 of 82 mutants killed** on the first run. The tests compare the whole loaded
+object, check every error message exactly with its line number, and cover `yes`, `no`, blank and
+wrongly written values of `required`.
 
 ## Cards: `presentation.py`
 
@@ -231,6 +263,47 @@ Equivalent survivors (left on purpose):
 | Mutant | Change | Why nothing can notice it |
 |---|---|---|
 | `safe_link` 3 | `url or ""` became `url or "XXXX"` | both give a value that is not an http(s) link, so the result is `None` either way |
+| `result_card_html` 9, `_title_html` 6 (since removed with the old cards) | `escape(link, quote=True)` became `escape(link)` | `html.escape` escapes quotes by default, so the output is identical |
+
+## New screens: `screens.py`, `components.py` and the smaller `presentation.py`
+
+The redesign moved the cards out of `presentation.py` and into `components.py` (small pieces such as
+a badge, a tile or a link) and `screens.py` (one row or card of each screen). The old card code was
+removed, so `presentation.py` now holds only the shared text helpers. All three were run again
+(unit tests only, as for the other modules).
+
+| Module | First run | After new tests |
+|---|---|---|
+| `screens.py` | 371 mutants, 315 killed | 362 mutants, **362 killed** |
+| `components.py` | 112 mutants, 106 killed | 112 mutants, **111 killed**, 1 equivalent |
+| `presentation.py` | 83 mutants, 82 killed | 83 mutants, **82 killed**, 1 equivalent |
+
+What the survivors showed, and the tests added for them (end of `tests/unit/test_screens.py` and
+`tests/unit/test_components.py`):
+
+- The fixed info cards (how cost is worked out, what the faces mean, the funding legend, the
+  "At a glance" card) were only checked for a few words. They are now compared exactly.
+- Deadline rows were not checked on the edges of the warning window. New boundary tests use
+  -1, 0, 14 and 15 days, check that only passed rows are struck through, and check that a chosen
+  window of 7 days changes the face as well as the tint.
+- The due text and the scholarship amount had no test for 1 day, for an amount of $1, or for a
+  chosen window being passed on.
+- A stipend of $1 still counts as a stipend; the checklist lines, the TOEFL tag and the row cells
+  are checked side by side, so text glued between them is noticed.
+- Initials did not test a hyphenated name ("Winston-Salem State University" gives WSS), the
+  progress bar did not test a total of 1, and the default sizes of the face and the star were not
+  checked.
+- `deadline_row_html` read the link with `getattr(item, "website", "")`. Every dated item has a
+  website field, so the default could never be used; the code now reads `item.website`, and the
+  three mutants on the unused default are gone (371 to 362 mutants).
+
+Equivalent survivors (left on purpose):
+
+| Mutant | Change | Why nothing can notice it |
+|---|---|---|
+| `components.official_link` 11 | `escape(link, quote=True)` became `escape(link)` | `html.escape` escapes quotes by default, so the output is identical |
+| `presentation.safe_link` 3 | `url or ""` became `url or "XXXX"` | both give a value that is not an http(s) link, so the result is `None` either way |
+
 | `result_card_html` 9, `_title_html` 6 | `escape(link, quote=True)` became `escape(link)` | `html.escape` escapes quotes by default, so the output is identical |
 
 ## `data_report.py`
