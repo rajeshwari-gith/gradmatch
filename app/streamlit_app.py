@@ -25,8 +25,8 @@ st.title("GradMatch")
 st.write("Find graduate programs you can afford, scholarships you can apply for, and their deadlines.")
 
 try:
-    database = create_database(data_loader.load_programs(DATA / "programs.csv"))
     scholarships = data_loader.load_scholarships(DATA / "scholarships.csv")
+    database = create_database(data_loader.load_programs(DATA / "programs.csv"))
 except (OSError, data_loader.DataError) as error:
     st.error(f"Could not read the data: {error}")
     st.stop()
@@ -91,3 +91,5 @@ if submitted:
                       for d in coming], hide_index=True)
     else:
         st.info("No upcoming deadlines.")
+
+database.close()
