@@ -1,45 +1,18 @@
 [project]
 name = "gradmatch"
 version = "0.1.0"
-description = "Find graduate programs, funding, scholarships and deadlines."
+description = "Find master's programs a student can afford."
 requires-python = ">=3.11"
 
-# Project settings in one file. Below: how to run the tests, how to measure coverage, how to run mutation tests.
-
 [tool.pytest.ini_options]
-# pythonpath lets tests write "import gradmatch" and "import freshness" without installing the project.
-pythonpath = ["src", "app"]
+pythonpath = ["src"]
 testpaths = ["tests"]
-markers = [
-    "unit: tests one function or module on its own",
-    "integration: tests modules working together (database, API)",
-    "system: tests the whole Streamlit app",
-    "acceptance: tests a user story end to end",
-]
 
-# Coverage = which lines (and which if/else branches) the tests ran. We aim for 100%.
+# Coverage = which lines and which if/else branches the tests ran (week 7).
 [tool.coverage.run]
 source = ["src/gradmatch", "app"]
 branch = true
 
 [tool.coverage.report]
 show_missing = true
-
-# Mutation testing: mutmut makes small deliberate bugs in the code and checks that a test fails.
-# source_paths = the files to break; also_copy = the extra files its copy of the project needs.
-[tool.mutmut]
-source_paths = ["src/gradmatch/cost.py", "src/gradmatch/fit.py", "src/gradmatch/funding.py",
-                "src/gradmatch/requirements.py",
-                "src/gradmatch/validation.py", "src/gradmatch/search.py",
-                "src/gradmatch/starred.py",
-                "src/gradmatch/data_loader.py", "src/gradmatch/scholarships.py",
-                "src/gradmatch/deadlines.py", "src/gradmatch/exports.py",
-                "src/gradmatch/apply_lookup.py", "src/gradmatch/apply_scholarship_sheet.py",
-                "src/gradmatch/ipeds_import.py",
-                "src/gradmatch/presentation.py", "src/gradmatch/components.py",
-                "src/gradmatch/screens.py", "src/gradmatch/data_report.py"]
-pytest_add_cli_args_test_selection = ["tests/unit/"]
-also_copy = ["tests/", "src/gradmatch/__init__.py", "src/gradmatch/models.py",
-             "src/gradmatch/link_check.py",
-             "src/gradmatch/api.py", "pyproject.toml",
-             "app/"]
+fail_under = 100

@@ -1,18 +1,5 @@
-# This file sets the colours and hides the developer toolbar. Nothing here affects how the app calculates anything.
-# The Sage & Cream design is a light design; the rest of the look is in app/theme.py.
-
 [theme]
 base = "light"
-primaryColor = "#5E7D63"
-backgroundColor = "#FBF8F1"
-secondaryBackgroundColor = "#F5F1E7"
-textColor = "#2B2B26"
-font = "sans serif"
-baseRadius = "0.85rem"
-greenColor = "#3A9D55"
-yellowColor = "#D9A441"
-redColor = "#9A3F22"
 
 [client]
-# Visitors see only the app, not the developer menu.
 toolbarMode = "viewer"

@@ -2,49 +2,44 @@
 
 ## What we test
 
-The rules (cost, Safety/Match/Reach, funding, scholarships, deadlines), reading the data files,
-the data import, the Streamlit app and the API. We don't test whether the schools' own numbers
-are right, and we don't do load testing.
+The 4 features in the README. The requirements below are what the functional tests check.
 
-## Test levels
+| ID | Requirement |
+|----|-------------|
+| R1 | Only programs in the chosen field are shown. |
+| R2 | Only programs whose yearly cost is at or under the budget are shown. |
+| R3 | Yearly cost = tuition + living cost. In-state tuition if the home state is the program's state. |
+| R4 | Results are sorted cheapest first. |
+| R5 | Chance: GPA difference ≥ 0.20 is Safety, -0.15 to 0.19 is Match, below -0.15 is Reach. |
+| R6 | A GPA outside 0–4 or a negative budget is rejected. |
+| R7 | A bad row in the data file gives an error with its line number. |
 
-| Level | Folder | How |
-|---|---|---|
-| Unit (825) | `tests/unit/` | one function at a time, with small made-up programs |
-| Integration (150) | `tests/integration/` | CSV files through the loader, search and exports; the API; checks on the real data |
-| System (94) | `tests/system/` | the whole app with Streamlit's AppTest, on fixed test data and a fixed date |
-| Acceptance (11) | `tests/acceptance/` | our 4 user stories, checking what the student sees |
+## Tests by course topic
 
-## Techniques
+| Week | Topic | File | What it shows |
+|---|---|---|---|
+| 2 | Unit testing | `tests/test_unit.py` | Each function on its own |
+| 3 | Test case design | `tests/test_test_design.py` | Equivalence partitions and boundary values for GPA, chance and budget |
+| 4 | TDD and test doubles | `tests/test_test_doubles.py` | Stub, fake, spy and mock (TDD: see below) |
+| 5 | Control-flow testing | `tests/test_control_flow.py` | One test per path of `chance()` and every branch of `find_programs()` |
+| 6 | Data-flow testing | `tests/test_data_flow.py` | All def-use pairs of `diff`, `cost`, `student` and `results` |
+| 7 | Coverage | `pyproject.toml` | 100% line and branch coverage; `pytest --cov` fails below 100% |
+| 8 | Functional testing | `tests/test_functional.py` | One test (or more) per requirement R1–R7 |
+| 9 | Integration testing | `tests/test_integration.py` | Loader + search + cost + chance on the real file and temp files |
+| 10 | System testing | `tests/test_system.py` | The whole app run with Streamlit's AppTest |
+| 11 | Acceptance testing | `tests/test_acceptance.py` | 3 user stories written as Given / When / Then |
+| 13 | Continuous testing | `.github/workflows/tests.yml` | GitHub Actions runs all tests and coverage on every push |
+| 14 | Advanced testing | `tests/test_advanced.py` | Property-based tests with Hypothesis |
 
-- **Boundary values**: budget exactly at the cost, deadlines at 0/14/15 days, GPA limits
-  (`test_affordability_boundary`, `test_deadline_status_boundaries`, `test_gpa_difference_boundaries`)
-- **Equivalence classes**: valid vs invalid input, good vs bad CSV rows
-- **Decision tables**: scholarship eligibility, who pays in-state tuition (`test_decision_table`)
-- **Property-based tests** (Hypothesis): things that must always be true, like a cost never below 0
-  (`test_yearly_cost_is_never_negative`, `test_no_result_is_ever_over_budget`)
-- **Regression tests**: every bug in `DEFECT_LOG.md` got a test first (`test_funded_phd_pays_no_tuition` for D-001)
-- **Mutation testing** (mutmut): to check our tests actually catch mistakes, see `mutation-testing.md`
+The graphs and the def-use table for weeks 5 and 6 are in [control-and-data-flow.md](control-and-data-flow.md).
 
-## Coverage
+## TDD (week 4)
 
-Our goal is 100% line and branch coverage of `src/gradmatch` and `app/`, and we're at 100%.
-Run `pytest --cov`. GitHub Actions shows the numbers on every push.
+Each of us adds one small change to our own feature test first: write the test, run it and see it
+fail (red), write just enough code to pass (green), then clean up. The test and the code go in
+separate commits so the order shows in the history.
 
-## Which tests cover what
+## Results
 
-| Feature | Code | Tests |
-|---|---|---|
-| Profile form checks | `validation.py` | `test_validation.py`, `test_profile_form.py` |
-| Cost, in-state rule, funded PhD | `cost.py`, `search.py` | `test_cost.py`, `test_search.py`, `test_results_page.py` |
-| Safety / Match / Reach | `fit.py` | `test_fit.py` |
-| Funding label | `funding.py` | `test_funding.py` |
-| Scholarships | `scholarships.py` | `test_scholarships.py`, story 2 |
-| Deadlines, warning window, own deadlines | `deadlines.py` | `test_deadlines.py`, story 3 |
-| Stars | `starred.py` | `test_starred.py`, `test_results_page.py` |
-| CSV and calendar downloads | `exports.py` | `test_exports.py`, `test_pipeline.py` |
-| Reading the data | `data_loader.py` | `test_data_loader.py`, `test_data_errors.py` |
-| Screens | `screens.py`, `components.py`, `theme.py` | `test_screens.py`, `test_components.py`, `test_theme.py` |
-| Data import | `ipeds_import.py` | `test_ipeds_import.py`, `test_ipeds_import_cli.py` |
-| API | `api.py` | `test_api.py`, `test_readme_examples.py` |
-| Bachelor's search | `search.py` | `test_bachelors.py`, story 4 |
+91 tests, all passing. Coverage: 100% of lines and branches.
+Defects we found are in [DEFECT_LOG.md](../DEFECT_LOG.md).
