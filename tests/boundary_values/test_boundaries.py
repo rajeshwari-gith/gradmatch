@@ -2,9 +2,9 @@ from datetime import date
 
 import pytest
 
-from tests.helpers import make_program, make_scholarship, make_student
-from programs import MATCH, REACH, SAFETY, chance, check_gpa, find_programs
+from programs import chance, check_gpa, find_programs
 from scholarships import qualifies, upcoming
+from tests.helpers import make_program, make_scholarship, make_student
 
 
 def test_boundary_values():
@@ -16,8 +16,8 @@ def test_boundary_values():
             check_gpa(bad)
 
     # REQ-4: chance changes at GPA 3.0 / 3.7 and acceptance rate 10% / 25% / 60%
-    assert [chance(gpa, 0.40) for gpa in [2.99, 3.0, 3.69, 3.7]] == [REACH, MATCH, MATCH, SAFETY]
-    assert [chance(3.5, rate) for rate in [0.09, 0.10, 0.25, 0.60]] == [REACH, REACH, MATCH, SAFETY]
+    assert [chance(gpa, 0.40) for gpa in [2.99, 3.0, 3.69, 3.7]] == ["Reach", "Match", "Match", "Safety"]
+    assert [chance(3.5, rate) for rate in [0.09, 0.10, 0.25, 0.60]] == ["Reach", "Reach", "Match", "Safety"]
 
     # REQ-2: the program costs $25,000, so a budget of $24,999 is too small
     assert [len(find_programs([make_program()], make_student(budget=b))) for b in [24999, 25000]] == [0, 1]

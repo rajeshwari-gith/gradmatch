@@ -1,7 +1,7 @@
 import pytest
 
-from tests.helpers import make_program, make_student
 from programs import find_programs
+from tests.helpers import make_program, make_student
 
 
 def test_every_branch_of_find_programs():

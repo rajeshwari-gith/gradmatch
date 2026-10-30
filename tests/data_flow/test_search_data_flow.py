@@ -1,5 +1,5 @@
+from programs import find_programs
 from tests.helpers import make_program, make_student
-from programs import SAFETY, find_programs
 
 
 def test_values_flow_through_find_programs():
@@ -7,7 +7,7 @@ def test_values_flow_through_find_programs():
     assert find_programs([make_program()], make_student(home_state="OH"))[0]["cost"] == 35000
 
     # REQ-4: gpa -> chance
-    assert find_programs([make_program()], make_student(gpa=3.9))[0]["chance"] == SAFETY
+    assert find_programs([make_program()], make_student(gpa=3.9))[0]["chance"] == "Safety"
 
     # REQ-2: cost -> sort, cheapest first, same cost A-Z
     programs = [make_program(university="C", living_cost=20000),

@@ -1,5 +1,5 @@
-from tests.helpers import make_scholarship, make_student
 from scholarships import find_scholarships
+from tests.helpers import make_scholarship, make_student
 
 
 def test_find_scholarships():

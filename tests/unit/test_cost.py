@@ -1,5 +1,5 @@
-from tests.helpers import make_program
 from programs import yearly_cost
+from tests.helpers import make_program
 
 
 def test_yearly_cost():
