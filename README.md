@@ -23,7 +23,7 @@ Live app: https://gradmatch-rg.streamlit.app
 
 Also: the page `app/streamlit_app.py` and CI (Rajeshwari), and the SQLite database
 `database.py` (Sai Nishith). All code is in `src/gradmatch/`. The tests are in `tests/`, one
-folder per kind of test. See [TEST_PLAN.md](TEST_PLAN.md).
+folder per testing technique. See [TEST_PLAN.md](TEST_PLAN.md).
 
 ## Running
 
@@ -33,7 +33,7 @@ Python 3.11 or newer.
 pip install -r requirements.txt
 streamlit run app/streamlit_app.py
 pytest --cov              # all tests, with coverage (report in htmlcov/index.html)
-pytest tests/unit         # only one kind of test
+pytest tests/unit         # only one folder
 ```
 
 ## Data

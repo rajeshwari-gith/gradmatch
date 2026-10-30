@@ -33,20 +33,28 @@ Under 10% acceptance is always Reach. Otherwise:
 
 ## Tests
 
-| Folder | Kind of test | Files |
+The tests are grouped by technique, one folder each:
+
+| Folder | Technique | What it checks |
 |---|---|---|
-| `tests/unit/` | One module on its own | `test_cost.py`, `test_fit.py`, `test_search.py`, `test_scholarships.py`, `test_deadlines.py` |
-| `tests/integration/` | Our code working with the SQLite database | `test_database.py` |
-| `tests/system/` | The whole app page, with Streamlit's AppTest | `test_app.py` |
-| `tests/acceptance/` | The 3 user stories above | `test_user_stories.py` |
+| `tests/unit/` | Unit testing | Each function on its own with a simple example |
+| `tests/boundary_values/` | Equivalence partitioning and boundary values | GPA, acceptance rate, budget, scholarship minimum GPA, days until a deadline |
+| `tests/decision_tables/` | Decision tables | The chance table above and the scholarship rules |
+| `tests/control_flow/` | Control-flow (branch) testing | Every branch of `find_programs()` |
+| `tests/data_flow/` | Data-flow testing | Each value in `find_programs()` from where it is set to where it is used |
+| `tests/test_doubles/` | Test doubles | A spy on the cost function, mocks for the database and today's date |
+| `tests/integration/` | Integration testing | Our code with the SQLite database, including its rules for bad data |
+| `tests/system/` | System testing | The whole app page with Streamlit's AppTest |
+| `tests/acceptance/` | Acceptance testing | The 3 user stories above |
+| `tests/property_based/` | Property-based testing | Rules that hold for any input, with Hypothesis |
 
 `tests/helpers.py` has the made-up programs, scholarships and students the tests share.
 
-Methods used: equivalence partitioning and boundary values (GPA, acceptance rate, budget, days
-left), decision tables (chance, scholarships), branch coverage, mocks (database, today's date)
-and property-based tests with Hypothesis.
+Boundary values and decision tables are black-box (functional) tests: they come from the
+requirements above. Control-flow and data-flow tests are white-box: they come from the code.
 
-Run with `pytest --cov`. GitHub Actions runs the tests on every push and saves the HTML
-coverage report (download "coverage-report" from the run's page).
+Coverage: `pytest --cov` measures line and branch coverage and fails below 100%. GitHub Actions
+runs every test on each push and saves the HTML coverage report (download "coverage-report"
+from the run's page).
 
-Current result: 105 tests passing, 100% line and branch coverage.
+Current result: 108 tests passing, 100% line and branch coverage.

@@ -9,7 +9,6 @@ def check_gpa(gpa: float) -> None:
 
 
 def chance(gpa: float, acceptance_rate: float) -> str:
-    check_gpa(gpa)
     if acceptance_rate < 0.10:
         return REACH
 
