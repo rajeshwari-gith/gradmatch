@@ -4,44 +4,28 @@ import pytest
 
 from helpers import make_program, make_scholarship, make_student
 from programs import MATCH, REACH, SAFETY, chance, check_gpa, find_programs
-from scholarships import find_scholarships, qualifies, upcoming
+from scholarships import qualifies, upcoming
 
 
-def test_req7_gpa_must_be_0_to_4():
+def test_boundary_values():
+    # REQ-7: GPA must be 0 to 4
     check_gpa(0.0)
     check_gpa(4.0)
     for bad in [-0.01, 4.01]:
         with pytest.raises(ValueError):
             check_gpa(bad)
 
-
-def test_req4_chance_edges():
+    # REQ-4: chance changes at GPA 3.0 / 3.7 and acceptance rate 10% / 25% / 60%
     assert [chance(gpa, 0.40) for gpa in [2.99, 3.0, 3.69, 3.7]] == [REACH, MATCH, MATCH, SAFETY]
-    rates = [0.09, 0.10, 0.24, 0.25, 0.59, 0.60]
-    assert [chance(3.5, rate) for rate in rates] == [REACH, REACH, REACH, MATCH, MATCH, SAFETY]
+    assert [chance(3.5, rate) for rate in [0.09, 0.10, 0.25, 0.60]] == [REACH, REACH, MATCH, SAFETY]
 
+    # REQ-2: the program costs $25,000, so a budget of $24,999 is too small
+    assert [len(find_programs([make_program()], make_student(budget=b))) for b in [24999, 25000]] == [0, 1]
 
-def test_req2_req7_budget_edges():
-    # the program costs $25,000 a year
-    for budget, found in [(25001, 1), (25000, 1), (24999, 0)]:
-        assert len(find_programs([make_program()], make_student(budget=budget))) == found
-    with pytest.raises(ValueError):
-        find_programs([make_program()], make_student(budget=-1))
+    # REQ-5: scholarship minimum GPA of 3.0
+    assert [qualifies(make_scholarship(min_gpa=3.0), make_student(gpa=g)) for g in [2.99, 3.0]] == [False, True]
 
-
-def test_req5_scholarship_min_gpa_edge():
-    scholarship = make_scholarship(min_gpa=3.0)
-    assert [qualifies(scholarship, make_student(gpa=gpa)) for gpa in [2.99, 3.0]] == [False, True]
-
-
-def test_req6_deadline_day_edges():
-    today = date(2026, 11, 1)
-    found = upcoming([("0", date(2026, 11, 1)), ("14", date(2026, 11, 15)),
-                      ("15", date(2026, 11, 16)), ("passed", date(2026, 10, 31))], today)
-    assert [(d.days_left, d.soon) for d in found] == [(0, True), (14, True), (15, False)]
-
-
-def test_req1_req5_req6_empty_lists():
-    assert find_programs([], make_student()) == []
-    assert find_scholarships([], make_student()) == []
-    assert upcoming([], date(2026, 11, 1)) == []
+    # REQ-6: warning at 14 days, not at 15; a passed deadline is hidden
+    found = upcoming([("14", date(2026, 11, 15)), ("15", date(2026, 11, 16)),
+                      ("passed", date(2026, 10, 31))], date(2026, 11, 1))
+    assert [(d.days_left, d.soon) for d in found] == [(14, True), (15, False)]

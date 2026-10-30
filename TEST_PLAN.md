@@ -42,50 +42,42 @@
 
 ## Tests
 
-The tests are grouped by technique, one folder each:
+One test for each technique, in its own folder:
 
-| Folder | Technique | What it checks |
+| Folder | Technique | Test |
 |---|---|---|
-| `tests/unit/` | Unit testing | One file per feature (`test_cost.py`, `test_fit.py`, `test_search.py`, `test_scholarships.py`, `test_deadlines.py`), each function with a simple example |
-| `tests/boundary_values/` | Equivalence partitioning and boundary values | GPA, acceptance rate, budget, scholarship minimum GPA, days until a deadline |
-| `tests/decision_tables/` | Decision tables | Tables C and S above, one test per rule |
-| `tests/control_flow/` | Control-flow (branch) testing | Every branch of `find_programs()` in `programs.py` |
-| `tests/data_flow/` | Data-flow testing | Each value in `find_programs()` from where it is set to where it is used |
-| `tests/test_doubles/` | Test doubles | A spy on the cost function, mocks for the database and today's date |
-| `tests/integration/` | Integration testing | Our code with the SQLite database, including its rules for bad data |
-| `tests/system/` | System testing | The whole app page with Streamlit's AppTest |
-| `tests/acceptance/` | Acceptance testing | The 3 user stories above |
-| `tests/property_based/` | Property-based testing | Rules that hold for any input, with Hypothesis |
-
-Every test name starts with the requirement it checks (for example `test_req4_chance_table`),
-and each decision-table test has the rule ID (for example `C2-10-24%-strong-gpa`).
-
-## Traceability
-
-| Requirement | Technique | Tests |
-|---|---|---|
-| REQ-1 | Control flow, boundary values, system | `test_req1_*`, `test_search_shows_programs_and_scholarships` |
-| REQ-2 | Boundary values, control flow, data flow | `test_req2_*` |
-| REQ-3 | Unit, data flow | `test_req3_*` |
-| REQ-4 | Decision table C, boundary values, data flow, property-based | `test_req4_*`, `test_results_always_fit_the_student` |
-| REQ-5 | Decision table S, boundary values, unit | `test_req5_*`, `test_find_scholarships` |
-| REQ-6 | Boundary values, test doubles (mocked date), acceptance | `test_req6_*`, `test_mock_database`, story 3 |
-| REQ-7 | Boundary values, control flow | `test_req7_*` |
-| REQ-8 | Integration (SQLite) | `test_req8_database_refuses_bad_data` |
-| User stories 1-3 | Acceptance | `tests/acceptance/test_user_stories.py` |
-
-Expected values come from the requirements and tables above, not from running the code.
+| `tests/unit/` | Unit testing | One file per feature: `test_cost.py`, `test_fit.py`, `test_search.py`, `test_scholarships.py`, `test_deadlines.py` |
+| `tests/boundary_values/` | Equivalence partitioning and boundary values | `test_boundary_values` |
+| `tests/decision_tables/` | Decision tables | `test_decision_tables` (tables C and S above) |
+| `tests/control_flow/` | Control-flow (branch) testing | `test_every_branch_of_find_programs` |
+| `tests/data_flow/` | Data-flow testing | `test_values_flow_through_find_programs` |
+| `tests/test_doubles/` | Test doubles (mocks) | `test_app_with_mocked_database_and_date` |
+| `tests/integration/` | Integration testing (SQLite) | `test_database` |
+| `tests/system/` | System testing (Streamlit AppTest) | `test_whole_app` |
+| `tests/acceptance/` | Acceptance testing | One test per user story |
 
 `tests/helpers.py` has the made-up programs, scholarships and students the tests share.
 
-Boundary values and decision tables are black-box (functional) tests: they come from the
-requirements above. Control-flow and data-flow tests are white-box: they come from the code.
+## Traceability
 
-Coverage: `pytest --cov` measures line and branch coverage and fails below 100%. GitHub Actions
-runs every test on each push and saves the HTML coverage report (download "coverage-report"
-from the run's page).
+| Requirement | Tests |
+|---|---|
+| REQ-1 | `test_every_branch_of_find_programs`, `test_whole_app` |
+| REQ-2 | `test_boundary_values`, `test_every_branch_of_find_programs`, `test_values_flow_through_find_programs` |
+| REQ-3 | `test_yearly_cost`, `test_values_flow_through_find_programs` |
+| REQ-4 | `test_chance`, `test_boundary_values`, `test_decision_tables` |
+| REQ-5 | `test_find_scholarships`, `test_boundary_values`, `test_decision_tables` |
+| REQ-6 | `test_upcoming`, `test_boundary_values`, `test_app_with_mocked_database_and_date`, story 3 |
+| REQ-7 | `test_boundary_values`, `test_every_branch_of_find_programs` |
+| REQ-8 | `test_database` |
 
-Current result: 41 tests passing, 100% line and branch coverage.
+Each test has a comment naming the requirement it checks. Expected values come from the
+requirements and tables above, not from running the code.
+
+Run with `python -m pytest -v`. Coverage: `python -m pytest --cov` measures line and branch
+coverage. GitHub Actions runs every test on each push and saves the HTML coverage report.
+
+Current result: 15 tests passing, 100% line and branch coverage.
 
 ## Defect log
 

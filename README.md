@@ -30,7 +30,7 @@ Also: the page `app.py` and CI (Rajeshwari), and the SQLite database `database.p
 
 ## Technologies Used
 
-Python, Streamlit, SQLite, pytest, pytest-cov and Hypothesis.
+Python, Streamlit, SQLite, pytest and pytest-cov.
 
 ## Installation
 
@@ -70,7 +70,7 @@ All results are estimates. They do not promise admission.
 
 ## Current Testing Results
 
-41 automated tests pass, with 100% line and branch coverage. GitHub Actions runs them on
+15 automated tests pass, with 100% line and branch coverage. GitHub Actions runs them on
 every push and saves the coverage report.
 
 ## Project Status
