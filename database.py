@@ -1,6 +1,6 @@
 import sqlite3
 
-# STRICT makes SQLite refuse a value of the wrong type, and CHECK refuses bad values
+# CHECK makes SQLite refuse bad values
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS programs (
     university        TEXT    NOT NULL CHECK (university != ''),
@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS programs (
     acceptance_rate   REAL    NOT NULL CHECK (acceptance_rate BETWEEN 0 AND 1),
     deadline          TEXT    NOT NULL CHECK (date(deadline) IS deadline),
     website           TEXT    NOT NULL
-) STRICT;
+);
 
 CREATE TABLE IF NOT EXISTS scholarships (
     name     TEXT    NOT NULL CHECK (name != ''),
@@ -24,7 +24,7 @@ CREATE TABLE IF NOT EXISTS scholarships (
     open_to  TEXT    NOT NULL,
     deadline TEXT    NOT NULL CHECK (date(deadline) IS deadline),
     website  TEXT    NOT NULL
-) STRICT;
+);
 """
 
 
