@@ -1,3 +1,4 @@
+# Unit test for scholarships
 from scholarships import find_scholarships
 from tests.helpers import make_scholarship, make_student
 

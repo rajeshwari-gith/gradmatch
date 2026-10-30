@@ -1,3 +1,4 @@
+# Decision table tests for chance and scholarships
 from programs import chance
 from scholarships import qualifies
 from tests.helpers import make_scholarship, make_student

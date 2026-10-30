@@ -1,3 +1,4 @@
+# Unit test for admission chance
 from programs import chance
 
 

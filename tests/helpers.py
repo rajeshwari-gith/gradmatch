@@ -1,4 +1,4 @@
-# Made-up data and app helpers shared by the tests
+# Made-up programs, scholarships and students, and app helpers for the tests
 from datetime import date
 from pathlib import Path
 from unittest.mock import Mock, patch

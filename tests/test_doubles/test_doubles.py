@@ -1,3 +1,4 @@
+# Test with a mocked database and date
 from datetime import date
 from unittest.mock import Mock, patch
 from tests.helpers import make_program, open_app, search, table

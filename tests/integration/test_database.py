@@ -1,3 +1,4 @@
+# Integration test with the SQLite database
 import sqlite3
 
 import pytest
