@@ -10,7 +10,7 @@ from hypothesis import given, strategies as st
 from conftest import make_profile, make_program
 from gradmatch.fit import MATCH
 from gradmatch.funding import FULLY_FUNDED, SELF_FUNDED
-from gradmatch.search import matches_filters, search_programs, tuition_state
+from gradmatch.search import matches_filters, school_rates, search_programs, tuition_state
 
 pytestmark = pytest.mark.unit
 
@@ -189,12 +189,29 @@ def test_international_total_cost_also_uses_the_out_of_state_rate():
 
 # ---- Programs with unpublished values still appear ----
 
-def test_programs_with_unpublished_values_are_found_and_labelled():
-    program = make_program(avg_gpa=None, acceptance_rate=None, stipend=None,
-                           application_deadline=None, source="ipeds")
+def test_programs_with_unpublished_values_are_found_with_an_estimated_chance():
+    program = make_program(avg_gpa=None, stipend=None, application_deadline=None, source="ipeds")
     [result] = search_programs(make_profile(), [program], LIVING)
-    assert (result.fit, result.funding) == ("Unknown", "Funding unknown")
+    assert (result.fit, result.funding) == ("Match", "Funding unknown")   # 40% accepted, GPA 3.5
     assert result.yearly_cost == 27000
+
+
+def test_a_program_with_no_chance_at_all_is_left_out():
+    program = make_program(avg_gpa=None, acceptance_rate=None)
+    assert search_programs(make_profile(), [program], LIVING) == []
+
+
+def test_a_graduate_program_borrows_its_universitys_rate():
+    college = make_program(program_id="UG", degree="BS", acceptance_rate=0.75)
+    masters = make_program(program_id="MS1", avg_gpa=None, acceptance_rate=None)
+    assert school_rates([college, masters]) == {("Test University", "MI"): 0.75}
+    [result] = search_programs(make_profile(), [college, masters], LIVING)
+    assert (result.program.program_id, result.fit) == ("MS1", "Safety")
+
+
+def test_only_bachelors_rows_with_a_rate_give_a_university_rate():
+    rows = [make_program(degree="BS", acceptance_rate=None), make_program(degree="MS", acceptance_rate=0.3)]
+    assert school_rates(rows) == {}
 
 
 def test_phd_sort_treats_an_unpublished_stipend_as_zero():
@@ -253,3 +270,9 @@ def test_every_result_matches_the_students_field_and_degree(states):
                 for i, s in enumerate(states)]
     for r in search_programs(make_profile(annual_budget=100_000), programs, LIVING):
         assert (r.program.field, r.program.degree) == ("Computer Science", "MS")
+
+
+def test_a_program_with_no_chance_does_not_stop_the_search():
+    programs = [make_program(program_id="NONE", avg_gpa=None, acceptance_rate=None),
+                make_program(program_id="NEXT")]
+    assert ids(search_programs(make_profile(), programs, LIVING)) == ["NEXT"]

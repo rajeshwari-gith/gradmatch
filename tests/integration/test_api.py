@@ -333,12 +333,25 @@ def test_match_program_items_include_source(client_with_blanks):
                                                                     ("MID", "estimate")]
 
 
-def test_match_gives_unknown_fit_and_funding_for_unpublished_values(client_with_blanks):
+def test_match_leaves_out_a_program_with_no_chance_at_all(client_with_blanks):
     body = profile(field="Business Analytics", annual_budget=100000)
-    [program] = client_with_blanks.post("/match", json=body).json()["programs"]
+    assert client_with_blanks.post("/match", json=body).json()["programs"] == []
+
+
+def test_match_estimates_the_chance_from_the_universitys_rate(tmp_path, monkeypatch):
+    folder = write_fixture_data(tmp_path)
+    lines = (folder / "programs.csv").read_text().strip().split("\n")
+    college = ("UG1,Imported University,BS in Business,Business,BS,OH,9000,20000,4,,,0.70,0,,,"
+               "https://example.edu/ug1,ipeds")
+    lines = [lines[0] + ",source"] + [line + "," for line in lines[1:]] + [UNPUBLISHED_ROW, college]
+    (folder / "programs.csv").write_text("\n".join(lines) + "\n")
+    (folder / "living_costs.csv").write_text((folder / "living_costs.csv").read_text() + "OH,15000\n")
+    monkeypatch.setenv("GRADMATCH_DATA_DIR", str(folder))
+    body = profile(field="Business Analytics", annual_budget=100000)
+    [program] = TestClient(app).post("/match", json=body).json()["programs"]
 
     assert program["program_id"] == "IPEDS1"
-    assert (program["fit"], program["funding"]) == ("Unknown", "Funding unknown")
+    assert (program["fit"], program["funding"]) == ("Safety", "Funding unknown")   # 70% accepted
     assert program["yearly_cost"] == 22000 + 15000    # Michigan student at an Ohio school: out-of-state tuition + OH living cost; unknown stipend counts as 0
 
 

@@ -35,7 +35,7 @@ from gradmatch.data_loader import (DataError, load_living_costs, load_programs, 
 from gradmatch.deadlines import (CustomDeadline, deadline_of, glance_counts,  # noqa: E402
                                  validate_custom_deadline)
 from gradmatch.exports import to_csv, to_ics  # noqa: E402
-from gradmatch.fit import MATCH, REACH, SAFETY, UNKNOWN  # noqa: E402
+from gradmatch.fit import MATCH, REACH, SAFETY  # noqa: E402
 from gradmatch.models import StudentProfile  # noqa: E402
 from gradmatch.presentation import ESTIMATE_NOTE, SPECIAL_LABELS, format_date, money  # noqa: E402
 from gradmatch.scholarships import KINDS, eligible_scholarships, fellowship_count, kind_of  # noqa: E402
@@ -255,7 +255,7 @@ def show_results(profile, results, living_costs):
         return
 
     # Filter pills with counts (All / Safety / Match / Reach / Unknown) and "Starred only".
-    counts = {label: sum(r.fit == label for r in results) for label in (SAFETY, MATCH, REACH, UNKNOWN)}
+    counts = {label: sum(r.fit == label for r in results) for label in (SAFETY, MATCH, REACH)}
     options = ["All"] + [label for label, n in counts.items() if n]
     left, right = st.columns([1, 4], vertical_alignment="center")
     starred_only = left.toggle("Starred only", key="results_starred")

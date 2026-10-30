@@ -53,6 +53,7 @@ def test_buttons_lift_on_hover_and_press_down_when_clicked():
 
 def test_on_a_phone_the_table_becomes_labelled_cards():
     css = page_css()
-    assert "@media (max-width: 640px)" in css
+    assert "@container (max-width: 660px)" in css
+    assert "container-type: inline-size;" in css
     assert ".gm-table-head { display:none; }" in css
     assert "content: attr(data-label);" in css

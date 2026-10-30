@@ -303,3 +303,20 @@ Equivalent survivors (left on purpose):
 |---|---|---|
 | `components.official_link` 11 | `escape(link, quote=True)` became `escape(link)` | `html.escape` escapes quotes by default, so the output is identical |
 | `presentation.safe_link` 3 | `url or ""` became `url or "XXXX"` | both give a value that is not an http(s) link, so the result is `None` either way |
+
+## Estimated chance: `fit.py` and `search.py` again
+
+Most graduate programs publish no average GPA, so their chance is now estimated from the
+acceptance rate (the program's own, or its university's overall rate) and the student's GPA, and a
+program with no data at all is left out instead of being shown as "Unknown". Both modules were run
+again after the change.
+
+| Module | First run | After new tests |
+|---|---|---|
+| `fit.py` | 76 mutants, 74 killed | **76 of 76 killed** |
+| `search.py` | 86 mutants, 85 killed | **86 of 86 killed** |
+
+The survivors showed two gaps: no test had a weak GPA at an open school (so moving two steps instead
+of one, or starting open schools one step higher, went unnoticed), and no test put a program with no
+chance before a normal one (so stopping the search there instead of skipping it went unnoticed).
+Both cases are now tested in `tests/unit/test_fit.py` and `tests/unit/test_search.py`.
