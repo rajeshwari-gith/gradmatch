@@ -13,6 +13,11 @@ def test_programs_within_budget_cheapest_first():
     assert costs and costs == sorted(costs) and max(costs) <= 35000
 
 
+def test_programs_in_chosen_states():
+    found = client.get("/programs", params=MS_CS | {"budget": 100000, "states": ["OH", "IN"]}).json()
+    assert found and {p["state"] for p in found} <= {"OH", "IN"}
+
+
 def test_programs_tiny_budget_returns_nothing():
     assert client.get("/programs", params=MS_CS | {"budget": 0}).json() == []
 

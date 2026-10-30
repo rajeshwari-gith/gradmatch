@@ -13,6 +13,7 @@ class Program:
     tuition_out_state: int
     living_cost: int
     acceptance_rate: float
+    stipend: int | None
     website: str
 
 
@@ -36,3 +37,4 @@ class Student:
     home_state: str
     budget: int
     citizenship: str
+    states: tuple[str, ...] = ()
