@@ -12,6 +12,20 @@ def test_load_programs(tmp_path):
     assert program.university == "Test University"
     assert program.tuition_in_state == 10000
     assert program.acceptance_rate == 0.5
+    assert program.stipend is None
+    assert program.avg_gre is None
+    assert program.deadline is None
+
+
+def test_gre_and_deadline_are_read(tmp_path):
+    row = PROGRAM_ROW.replace("0.5,,,,", "0.5,,320,2027-01-15,")
+    program = load_programs(write_csv(tmp_path, PROGRAM_HEADER, row))[0]
+    assert (program.avg_gre, program.deadline) == (320, date(2027, 1, 15))
+
+
+def test_stipend_is_read(tmp_path):
+    row = PROGRAM_ROW.replace("0.5,,,,", "0.5,30000,,,")
+    assert load_programs(write_csv(tmp_path, PROGRAM_HEADER, row))[0].stipend == 30000
 
 
 def test_load_scholarships(tmp_path):
@@ -27,7 +41,7 @@ def test_empty_file(tmp_path):
 
 def test_real_files_load():
     programs = load_programs(PROGRAMS)
-    assert len(programs) == 133
+    assert len(programs) == 159
     assert {p.degree for p in programs} == {"MS", "PhD"}
     assert len(load_scholarships(SCHOLARSHIPS)) == 7
 
@@ -37,6 +51,9 @@ def test_real_files_load():
     (PROGRAM_ROW.replace(",MS,", ",BS,"), "degree"),
     (PROGRAM_ROW.replace("10000", "-1"), "negative"),
     (PROGRAM_ROW.replace("0.5", "1.5"), "acceptance_rate"),
+    (PROGRAM_ROW.replace("0.5,,,,", "0.5,-1,,,"), "negative"),
+    (PROGRAM_ROW.replace("0.5,,,,", "0.5,,200,,"), "avg_gre"),
+    (PROGRAM_ROW.replace("0.5,,,,", "0.5,,,Jan 5,"), "isoformat"),
     (PROGRAM_ROW.replace("Test University", " "), "university is empty"),
     ("only,three,values", "wrong number"),
     (PROGRAM_ROW + ",extra", "wrong number"),
