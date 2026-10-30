@@ -6,14 +6,13 @@ import streamlit as st
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
-from gradmatch import data_loader  # noqa: E402
 from gradmatch import deadlines  # noqa: E402
-from gradmatch.database import create_database, get_fields, get_programs  # noqa: E402
+from gradmatch.database import connect, get_fields, get_programs, get_scholarships  # noqa: E402
 from gradmatch.models import Student  # noqa: E402
 from gradmatch.scholarships import find_scholarships  # noqa: E402
 from gradmatch.search import find_programs  # noqa: E402
 
-DATA = ROOT / "data"
+DATABASE = ROOT / "data" / "gradmatch.db"
 STATES = ["AL", "AK", "AZ", "AR", "CA", "CO", "CT", "DC", "DE", "FL", "GA", "HI", "IA", "ID", "IL",
           "IN", "KS", "KY", "LA", "MA", "MD", "ME", "MI", "MN", "MO", "MS", "MT", "NC", "ND", "NE",
           "NH", "NJ", "NM", "NV", "NY", "OH", "OK", "OR", "PA", "RI", "SC", "SD", "TN", "TX", "UT",
@@ -23,16 +22,18 @@ st.set_page_config(page_title="GradMatch")
 st.title("GradMatch")
 st.write("Find graduate programs you can afford, scholarships you can apply for, and their deadlines.")
 
-try:
-    scholarships = data_loader.load_scholarships(DATA / "scholarships.csv")
-    database = create_database(data_loader.load_programs(DATA / "programs.csv"))
-except (OSError, data_loader.DataError) as error:
-    st.error(f"Could not read the data: {error}")
+connection = connect(DATABASE)
+programs = get_programs(connection)
+scholarships = get_scholarships(connection)
+fields = get_fields(connection)
+connection.close()
+if not programs:
+    st.error("No programs found in the database.")
     st.stop()
 
 with st.form("profile"):
     degree = st.radio("Degree", ["MS", "PhD"], horizontal=True, key="degree")
-    field = st.selectbox("Field", get_fields(database), key="field")
+    field = st.selectbox("Field", fields, key="field")
     gpa = st.number_input("Your GPA", min_value=0.0, max_value=4.0, value=3.5, step=0.1, key="gpa")
     home_state = st.selectbox("Your home state", STATES, index=STATES.index("MI"), key="home_state")
     gre = st.number_input("GRE score (optional)", min_value=260, max_value=340, value=None,
@@ -46,7 +47,7 @@ if submitted:
                       None if gre is None else int(gre))
 
     st.subheader("Programs")
-    results = find_programs(get_programs(database, degree, field), student)
+    results = find_programs(programs, student)
     if results:
         order = "best funded first" if degree == "PhD" else "cheapest first"
         st.write(f"{len(results)} programs fit your budget, {order}.")
@@ -90,5 +91,3 @@ if submitted:
                       for d in coming], hide_index=True)
     else:
         st.info("No upcoming deadlines.")
-
-database.close()

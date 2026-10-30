@@ -3,8 +3,7 @@ from unittest.mock import Mock, patch
 
 from streamlit.testing.v1 import AppTest
 
-from gradmatch.data_loader import DataError
-from helpers import APP, PROGRAMS, make_program, open_app, search, table
+from helpers import APP, make_program, open_app, search, table
 
 
 def test_page_opens():
@@ -35,7 +34,7 @@ def test_gre_is_accepted():
 
 def test_program_deadline_is_tracked():
     loader = Mock(return_value=[make_program(deadline=date(2026, 11, 25))])
-    with patch("gradmatch.data_loader.load_programs", loader):
+    with patch("gradmatch.database.get_programs", loader):
         at = search(open_app())
     assert "Test University (MS in Computer Science) is due in 5 days" in at.warning[0].value
 
@@ -59,22 +58,22 @@ def test_scholarships_show_who_can_apply():
 
 
 def test_no_scholarships_message():
-    with patch("gradmatch.data_loader.load_scholarships", Mock(return_value=[])):
+    with patch("gradmatch.database.get_scholarships", Mock(return_value=[])):
         at = search(open_app())
     assert "No scholarships match your degree, field and GPA." in [i.value for i in at.info]
 
 
-def test_app_uses_the_loader():
+def test_app_reads_programs_from_the_database():
     loader = Mock(return_value=[make_program(university="Mock University")])
-    with patch("gradmatch.data_loader.load_programs", loader):
+    with patch("gradmatch.database.get_programs", loader):
         at = open_app()
         at.button[0].click().run()
-    loader.assert_called_with(PROGRAMS)
+    loader.assert_called()
     assert list(table(at, "Programs")["University"]) == ["Mock University"]
 
 
-def test_bad_data_shows_error():
-    with patch("gradmatch.data_loader.load_programs", Mock(side_effect=DataError("line 3: bad"))):
+def test_empty_database_shows_error():
+    with patch("gradmatch.database.get_programs", Mock(return_value=[])):
         at = AppTest.from_file(APP, default_timeout=30).run()
-    assert "line 3: bad" in at.error[0].value
+    assert at.error[0].value == "No programs found in the database."
     assert len(at.button) == 0

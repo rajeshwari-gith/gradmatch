@@ -23,8 +23,8 @@ Live app: https://gradmatch-rg.streamlit.app
 | Scholarships | `scholarships.py` | Sai Nishith |
 | Deadline tracker | `deadlines.py` | Sai Nishith |
 
-Also: the page `app/streamlit_app.py` and CI (Rajeshwari), and the data loader
-`data_loader.py`, the SQLite database `database.py` and the API `api.py` (Sai Nishith). All code is in `src/gradmatch/`. The tests are in `tests/`, one folder per kind of test
+Also: the page `app/streamlit_app.py` and CI (Rajeshwari), and the SQLite database
+`database.py` and the API `api.py` (Sai Nishith). All code is in `src/gradmatch/`. The tests are in `tests/`, one folder per kind of test
 (unit, integration, system, acceptance). See [TEST_PLAN.md](TEST_PLAN.md).
 
 ## Running
@@ -41,7 +41,11 @@ pytest tests/unit                           # only one kind of test
 
 ## Data
 
-**Programs** (`data/programs.csv`)
+All data is in one SQLite database, `data/gradmatch.db`, with two tables: `programs` and
+`scholarships`. The table rules (in `database.py`) refuse bad values, like a negative cost or a
+GPA above 4. To look inside: `sqlite3 data/gradmatch.db "SELECT * FROM programs LIMIT 5"`.
+
+**Programs** (`programs` table)
 - 159 MS and PhD programs.
 - 4 subjects: Computer Science, Electrical Engineering, Mechanical Engineering, Statistics.
 - 5 states: Illinois, Indiana, Michigan, Ohio, Wisconsin.
@@ -58,7 +62,7 @@ How we estimated:
 - Average GRE: 320 at harder schools, 310 at others.
 - Deadline: December 15, 2026 for PhD. February 1, 2027 for MS.
 
-**Scholarships** (`data/scholarships.csv`)
+**Scholarships** (`scholarships` table)
 - 7 national scholarships and fellowships.
 - Each one says who can apply (for example "US citizens" or "Everyone").
 - The amounts and deadlines are estimates.

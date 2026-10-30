@@ -1,39 +1,92 @@
 import sqlite3
 from contextlib import closing
-from datetime import date
 
-from gradmatch.data_loader import load_programs
-from gradmatch.database import create_database, get_fields, get_programs
-from helpers import PROGRAMS, make_program
+import pytest
 
-
-def test_saved_programs_come_back_the_same():
-    program = make_program(stipend=30000, avg_gre=320, deadline=date(2027, 1, 15))
-    with closing(create_database([program])) as database:
-        assert get_programs(database, "MS", "Computer Science") == [program]
+from gradmatch.database import (add_programs, add_scholarships, connect, get_fields, get_programs,
+                                get_scholarships)
+from helpers import DATABASE, make_program, make_scholarship
 
 
-def test_get_programs_filters_degree_and_field():
-    programs = [make_program(university="A"), make_program(university="B", degree="PhD"),
-                make_program(university="C", field="Statistics")]
-    with closing(create_database(programs)) as database:
-        assert [p.university for p in get_programs(database, "MS", "Computer Science")] == ["A"]
+def test_programs_come_back_the_same():
+    program = make_program(stipend=30000, avg_gre=320)
+    with closing(connect(":memory:")) as connection:
+        add_programs(connection, [program])
+        assert get_programs(connection) == [program]
+
+
+def test_scholarships_come_back_the_same():
+    scholarship = make_scholarship(degrees=("MS", "PhD"), fields=("Computer Science", "Statistics"))
+    with closing(connect(":memory:")) as connection:
+        add_scholarships(connection, [scholarship])
+        assert get_scholarships(connection) == [scholarship]
 
 
 def test_empty_database():
-    with closing(create_database([])) as database:
-        assert get_programs(database, "MS", "Computer Science") == []
+    with closing(connect(":memory:")) as connection:
+        assert (get_programs(connection), get_scholarships(connection), get_fields(connection)) == ([], [], [])
 
 
-def test_real_data_in_the_database():
-    with closing(create_database(load_programs(PROGRAMS))) as database:
-        assert get_fields(database) == ["Computer Science", "Electrical Engineering",
-                                        "Mechanical Engineering", "Statistics"]
-        assert len(get_programs(database, "PhD", "Statistics")) == 8
+def test_fields_are_listed_once_in_order():
+    programs = [make_program(field="Statistics"), make_program(), make_program()]
+    with closing(connect(":memory:")) as connection:
+        add_programs(connection, programs)
+        assert get_fields(connection) == ["Computer Science", "Statistics"]
 
 
-def test_database_file(tmp_path):
-    with closing(create_database([make_program()], tmp_path / "test.db")) as database:
-        database.commit()
-    with closing(sqlite3.connect(tmp_path / "test.db")) as database:
-        assert database.execute("SELECT COUNT(*) FROM programs").fetchone() == (1,)
+def test_saved_to_a_file(tmp_path):
+    with closing(connect(tmp_path / "test.db")) as connection:
+        add_programs(connection, [make_program()])
+    with closing(connect(tmp_path / "test.db")) as connection:
+        assert len(get_programs(connection)) == 1
+
+
+def test_real_database():
+    with closing(connect(DATABASE)) as connection:
+        programs = get_programs(connection)
+        assert len(programs) == 159
+        assert {p.degree for p in programs} == {"MS", "PhD"}
+        assert len(get_scholarships(connection)) == 7
+        assert get_fields(connection) == ["Computer Science", "Electrical Engineering",
+                                          "Mechanical Engineering", "Statistics"]
+
+
+# the database itself refuses bad values
+@pytest.mark.parametrize("bad", [
+    dict(university=""),
+    dict(degree="BS"),
+    dict(state="Michigan"),
+    dict(tuition_in_state=-1),
+    dict(living_cost=-1),
+    dict(acceptance_rate=1.5),
+    dict(stipend=-1),
+    dict(avg_gre=259),
+    dict(avg_gre=341),
+    dict(tuition_in_state="lots"),
+], ids=lambda bad: f"{list(bad)[0]}={list(bad.values())[0]}")
+def test_bad_program_is_refused(bad):
+    with closing(connect(":memory:")) as connection:
+        with pytest.raises(sqlite3.IntegrityError):
+            add_programs(connection, [make_program(**bad)])
+
+
+@pytest.mark.parametrize("gre", [260, 340])
+def test_gre_edges_are_accepted(gre):
+    with closing(connect(":memory:")) as connection:
+        add_programs(connection, [make_program(avg_gre=gre)])
+        assert get_programs(connection)[0].avg_gre == gre
+
+
+@pytest.mark.parametrize("bad", [dict(name=""), dict(amount=-5), dict(min_gpa=4.5)],
+                         ids=["name", "amount", "min_gpa"])
+def test_bad_scholarship_is_refused(bad):
+    with closing(connect(":memory:")) as connection:
+        with pytest.raises(sqlite3.IntegrityError):
+            add_scholarships(connection, [make_scholarship(**bad)])
+
+
+def test_bad_deadline_is_refused():
+    with closing(connect(":memory:")) as connection:
+        with pytest.raises(sqlite3.IntegrityError):
+            connection.execute("INSERT INTO scholarships VALUES ('A', 1, 'MS', 'Any', 3.0, 'Everyone', "
+                               "'Feb 1', 'https://example.org')")
