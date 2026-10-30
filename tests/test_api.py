@@ -47,6 +47,13 @@ def test_scholarships_for_international_ms_student():
     assert names == ["GVSU Graduate Assistantship"]
 
 
+
+def test_scholarships_bad_gpa_is_400():
+    params = {"degree": "MS", "field": "Computer Science", "gpa": 5, "citizenship": "US"}
+    response = client.get("/scholarships", params=params)
+    assert response.status_code == 400
+    assert "GPA" in response.json()["detail"]
+
 def test_deadlines_on_a_fixed_day():
     found = client.get("/deadlines", params={"today": "2026-11-20"}).json()
     assert found[0] == {"name": "DoD SMART Scholarship", "date": "2026-12-01",
