@@ -1,18 +1,14 @@
-import sys
 from pathlib import Path
 
 import streamlit as st
 
-ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT / "src"))
+import deadlines
+from database import connect, get_programs, get_scholarships
+from models import Student
+from scholarships import find_scholarships
+from search import find_programs
 
-from gradmatch import deadlines  # noqa: E402
-from gradmatch.database import connect, get_fields, get_programs, get_scholarships  # noqa: E402
-from gradmatch.models import Student  # noqa: E402
-from gradmatch.scholarships import find_scholarships  # noqa: E402
-from gradmatch.search import find_programs  # noqa: E402
-
-DATABASE = ROOT / "data" / "gradmatch.db"
+DATABASE = Path(__file__).parent / "data" / "gradmatch.db"
 STATES = ["AL", "AK", "AZ", "AR", "CA", "CO", "CT", "DC", "DE", "FL", "GA", "HI", "IA", "ID", "IL",
           "IN", "KS", "KY", "LA", "MA", "MD", "ME", "MI", "MN", "MO", "MS", "MT", "NC", "ND", "NE",
           "NH", "NJ", "NM", "NV", "NY", "OH", "OK", "OR", "PA", "RI", "SC", "SD", "TN", "TX", "UT",
@@ -25,7 +21,6 @@ st.write("Find graduate programs you can afford, scholarships you can apply for,
 connection = connect(DATABASE)
 programs = get_programs(connection)
 scholarships = get_scholarships(connection)
-fields = get_fields(connection)
 connection.close()
 if not programs:
     st.error("No programs found in the database.")
@@ -33,7 +28,7 @@ if not programs:
 
 with st.form("profile"):
     degree = st.radio("Degree", ["MS", "PhD"], horizontal=True, key="degree")
-    field = st.selectbox("Field", fields, key="field")
+    field = st.selectbox("Field", sorted({p.field for p in programs}), key="field")
     gpa = st.number_input("Your GPA", min_value=0.0, max_value=4.0, value=3.5, step=0.1, key="gpa")
     home_state = st.selectbox("Your home state", STATES, index=STATES.index("MI"), key="home_state")
     states = st.multiselect("States you'd like (leave empty for any)", STATES, key="states")
@@ -48,8 +43,7 @@ if submitted:
     if results:
         st.write(f"{len(results)} programs fit your budget, cheapest first.")
         st.dataframe(
-            [{"University": r.program.university, "Program": r.program.program,
-              "State": r.program.state, "Yearly cost": f"${r.cost:,}", "Chance": r.chance,
+            [{"University": r.program.university, "State": r.program.state, "Yearly cost": f"${r.cost:,}", "Chance": r.chance,
               "Website": r.program.website} for r in results],
             hide_index=True, column_config={"Website": st.column_config.LinkColumn()},
         )
@@ -72,7 +66,7 @@ if submitted:
 
     st.subheader("Deadlines")
     dates = [(s.name, s.deadline) for s in found]
-    dates += [(f"{r.program.university} ({r.program.program})", r.program.deadline)
+    dates += [(f"{r.program.university} application", r.program.deadline)
               for r in results]
     coming = deadlines.upcoming(dates, deadlines.today())
     for d in coming:

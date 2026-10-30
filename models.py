@@ -5,7 +5,6 @@ from datetime import date
 @dataclass(frozen=True)
 class Program:
     university: str
-    program: str
     degree: str
     field: str
     state: str

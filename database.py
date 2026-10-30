@@ -1,13 +1,12 @@
 import sqlite3
 from datetime import date
 
-from gradmatch.models import Program, Scholarship
+from models import Program, Scholarship
 
 # STRICT makes SQLite refuse a value of the wrong type, and CHECK refuses bad values
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS programs (
     university        TEXT    NOT NULL CHECK (university != ''),
-    program           TEXT    NOT NULL CHECK (program != ''),
     degree            TEXT    NOT NULL CHECK (degree IN ('MS', 'PhD')),
     field             TEXT    NOT NULL CHECK (field != ''),
     state             TEXT    NOT NULL CHECK (length(state) = 2),
@@ -39,10 +38,10 @@ def connect(path) -> sqlite3.Connection:
 
 
 def add_programs(connection: sqlite3.Connection, programs: list[Program]) -> None:
-    rows = [(p.university, p.program, p.degree, p.field, p.state, p.tuition_in_state,
+    rows = [(p.university, p.degree, p.field, p.state, p.tuition_in_state,
              p.tuition_out_state, p.living_cost, p.acceptance_rate, p.deadline.isoformat(),
              p.website) for p in programs]
-    connection.executemany("INSERT INTO programs VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", rows)
+    connection.executemany("INSERT INTO programs VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", rows)
     connection.commit()
 
 
@@ -55,7 +54,7 @@ def add_scholarships(connection: sqlite3.Connection, scholarships: list[Scholars
 
 def get_programs(connection: sqlite3.Connection) -> list[Program]:
     rows = connection.execute("SELECT * FROM programs ORDER BY university")
-    return [Program(*row[:9], date.fromisoformat(row[9]), row[10]) for row in rows]
+    return [Program(*row[:8], date.fromisoformat(row[8]), row[9]) for row in rows]
 
 
 def get_scholarships(connection: sqlite3.Connection) -> list[Scholarship]:
@@ -64,7 +63,3 @@ def get_scholarships(connection: sqlite3.Connection) -> list[Scholarship]:
                         open_to, date.fromisoformat(deadline), website)
             for name, amount, degrees, fields, min_gpa, open_to, deadline, website in rows]
 
-
-def get_fields(connection: sqlite3.Connection) -> list[str]:
-    rows = connection.execute("SELECT DISTINCT field FROM programs ORDER BY field")
-    return [row[0] for row in rows]

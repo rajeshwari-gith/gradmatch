@@ -1,8 +1,8 @@
 from dataclasses import dataclass
 
-from gradmatch.cost import yearly_cost
-from gradmatch.fit import chance, check_gpa
-from gradmatch.models import Program, Student
+from cost import yearly_cost
+from fit import chance, check_gpa
+from models import Program, Student
 
 
 @dataclass(frozen=True)

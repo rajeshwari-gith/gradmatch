@@ -5,11 +5,12 @@ description = "Find master's programs a student can afford."
 requires-python = ">=3.11"
 
 [tool.pytest.ini_options]
-pythonpath = ["src", "tests"]
+pythonpath = [".", "tests"]
 testpaths = ["tests"]
 
 [tool.coverage.run]
-source = ["src/gradmatch", "app"]
+source = ["."]
+omit = ["tests/*"]
 branch = true
 
 [tool.coverage.report]
