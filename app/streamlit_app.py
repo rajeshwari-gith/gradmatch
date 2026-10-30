@@ -36,6 +36,8 @@ with st.form("profile"):
     field = st.selectbox("Field", get_fields(database), key="field")
     gpa = st.number_input("Your GPA", min_value=0.0, max_value=4.0, value=3.5, step=0.1, key="gpa")
     home_state = st.selectbox("Your home state", STATES, index=STATES.index("MI"), key="home_state")
+    gre = st.number_input("GRE score (optional)", min_value=260, max_value=340, value=None,
+                          key="gre")
     states = st.multiselect("States you'd like (leave empty for any)", STATES, key="states")
     budget = st.number_input("Yearly budget ($)", min_value=0, value=40000, step=1000, key="budget")
     citizenship = st.selectbox("Citizenship", list(CITIZENSHIP), key="citizenship")
@@ -43,7 +45,7 @@ with st.form("profile"):
 
 if submitted:
     student = Student(degree, field, gpa, home_state, int(budget), CITIZENSHIP[citizenship],
-                      tuple(states))
+                      tuple(states), None if gre is None else int(gre))
 
     st.subheader("Programs")
     results = find_programs(get_programs(database, degree, field), student)
@@ -76,7 +78,10 @@ if submitted:
         st.info("No scholarships match you.")
 
     st.subheader("Deadlines")
-    deadlines = dl.upcoming(found, dl.today())
+    dates = [(s.name, s.deadline) for s in found]
+    dates += [(f"{r.program.university} ({r.program.program})", r.program.deadline)
+              for r in results if r.program.deadline]
+    deadlines = dl.upcoming(dates, dl.today())
     for d in deadlines:
         if d.soon:
             st.warning(f"{d.name} is due in {d.days_left} days ({d.date:%b %d}).")

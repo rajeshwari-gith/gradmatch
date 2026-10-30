@@ -3,13 +3,12 @@ from datetime import date
 import pytest
 
 from gradmatch.deadlines import today, upcoming
-from helpers import make_scholarship
 
 TODAY = date(2026, 11, 1)
 
 
 def due(day):
-    return make_scholarship(name=f"Due {day}", deadline=day)
+    return (f"Due {day}", day)
 
 
 @pytest.mark.parametrize("deadline, days_left, soon", [

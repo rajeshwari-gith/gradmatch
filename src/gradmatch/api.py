@@ -11,7 +11,8 @@ from gradmatch.scholarships import find_scholarships
 from gradmatch.search import find_programs
 
 DATA = Path(__file__).resolve().parents[2] / "data"
-DATABASE = create_database(load_programs(DATA / "programs.csv"))
+PROGRAMS = load_programs(DATA / "programs.csv")
+DATABASE = create_database(PROGRAMS)
 SCHOLARSHIPS = load_scholarships(DATA / "scholarships.csv")
 
 app = FastAPI(title="GradMatch")
@@ -19,14 +20,15 @@ app = FastAPI(title="GradMatch")
 
 @app.get("/programs")
 def programs(degree: str, field: str, gpa: float, home_state: str, budget: int,
-             states: list[str] = Query([])):
-    student = Student(degree, field, gpa, home_state, budget, "US", tuple(states))
+             states: list[str] = Query([]), gre: int | None = None):
+    student = Student(degree, field, gpa, home_state, budget, "US", tuple(states), gre)
     try:
         results = find_programs(get_programs(DATABASE, degree, field), student)
     except ValueError as error:
         raise HTTPException(status_code=400, detail=str(error))
     return [{"university": r.program.university, "program": r.program.program,
-             "state": r.program.state, "yearly_cost": r.cost, "chance": r.chance, "funding": r.funding}
+             "state": r.program.state, "yearly_cost": r.cost, "chance": r.chance,
+             "funding": r.funding}
             for r in results]
 
 
@@ -40,4 +42,10 @@ def scholarships(degree: str, field: str, gpa: float, citizenship: str):
 @app.get("/deadlines")
 def deadlines(today: date | None = None):
     return [{"name": d.name, "date": d.date.isoformat(), "days_left": d.days_left, "soon": d.soon}
-            for d in upcoming(SCHOLARSHIPS, today or date.today())]
+            for d in upcoming(deadline_list(), today or date.today())]
+
+
+def deadline_list():
+    dates = [(s.name, s.deadline) for s in SCHOLARSHIPS]
+    dates += [(f"{p.university} ({p.program})", p.deadline) for p in PROGRAMS if p.deadline]
+    return dates

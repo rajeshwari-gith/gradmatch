@@ -1,6 +1,10 @@
+from datetime import date
+
 from fastapi.testclient import TestClient
 
+from gradmatch import api
 from gradmatch.api import app
+from helpers import make_program
 
 client = TestClient(app)
 MS_CS = {"degree": "MS", "field": "Computer Science", "gpa": 3.5, "home_state": "MI"}
@@ -16,6 +20,11 @@ def test_programs_within_budget_cheapest_first():
 def test_programs_in_chosen_states():
     found = client.get("/programs", params=MS_CS | {"budget": 100000, "states": ["OH", "IN"]}).json()
     assert found and {p["state"] for p in found} <= {"OH", "IN"}
+
+
+def test_programs_bad_gre_is_400():
+    response = client.get("/programs", params=MS_CS | {"budget": 40000, "gre": 400})
+    assert response.status_code == 400
 
 
 def test_programs_tiny_budget_returns_nothing():
@@ -43,6 +52,13 @@ def test_deadlines_on_a_fixed_day():
     assert found[0] == {"name": "DoD SMART Scholarship", "date": "2026-12-01",
                         "days_left": 11, "soon": True}
     assert all(d["date"] >= "2026-11-20" for d in found)
+
+
+def test_program_deadlines_are_included(monkeypatch):
+    monkeypatch.setattr(api, "PROGRAMS", [make_program(deadline=date(2026, 12, 15))])
+    found = client.get("/deadlines", params={"today": "2026-12-10"}).json()
+    assert found[0] == {"name": "Test University (MS in Computer Science)", "date": "2026-12-15",
+                        "days_left": 5, "soon": True}
 
 
 def test_deadlines_default_to_today():

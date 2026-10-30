@@ -1,4 +1,5 @@
 import sqlite3
+from datetime import date
 
 from gradmatch.data_loader import load_programs
 from gradmatch.database import create_database, get_fields, get_programs
@@ -6,7 +7,7 @@ from helpers import PROGRAMS, make_program
 
 
 def test_saved_programs_come_back_the_same():
-    program = make_program(stipend=30000)
+    program = make_program(stipend=30000, avg_gre=320, deadline=date(2027, 1, 15))
     assert get_programs(create_database([program]), "MS", "Computer Science") == [program]
 
 
@@ -31,3 +32,8 @@ def test_database_file(tmp_path):
     create_database([make_program()], tmp_path / "test.db").commit()
     count = sqlite3.connect(tmp_path / "test.db").execute("SELECT COUNT(*) FROM programs").fetchone()
     assert count == (1,)
+
+
+def test_program_without_deadline_comes_back_the_same():
+    program = make_program()
+    assert get_programs(create_database([program]), "MS", "Computer Science") == [program]

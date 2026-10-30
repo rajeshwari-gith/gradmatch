@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
 from gradmatch.cost import funding, yearly_cost
-from gradmatch.fit import chance, check_gpa
+from gradmatch.fit import chance, check_gpa, check_gre
 from gradmatch.models import Program, Student
 
 
@@ -15,6 +15,8 @@ class Result:
 
 def find_programs(programs: list[Program], student: Student) -> list[Result]:
     check_gpa(student.gpa)
+    if student.gre is not None:
+        check_gre(student.gre)
     if student.budget < 0:
         raise ValueError("budget can't be negative")
     results = []
@@ -26,7 +28,8 @@ def find_programs(programs: list[Program], student: Student) -> list[Result]:
         cost = yearly_cost(program, student.home_state)
         if cost > student.budget:
             continue
-        results.append(Result(program, cost, chance(student.gpa, program.acceptance_rate),
+        results.append(Result(program, cost, chance(student.gpa, program.acceptance_rate,
+                                                     student.gre, program.avg_gre),
                               funding(program)))
     results.sort(key=lambda result: (result.cost, result.program.university))
     if student.degree == "PhD":

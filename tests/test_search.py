@@ -92,8 +92,13 @@ def test_student_gpa_is_used_for_chance():
     assert result.chance == SAFETY
 
 
+def test_student_gre_is_used_for_chance():
+    result = find_programs([make_program(avg_gre=310)], make_student(gre=330))[0]
+    assert result.chance == SAFETY
+
+
 @pytest.mark.parametrize("student", [make_student(gpa=4.2), make_student(gpa=-1),
-                                     make_student(budget=-1)])
+                                     make_student(budget=-1), make_student(gre=200)])
 def test_bad_input(student):
     with pytest.raises(ValueError):
         find_programs([make_program()], student)

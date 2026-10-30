@@ -14,7 +14,7 @@ def open_app():
 
 
 def search(at, degree="MS", field="Computer Science", gpa=3.5, home_state="MI", budget=40000,
-           citizenship="US citizen", states=(), today=date(2026, 11, 20)):
+           citizenship="US citizen", states=(), gre=None, today=date(2026, 11, 20)):
     at.radio(key="degree").set_value(degree)
     at.selectbox(key="field").set_value(field)
     at.number_input(key="gpa").set_value(gpa)
@@ -22,6 +22,7 @@ def search(at, degree="MS", field="Computer Science", gpa=3.5, home_state="MI", 
     at.number_input(key="budget").set_value(budget)
     at.selectbox(key="citizenship").set_value(citizenship)
     at.multiselect(key="states").set_value(list(states))
+    at.number_input(key="gre").set_value(gre)
     with patch("gradmatch.deadlines.today", Mock(return_value=today)):
         at.button[0].click().run()
     assert not at.exception
@@ -78,6 +79,17 @@ def test_ms_table_has_no_funding_column():
 def test_only_chosen_states_are_shown():
     programs = table(search(open_app(), states=["OH"], budget=100000), "Programs")
     assert set(programs["State"]) == {"OH"}
+
+
+def test_gre_is_accepted():
+    assert len(table(search(open_app(), gre=320), "Programs")) > 0
+
+
+def test_program_deadline_is_tracked():
+    loader = Mock(return_value=[make_program(deadline=date(2026, 11, 25))])
+    with patch("gradmatch.data_loader.load_programs", loader):
+        at = search(open_app())
+    assert "Test University (MS in Computer Science) is due in 5 days" in at.warning[0].value
 
 
 def test_small_budget_shows_message():

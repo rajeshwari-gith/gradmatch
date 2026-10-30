@@ -18,7 +18,7 @@ def check_row(row: dict, optional=()) -> None:
 
 
 def parse_program(row: dict) -> Program:
-    check_row(row, optional=("stipend",))
+    check_row(row, optional=("stipend", "avg_gre", "deadline"))
     program = Program(
         university=row["university"].strip(),
         program=row["program"].strip(),
@@ -30,6 +30,8 @@ def parse_program(row: dict) -> Program:
         living_cost=int(row["living_cost"]),
         acceptance_rate=float(row["acceptance_rate"]),
         stipend=int(row["stipend"]) if row["stipend"].strip() else None,
+        avg_gre=int(row["avg_gre"]) if row["avg_gre"].strip() else None,
+        deadline=date.fromisoformat(row["deadline"]) if row["deadline"].strip() else None,
         website=row["website"].strip(),
     )
     if program.degree not in ("MS", "PhD"):
@@ -37,6 +39,8 @@ def parse_program(row: dict) -> Program:
     if min(program.tuition_in_state, program.tuition_out_state, program.living_cost,
            program.stipend or 0) < 0:
         raise ValueError("costs can't be negative")
+    if program.avg_gre is not None and not 260 <= program.avg_gre <= 340:
+        raise ValueError(f"avg_gre must be between 260 and 340, got {program.avg_gre}")
     if not 0 <= program.acceptance_rate <= 1:
         raise ValueError(f"acceptance_rate must be between 0 and 1, got {program.acceptance_rate}")
     return program

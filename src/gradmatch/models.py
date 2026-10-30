@@ -14,6 +14,8 @@ class Program:
     living_cost: int
     acceptance_rate: float
     stipend: int | None
+    avg_gre: int | None
+    deadline: date | None
     website: str
 
 
@@ -38,3 +40,4 @@ class Student:
     budget: int
     citizenship: str
     states: tuple[str, ...] = ()
+    gre: int | None = None
