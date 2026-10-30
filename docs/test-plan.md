@@ -1,50 +1,25 @@
 # Test plan
 
-## What we test
+## Requirements
 
-The rules (cost, Safety/Match/Reach, funding, scholarships, deadlines), reading the data files,
-the data import, the Streamlit app and the API. We don't test whether the schools' own numbers
-are right, and we don't do load testing.
+1. Only programs in the chosen field are shown.
+2. Only programs with a yearly cost at or under the budget are shown.
+3. Yearly cost is tuition + living cost, using in-state tuition if the student is from that state.
+4. Results are sorted cheapest first.
+5. Chance: GPA at least 0.20 above the average is Safety, down to 0.15 below is Match, lower is Reach.
+6. A GPA outside 0-4 or a negative budget gives an error.
+7. A bad row in the data file gives an error with the line number.
 
-## Test levels
+## Tests
 
-| Level | Folder | How |
-|---|---|---|
-| Unit (825) | `tests/unit/` | one function at a time, with small made-up programs |
-| Integration (150) | `tests/integration/` | CSV files through the loader, search and exports; the API; checks on the real data |
-| System (94) | `tests/system/` | the whole app with Streamlit's AppTest, on fixed test data and a fixed date |
-| Acceptance (11) | `tests/acceptance/` | our 4 user stories, checking what the student sees |
+| File | What it tests |
+|---|---|
+| `test_cost.py` | cost.py |
+| `test_fit.py` | fit.py, including the 0.20 and -0.15 edges and invalid GPAs |
+| `test_data_loader.py` | data_loader.py with good and bad CSV files |
+| `test_search.py` | search.py, every branch, plus searches on the real data |
+| `test_app.py` | the whole page with Streamlit's AppTest |
 
-## Techniques
+Run with `pytest --cov`. GitHub Actions runs the tests on every push.
 
-- **Boundary values**: budget exactly at the cost, deadlines at 0/14/15 days, GPA limits
-  (`test_affordability_boundary`, `test_deadline_status_boundaries`, `test_gpa_difference_boundaries`)
-- **Equivalence classes**: valid vs invalid input, good vs bad CSV rows
-- **Decision tables**: scholarship eligibility, who pays in-state tuition (`test_decision_table`)
-- **Property-based tests** (Hypothesis): things that must always be true, like a cost never below 0
-  (`test_yearly_cost_is_never_negative`, `test_no_result_is_ever_over_budget`)
-- **Regression tests**: every bug in `DEFECT_LOG.md` got a test first (`test_funded_phd_pays_no_tuition` for D-001)
-- **Mutation testing** (mutmut): to check our tests actually catch mistakes, see `mutation-testing.md`
-
-## Coverage
-
-Our goal is 100% line and branch coverage of `src/gradmatch` and `app/`, and we're at 100%.
-Run `pytest --cov`. GitHub Actions shows the numbers on every push.
-
-## Which tests cover what
-
-| Feature | Code | Tests |
-|---|---|---|
-| Profile form checks | `validation.py` | `test_validation.py`, `test_profile_form.py` |
-| Cost, in-state rule, funded PhD | `cost.py`, `search.py` | `test_cost.py`, `test_search.py`, `test_results_page.py` |
-| Safety / Match / Reach | `fit.py` | `test_fit.py` |
-| Funding label | `funding.py` | `test_funding.py` |
-| Scholarships | `scholarships.py` | `test_scholarships.py`, story 2 |
-| Deadlines, warning window, own deadlines | `deadlines.py` | `test_deadlines.py`, story 3 |
-| Stars | `starred.py` | `test_starred.py`, `test_results_page.py` |
-| CSV and calendar downloads | `exports.py` | `test_exports.py`, `test_pipeline.py` |
-| Reading the data | `data_loader.py` | `test_data_loader.py`, `test_data_errors.py` |
-| Screens | `screens.py`, `components.py`, `theme.py` | `test_screens.py`, `test_components.py`, `test_theme.py` |
-| Data import | `ipeds_import.py` | `test_ipeds_import.py`, `test_ipeds_import_cli.py` |
-| API | `api.py` | `test_api.py`, `test_readme_examples.py` |
-| Bachelor's search | `search.py` | `test_bachelors.py`, story 4 |
+Current result: 61 tests passing, 100% line and branch coverage.

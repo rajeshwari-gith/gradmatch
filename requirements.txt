@@ -1,7 +1,4 @@
 streamlit
-fastapi
-httpx
 pytest
 pytest-cov
 hypothesis
-uvicorn
