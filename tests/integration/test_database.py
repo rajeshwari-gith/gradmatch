@@ -28,7 +28,7 @@ def test_real_database():
                                           "Mechanical Engineering", "Statistics"]
 
 
-def test_database_refuses_bad_data():
+def test_req8_database_refuses_bad_data():
     bad_programs = [dict(university=""), dict(degree="BS"), dict(tuition_in_state=-1),
                     dict(acceptance_rate=1.5), dict(tuition_in_state="lots")]
     with closing(connect(":memory:")) as connection:

@@ -8,12 +8,12 @@ from gradmatch.search import find_programs
 from helpers import make_program, make_scholarship, make_student
 
 
-def test_tuition():
+def test_req3_tuition():
     assert tuition_for(make_program(state="MI"), "MI") == 10000
     assert tuition_for(make_program(state="MI"), "OH") == 20000
 
 
-def test_yearly_cost():
+def test_req3_yearly_cost():
     assert yearly_cost(make_program(), "MI") == 10000 + 15000
 
 
