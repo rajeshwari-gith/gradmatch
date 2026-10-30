@@ -1,8 +1,3 @@
-SAFETY = "Safety"
-MATCH = "Match"
-REACH = "Reach"
-
-
 def yearly_cost(program, home_state):
     if home_state == program["state"]:
         tuition = program["tuition_in_state"]
@@ -18,7 +13,7 @@ def check_gpa(gpa):
 
 def chance(gpa, acceptance_rate):
     if acceptance_rate < 0.10:
-        return REACH
+        return "Reach"
 
     points = 0
     if acceptance_rate >= 0.60:
@@ -32,10 +27,10 @@ def chance(gpa, acceptance_rate):
         points -= 1
 
     if points >= 2:
-        return SAFETY
+        return "Safety"
     if points == 1:
-        return MATCH
-    return REACH
+        return "Match"
+    return "Reach"
 
 
 def find_programs(programs, student):

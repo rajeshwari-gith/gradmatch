@@ -1,5 +1,5 @@
-from programs import MATCH, chance
+from programs import chance
 
 
 def test_chance():
-    assert chance(3.5, 0.40) == MATCH
+    assert chance(3.5, 0.40) == "Match"

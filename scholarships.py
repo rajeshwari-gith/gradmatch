@@ -1,7 +1,5 @@
 from datetime import date
 
-SOON_DAYS = 14
-
 
 def qualifies(scholarship, student):
     if student["degree"] not in scholarship["degrees"].split(";"):
@@ -31,6 +29,6 @@ def upcoming(deadlines, today):
         if days_left < 0:
             continue
         coming.append({"name": name, "date": day, "days_left": days_left,
-                       "soon": days_left <= SOON_DAYS})
+                       "soon": days_left <= 14})
     coming.sort(key=lambda d: d["date"])
     return coming

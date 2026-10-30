@@ -17,7 +17,7 @@
 
 ## Decision table C: chance (REQ-4)
 
-"—" means the condition does not matter for that rule.
+"—" means it does not matter.
 
 | Rule | C1 | C2 | C3 | C4 | C5 | C6 | C7 | C8 |
 |---|---|---|---|---|---|---|---|---|
@@ -42,8 +42,6 @@
 
 ## Tests
 
-One test for each technique, in its own folder:
-
 | Folder | Technique | Test |
 |---|---|---|
 | `tests/unit/` | Unit testing | One file per feature: `test_cost.py`, `test_fit.py`, `test_search.py`, `test_scholarships.py`, `test_deadlines.py` |
@@ -55,8 +53,6 @@ One test for each technique, in its own folder:
 | `tests/integration/` | Integration testing (SQLite) | `test_database` |
 | `tests/system/` | System testing (Streamlit AppTest) | `test_whole_app` |
 | `tests/acceptance/` | Acceptance testing | One test per user story |
-
-`tests/helpers.py` has the made-up programs, scholarships and students the tests share.
 
 ## Traceability
 
@@ -71,19 +67,13 @@ One test for each technique, in its own folder:
 | REQ-7 | `test_boundary_values`, `test_every_branch_of_find_programs` |
 | REQ-8 | `test_database` |
 
-Each test has a comment naming the requirement it checks. Expected values come from the
-requirements and tables above, not from running the code.
-
-Run with `python -m pytest -v`. Coverage: `python -m pytest --cov=app --cov=programs --cov=scholarships --cov=database --cov-branch` measures line and branch
-coverage. GitHub Actions runs every test on each push and saves the HTML coverage report.
-
-Current result: 15 tests passing, 100% line and branch coverage.
+Result: 15 tests pass, 100% line and branch coverage. GitHub Actions runs them on every push.
 
 ## Defect log
 
-| ID | Date | File | Problem | Found by | Fixed |
-|----|------|------|---------|----------|-------|
-| 1 | Oct 30 | data_loader.py (file removed later) | A row with too few values crashed with AttributeError instead of our error message, and a row with too many values was accepted. | test_bad_program_row (test removed later) | Oct 30 |
-| 2 | Oct 30 | app.py (then app/streamlit_app.py) | The app crashed on start with "No module named gradmatch" when run with `streamlit run`, because Python couldn't find the src folder. The tests passed because pytest adds src itself. | Running the app by hand | Oct 30 |
-| 3 | Oct 30 | app.py (then app/streamlit_app.py) | The MS results table showed a Funding column saying "Not listed" for every program. Hiding the column only changed what was shown, not the table's data. | test_ms_table_has_no_funding_column (test removed later) | Oct 30 |
-| 4 | Oct 31 | api.py (file removed later) | /scholarships accepted a GPA outside 0–4 and still listed scholarships (GPA 5 returned NSF, SMART and GVSU) instead of a 400 error like /programs. Found by Nishith in review. | test_scholarships_bad_gpa_is_400 (test removed later) | Oct 31 |
+| ID | Date | Problem | Found by | Fixed |
+|----|------|---------|----------|-------|
+| 1 | Oct 30 | A data row with too few values crashed the loader instead of giving an error message. | A test | Oct 30 |
+| 2 | Oct 30 | The app did not start because Python could not find our code folder. | Running the app | Oct 30 |
+| 3 | Oct 30 | MS results showed a PhD-only "Funding" column. | A test | Oct 30 |
+| 4 | Oct 31 | Searching scholarships accepted a GPA above 4. | Code review | Oct 31 |

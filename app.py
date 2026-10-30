@@ -12,7 +12,6 @@ STATES = ["AL", "AK", "AZ", "AR", "CA", "CO", "CT", "DC", "DE", "FL", "GA", "HI"
           "NH", "NJ", "NM", "NV", "NY", "OH", "OK", "OR", "PA", "RI", "SC", "SD", "TN", "TX", "UT",
           "VA", "VT", "WA", "WI", "WV", "WY"]
 
-st.set_page_config(page_title="GradMatch")
 st.title("GradMatch")
 st.write("Find graduate programs you can afford, scholarships you can apply for, and their deadlines.")
 
@@ -20,9 +19,6 @@ connection = connect(DATABASE)
 programs = get_programs(connection)
 scholarships = get_scholarships(connection)
 connection.close()
-if not programs:
-    st.error("No programs found in the database.")
-    st.stop()
 
 with st.form("profile"):
     degree = st.radio("Degree", ["MS", "PhD"], horizontal=True, key="degree")
@@ -41,25 +37,17 @@ if submitted:
     results = find_programs(programs, student)
     if results:
         st.write(f"{len(results)} programs fit your budget, cheapest first.")
-        st.dataframe(
-            [{"University": r["program"]["university"], "State": r["program"]["state"],
-              "Yearly cost": f"${r['cost']:,}", "Chance": r["chance"],
-              "Website": r["program"]["website"]} for r in results],
-            hide_index=True, column_config={"Website": st.column_config.LinkColumn()},
-        )
+        st.dataframe([{"University": r["program"]["university"], "State": r["program"]["state"],
+                       "Yearly cost": r["cost"], "Chance": r["chance"],
+                       "Website": r["program"]["website"]} for r in results])
     else:
         st.info("No programs fit your budget. Try a bigger budget.")
-    st.caption("Yearly cost = tuition + living cost. Chance is an estimate from the school's "
-               "acceptance rate and your GPA.")
 
     st.subheader("Scholarships")
     found = find_scholarships(scholarships, student)
     if found:
-        st.dataframe(
-            [{"Name": s["name"], "Amount": f"${s['amount']:,}", "Open to": s["open_to"],
-              "Deadline": s["deadline"], "Website": s["website"]} for s in found],
-            hide_index=True, column_config={"Website": st.column_config.LinkColumn()},
-        )
+        st.dataframe([{"Name": s["name"], "Amount": s["amount"], "Open to": s["open_to"],
+                       "Deadline": s["deadline"], "Website": s["website"]} for s in found])
     else:
         st.info("No scholarships match your degree, field and GPA.")
 
@@ -70,9 +58,9 @@ if submitted:
     coming = upcoming(dates, today())
     for d in coming:
         if d["soon"]:
-            st.warning(f"{d['name']} is due in {d['days_left']} days ({d['date']}).")
+            st.warning(f"{d['name']} is due in {d['days_left']} days.")
     if coming:
         st.dataframe([{"Name": d["name"], "Date": d["date"], "Days left": d["days_left"]}
-                      for d in coming], hide_index=True)
+                      for d in coming])
     else:
         st.info("No upcoming deadlines.")

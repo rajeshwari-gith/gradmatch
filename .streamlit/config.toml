@@ -5,10 +5,3 @@ backgroundColor = "#FBF8F1"
 secondaryBackgroundColor = "#F5F1E7"
 textColor = "#2B2B26"
 headingFont = "serif"
-baseRadius = "0.85rem"
-greenColor = "#3A9D55"
-yellowColor = "#D9A441"
-redColor = "#9A3F22"
-
-[client]
-toolbarMode = "viewer"

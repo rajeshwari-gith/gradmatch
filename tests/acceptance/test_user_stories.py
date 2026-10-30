@@ -1,12 +1,12 @@
 from datetime import date
-
 from tests.helpers import open_app, search, table
+
 
 
 def test_story_1_student_finds_ms_programs_they_can_afford():
     at = search(open_app(), budget=35000)
     programs = table(at, "Programs")
-    costs = [int(c.strip("$").replace(",", "")) for c in programs["Yearly cost"]]
+    costs = list(programs["Yearly cost"])
     assert len(costs) > 0
     assert costs == sorted(costs) and max(costs) <= 35000
     assert set(programs["Chance"]) <= {"Safety", "Match", "Reach"}

@@ -1,13 +1,4 @@
 __pycache__/
-*.pyc
-.venv/
-venv/
 .pytest_cache/
 .coverage
 htmlcov/
-coverage.xml
-*.db
-.hypothesis/
-.DS_Store
-test-results.xml
-!data/gradmatch.db

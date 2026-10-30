@@ -1,9 +1,7 @@
 from datetime import date
 from unittest.mock import Mock, patch
+from tests.helpers import make_program, open_app, search, table
 
-from streamlit.testing.v1 import AppTest
-
-from tests.helpers import APP, make_program, open_app, search, table
 
 
 def test_app_with_mocked_database_and_date():
@@ -15,7 +13,3 @@ def test_app_with_mocked_database_and_date():
     assert list(table(at, "Programs")["University"]) == ["Mock University"]
     assert "No scholarships match your degree, field and GPA." in [i.value for i in at.info]
     assert "is due in 5 days" in at.warning[0].value
-
-    with patch("database.get_programs", Mock(return_value=[])):
-        at = AppTest.from_file(APP, default_timeout=30).run()
-    assert at.error[0].value == "No programs found in the database."
