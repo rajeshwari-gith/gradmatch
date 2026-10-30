@@ -1,30 +1,32 @@
 from datetime import date
 from pathlib import Path
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Query
 
 from gradmatch.data_loader import load_programs, load_scholarships
+from gradmatch.database import create_database, get_programs
 from gradmatch.deadlines import upcoming
 from gradmatch.models import Student
 from gradmatch.scholarships import find_scholarships
 from gradmatch.search import find_programs
 
 DATA = Path(__file__).resolve().parents[2] / "data"
-PROGRAMS = load_programs(DATA / "programs.csv")
+DATABASE = create_database(load_programs(DATA / "programs.csv"))
 SCHOLARSHIPS = load_scholarships(DATA / "scholarships.csv")
 
 app = FastAPI(title="GradMatch")
 
 
 @app.get("/programs")
-def programs(degree: str, field: str, gpa: float, home_state: str, budget: int):
-    student = Student(degree, field, gpa, home_state, budget, "US")
+def programs(degree: str, field: str, gpa: float, home_state: str, budget: int,
+             states: list[str] = Query([])):
+    student = Student(degree, field, gpa, home_state, budget, "US", tuple(states))
     try:
-        results = find_programs(PROGRAMS, student)
+        results = find_programs(get_programs(DATABASE, degree, field), student)
     except ValueError as error:
         raise HTTPException(status_code=400, detail=str(error))
     return [{"university": r.program.university, "program": r.program.program,
-             "state": r.program.state, "yearly_cost": r.cost, "chance": r.chance}
+             "state": r.program.state, "yearly_cost": r.cost, "chance": r.chance, "funding": r.funding}
             for r in results]
 
 

@@ -1,134 +1,160 @@
-university,program,degree,field,state,tuition_in_state,tuition_out_state,living_cost,acceptance_rate,website
-Bradley University,MS in Computer Science,MS,Computer Science,IL,20440,20440,18400,0.768,https://www.bradley.edu/admissions/freshman
-Chicago State University,MS in Computer Science,MS,Computer Science,IL,10294,16162,18400,0.433,https://www.csu.edu/admissions/
-Governors State University,MS in Computer Science,MS,Computer Science,IL,10666,10666,18400,0.483,https://www.govst.edu/admissions/
-Illinois Institute of Technology,MS in Computer Science,MS,Computer Science,IL,35222,35222,18400,0.549,https://www.iit.edu/admissions-aid
-Illinois State University,MS in Computer Science,MS,Computer Science,IL,10218,13062,18400,0.882,https://www.admissions.illinoisstate.edu/
-Lewis University,MS in Computer Science,MS,Computer Science,IL,15800,15800,18400,0.713,https://www.lewisu.edu/admissions/index.htm
-Loyola University Chicago,MS in Computer Science,MS,Computer Science,IL,21912,21912,18400,0.816,https://www.luc.edu/undergrad/
-Northeastern Illinois University,MS in Computer Science,MS,Computer Science,IL,9874,18217,18400,0.746,https://admissions.neiu.edu/
-Northern Illinois University,MS in Computer Science,MS,Computer Science,IL,9176,9176,18400,0.698,https://www.niu.edu/Apply/index.shtml
-Northwestern University,MS in Computer Science,MS,Computer Science,IL,54655,54655,18400,0.077,https://www.northwestern.edu/admissions/
-Roosevelt University,MS in Computer Science,MS,Computer Science,IL,20935,20935,18400,0.972,https://www.roosevelt.edu/admission
-Southern Illinois University Edwardsville,MS in Computer Science,MS,Computer Science,IL,10488,10488,18400,0.975,https://www.siue.edu/admissions
-Southern Illinois University-Carbondale,MS in Computer Science,MS,Computer Science,IL,14220,31122,18400,0.869,https://admissions.siu.edu/
-University of Chicago,MS in Computer Science,MS,Computer Science,IL,68652,68652,18400,0.045,https://collegeadmissions.uchicago.edu/
-University of Illinois Chicago,MS in Computer Science,MS,Computer Science,IL,17550,27748,18400,0.774,https://www.admissions.uic.edu/
-University of Illinois Springfield,MS in Computer Science,MS,Computer Science,IL,11938,19515,18400,0.859,https://www.uis.edu/admissions
-Indiana State University,MS in Computer Science,MS,Computer Science,IN,8596,16642,18000,0.808,https://indianastate.edu/admissions
-Indiana University-Bloomington,MS in Computer Science,MS,Computer Science,IN,11756,33454,18000,0.782,https://bloomington.iu.edu/admissions/
-Indiana University-Indianapolis,MS in Computer Science,MS,Computer Science,IN,11180,28964,18000,0.764,https://indianapolis.iu.edu/admissions
-Purdue University Fort Wayne,MS in Computer Science,MS,Computer Science,IN,7052,15962,18000,0.839,https://www.pfw.edu/admissions/
-Purdue University Northwest,MS in Computer Science,MS,Computer Science,IN,6638,11960,18000,0.724,https://www.pnw.edu/admissions/
-Central Michigan University,MS in Computer Science,MS,Computer Science,MI,17187,17187,18200,0.898,https://www.cmich.edu/admissions-aid
-Eastern Michigan University,MS in Computer Science,MS,Computer Science,MI,17968,30978,18200,0.796,https://www.emich.edu/admissions/
-Lawrence Technological University,MS in Computer Science,MS,Computer Science,MI,21692,21692,18200,0.559,https://www.ltu.edu/futurestudents/
-Michigan Technological University,MS in Computer Science,MS,Computer Science,MI,25916,25916,18200,0.924,https://www.mtu.edu/admissions/
-Western Michigan University,MS in Computer Science,MS,Computer Science,MI,20103,29681,18200,0.846,https://wmich.edu/admissions/
-Case Western Reserve University,MS in Computer Science,MS,Computer Science,OH,53980,53980,18600,0.365,https://admission.case.edu/
-Cleveland State University,MS in Computer Science,MS,Computer Science,OH,11297,21107,18600,0.913,https://www.csuohio.edu/admissions/
-Kent State University at Kent,MS in Computer Science,MS,Computer Science,OH,12483,23352,18600,0.863,https://www.kent.edu/admissions
-Miami University-Oxford,MS in Computer Science,MS,Computer Science,OH,16751,37791,18600,0.754,https://miamioh.edu/admission/
-Ohio University-Main Campus,MS in Computer Science,MS,Computer Science,OH,9720,17712,18600,0.85,https://www.ohio.edu/admissions/
-University of Akron Main Campus,MS in Computer Science,MS,Computer Science,OH,10125,15885,18600,0.597,https://www.uakron.edu/admissions/
-University of Dayton,MS in Computer Science,MS,Computer Science,OH,19580,19580,18600,0.654,https://udayton.edu/apply/
-University of Wisconsin-Milwaukee,MS in Computer Science,MS,Computer Science,WI,12728,26159,19000,0.907,https://uwm.edu/admission/
-University of Wisconsin-Whitewater,MS in Computer Science,MS,Computer Science,WI,10543,21603,19000,0.857,https://www.uww.edu/admissions/
-Illinois Institute of Technology,PhD in Computer Science,PhD,Computer Science,IL,35222,35222,18400,0.549,https://www.iit.edu/admissions-aid
-Northwestern University,PhD in Computer Science,PhD,Computer Science,IL,54655,54655,18400,0.077,https://www.northwestern.edu/admissions/
-University of Chicago,PhD in Computer Science,PhD,Computer Science,IL,68652,68652,18400,0.045,https://collegeadmissions.uchicago.edu/
-University of Illinois Chicago,PhD in Computer Science,PhD,Computer Science,IL,17550,27748,18400,0.774,https://www.admissions.uic.edu/
-Indiana University-Bloomington,PhD in Computer Science,PhD,Computer Science,IN,11756,33454,18000,0.782,https://bloomington.iu.edu/admissions/
-Indiana University-Indianapolis,PhD in Computer Science,PhD,Computer Science,IN,11180,28964,18000,0.764,https://indianapolis.iu.edu/admissions
-Case Western Reserve University,PhD in Computer Science,PhD,Computer Science,OH,53980,53980,18600,0.365,https://admission.case.edu/
-Kent State University at Kent,PhD in Computer Science,PhD,Computer Science,OH,12483,23352,18600,0.863,https://www.kent.edu/admissions
-Bradley University,MS in Electrical Engineering,MS,Electrical Engineering,IL,20440,20440,18400,0.768,https://www.bradley.edu/admissions/freshman
-Illinois Institute of Technology,MS in Electrical Engineering,MS,Electrical Engineering,IL,35222,35222,18400,0.549,https://www.iit.edu/admissions-aid
-Northern Illinois University,MS in Electrical Engineering,MS,Electrical Engineering,IL,9176,9176,18400,0.698,https://www.niu.edu/Apply/index.shtml
-Northwestern University,MS in Electrical Engineering,MS,Electrical Engineering,IL,54655,54655,18400,0.077,https://www.northwestern.edu/admissions/
-Southern Illinois University-Carbondale,MS in Electrical Engineering,MS,Electrical Engineering,IL,14220,31122,18400,0.869,https://admissions.siu.edu/
-University of Illinois Chicago,MS in Electrical Engineering,MS,Electrical Engineering,IL,17550,27748,18400,0.774,https://www.admissions.uic.edu/
-University of Illinois Urbana-Champaign,MS in Electrical Engineering,MS,Electrical Engineering,IL,19278,34406,18400,0.424,https://illinois.edu/admissions
-Indiana University-Indianapolis,MS in Electrical Engineering,MS,Electrical Engineering,IN,11180,28964,18000,0.764,https://indianapolis.iu.edu/admissions
-Purdue University Northwest,MS in Electrical Engineering,MS,Electrical Engineering,IN,6638,11960,18000,0.724,https://www.pnw.edu/admissions/
-Purdue University-Main Campus,MS in Electrical Engineering,MS,Electrical Engineering,IN,9992,28794,18000,0.499,https://www.purdue.edu/purdue/admissions/
-University of Notre Dame,MS in Electrical Engineering,MS,Electrical Engineering,IN,64826,64826,18000,0.113,https://admissions.nd.edu/
-Michigan State University,MS in Electrical Engineering,MS,Electrical Engineering,MI,21772,41848,18200,0.848,https://admissions.msu.edu/
-Oakland University,MS in Electrical Engineering,MS,Electrical Engineering,MI,21960,24648,18200,0.878,https://www.oakland.edu/futurestudents
-University of Michigan-Dearborn,MS in Electrical Engineering,MS,Electrical Engineering,MI,17126,30350,18200,0.556,https://umdearborn.edu/admissions/
-Wayne State University,MS in Electrical Engineering,MS,Electrical Engineering,MI,17960,36542,18200,0.812,https://wayne.edu/admissions
-Case Western Reserve University,MS in Electrical Engineering,MS,Electrical Engineering,OH,53980,53980,18600,0.365,https://admission.case.edu/
-Cleveland State University,MS in Electrical Engineering,MS,Electrical Engineering,OH,11297,21107,18600,0.913,https://www.csuohio.edu/admissions/
-Ohio State University-Main Campus,MS in Electrical Engineering,MS,Electrical Engineering,OH,13901,42740,18600,0.606,https://undergrad.osu.edu/
-Ohio University-Main Campus,MS in Electrical Engineering,MS,Electrical Engineering,OH,9720,17712,18600,0.85,https://www.ohio.edu/admissions/
-University of Cincinnati-Main Campus,MS in Electrical Engineering,MS,Electrical Engineering,OH,14902,26674,18600,0.853,https://admissions.uc.edu/
-University of Dayton,MS in Electrical Engineering,MS,Electrical Engineering,OH,19580,19580,18600,0.654,https://udayton.edu/apply/
-University of Toledo,MS in Electrical Engineering,MS,Electrical Engineering,OH,17605,29426,18600,0.92,https://www.utoledo.edu/admission/
-Wright State University-Main Campus,MS in Electrical Engineering,MS,Electrical Engineering,OH,15771,25759,18600,0.963,https://www.wright.edu/admissions
-Youngstown State University,MS in Electrical Engineering,MS,Electrical Engineering,OH,6848,7028,18600,0.844,https://ysu.edu/admissions
-Marquette University,MS in Electrical Engineering,MS,Electrical Engineering,WI,24680,24680,19000,0.813,https://www.marquette.edu/admissions
-University of Wisconsin-Madison,MS in Electrical Engineering,MS,Electrical Engineering,WI,12325,25651,19000,0.452,https://www.admissions.wisc.edu/
-Illinois Institute of Technology,PhD in Electrical Engineering,PhD,Electrical Engineering,IL,35222,35222,18400,0.549,https://www.iit.edu/admissions-aid
-Northwestern University,PhD in Electrical Engineering,PhD,Electrical Engineering,IL,54655,54655,18400,0.077,https://www.northwestern.edu/admissions/
-Southern Illinois University-Carbondale,PhD in Electrical Engineering,PhD,Electrical Engineering,IL,14220,31122,18400,0.869,https://admissions.siu.edu/
-University of Illinois Chicago,PhD in Electrical Engineering,PhD,Electrical Engineering,IL,17550,27748,18400,0.774,https://www.admissions.uic.edu/
-University of Illinois Urbana-Champaign,PhD in Electrical Engineering,PhD,Electrical Engineering,IL,19278,34406,18400,0.424,https://illinois.edu/admissions
-Indiana University-Indianapolis,PhD in Electrical Engineering,PhD,Electrical Engineering,IN,11180,28964,18000,0.764,https://indianapolis.iu.edu/admissions
-Purdue University-Main Campus,PhD in Electrical Engineering,PhD,Electrical Engineering,IN,9992,28794,18000,0.499,https://www.purdue.edu/purdue/admissions/
-University of Notre Dame,PhD in Electrical Engineering,PhD,Electrical Engineering,IN,64826,64826,18000,0.113,https://admissions.nd.edu/
-Michigan State University,PhD in Electrical Engineering,PhD,Electrical Engineering,MI,21772,41848,18200,0.848,https://admissions.msu.edu/
-Oakland University,PhD in Electrical Engineering,PhD,Electrical Engineering,MI,21960,24648,18200,0.878,https://www.oakland.edu/futurestudents
-Wayne State University,PhD in Electrical Engineering,PhD,Electrical Engineering,MI,17960,36542,18200,0.812,https://wayne.edu/admissions
-Case Western Reserve University,PhD in Electrical Engineering,PhD,Electrical Engineering,OH,53980,53980,18600,0.365,https://admission.case.edu/
-Ohio State University-Main Campus,PhD in Electrical Engineering,PhD,Electrical Engineering,OH,13901,42740,18600,0.606,https://undergrad.osu.edu/
-University of Cincinnati-Main Campus,PhD in Electrical Engineering,PhD,Electrical Engineering,OH,14902,26674,18600,0.853,https://admissions.uc.edu/
-University of Dayton,PhD in Electrical Engineering,PhD,Electrical Engineering,OH,19580,19580,18600,0.654,https://udayton.edu/apply/
-University of Wisconsin-Madison,PhD in Electrical Engineering,PhD,Electrical Engineering,WI,12325,25651,19000,0.452,https://www.admissions.wisc.edu/
-Illinois Institute of Technology,MS in Mechanical Engineering,MS,Mechanical Engineering,IL,35222,35222,18400,0.549,https://www.iit.edu/admissions-aid
-Northern Illinois University,MS in Mechanical Engineering,MS,Mechanical Engineering,IL,9176,9176,18400,0.698,https://www.niu.edu/Apply/index.shtml
-Northwestern University,MS in Mechanical Engineering,MS,Mechanical Engineering,IL,54655,54655,18400,0.077,https://www.northwestern.edu/admissions/
-Southern Illinois University Edwardsville,MS in Mechanical Engineering,MS,Mechanical Engineering,IL,10488,10488,18400,0.975,https://www.siue.edu/admissions
-Southern Illinois University-Carbondale,MS in Mechanical Engineering,MS,Mechanical Engineering,IL,14220,31122,18400,0.869,https://admissions.siu.edu/
-University of Illinois Chicago,MS in Mechanical Engineering,MS,Mechanical Engineering,IL,17550,27748,18400,0.774,https://www.admissions.uic.edu/
-University of Illinois Urbana-Champaign,MS in Mechanical Engineering,MS,Mechanical Engineering,IL,19278,34406,18400,0.424,https://illinois.edu/admissions
-Indiana University-Indianapolis,MS in Mechanical Engineering,MS,Mechanical Engineering,IN,11180,28964,18000,0.764,https://indianapolis.iu.edu/admissions
-Purdue University Northwest,MS in Mechanical Engineering,MS,Mechanical Engineering,IN,6638,11960,18000,0.724,https://www.pnw.edu/admissions/
-Purdue University-Main Campus,MS in Mechanical Engineering,MS,Mechanical Engineering,IN,9992,28794,18000,0.499,https://www.purdue.edu/purdue/admissions/
-University of Notre Dame,MS in Mechanical Engineering,MS,Mechanical Engineering,IN,64826,64826,18000,0.113,https://admissions.nd.edu/
-Lawrence Technological University,MS in Mechanical Engineering,MS,Mechanical Engineering,MI,21692,21692,18200,0.559,https://www.ltu.edu/futurestudents/
-Michigan State University,MS in Mechanical Engineering,MS,Mechanical Engineering,MI,21772,41848,18200,0.848,https://admissions.msu.edu/
-Michigan Technological University,MS in Mechanical Engineering,MS,Mechanical Engineering,MI,25916,25916,18200,0.924,https://www.mtu.edu/admissions/
-Oakland University,MS in Mechanical Engineering,MS,Mechanical Engineering,MI,21960,24648,18200,0.878,https://www.oakland.edu/futurestudents
-University of Detroit Mercy,MS in Mechanical Engineering,MS,Mechanical Engineering,MI,22544,22544,18200,0.754,https://www.udmercy.edu/admission/
-University of Michigan-Ann Arbor,MS in Mechanical Engineering,MS,Mechanical Engineering,MI,28886,57776,18200,0.156,https://admissions.umich.edu/
-University of Michigan-Dearborn,MS in Mechanical Engineering,MS,Mechanical Engineering,MI,17126,30350,18200,0.556,https://umdearborn.edu/admissions/
-Wayne State University,MS in Mechanical Engineering,MS,Mechanical Engineering,MI,17960,36542,18200,0.812,https://wayne.edu/admissions
-Western Michigan University,MS in Mechanical Engineering,MS,Mechanical Engineering,MI,20103,29681,18200,0.846,https://wmich.edu/admissions/
-Case Western Reserve University,MS in Mechanical Engineering,MS,Mechanical Engineering,OH,53980,53980,18600,0.365,https://admission.case.edu/
-Cleveland State University,MS in Mechanical Engineering,MS,Mechanical Engineering,OH,11297,21107,18600,0.913,https://www.csuohio.edu/admissions/
-Miami University-Oxford,MS in Mechanical Engineering,MS,Mechanical Engineering,OH,16751,37791,18600,0.754,https://miamioh.edu/admission/
-Ohio State University-Main Campus,MS in Mechanical Engineering,MS,Mechanical Engineering,OH,13901,42740,18600,0.606,https://undergrad.osu.edu/
-University of Akron Main Campus,MS in Mechanical Engineering,MS,Mechanical Engineering,OH,10125,15885,18600,0.597,https://www.uakron.edu/admissions/
-University of Cincinnati-Main Campus,MS in Mechanical Engineering,MS,Mechanical Engineering,OH,14902,26674,18600,0.853,https://admissions.uc.edu/
-University of Dayton,MS in Mechanical Engineering,MS,Mechanical Engineering,OH,19580,19580,18600,0.654,https://udayton.edu/apply/
-University of Toledo,MS in Mechanical Engineering,MS,Mechanical Engineering,OH,17605,29426,18600,0.92,https://www.utoledo.edu/admission/
-Wright State University-Main Campus,MS in Mechanical Engineering,MS,Mechanical Engineering,OH,15771,25759,18600,0.963,https://www.wright.edu/admissions
-Youngstown State University,MS in Mechanical Engineering,MS,Mechanical Engineering,OH,6848,7028,18600,0.844,https://ysu.edu/admissions
-Marquette University,MS in Mechanical Engineering,MS,Mechanical Engineering,WI,24680,24680,19000,0.813,https://www.marquette.edu/admissions
-University of Wisconsin-Madison,MS in Mechanical Engineering,MS,Mechanical Engineering,WI,12325,25651,19000,0.452,https://www.admissions.wisc.edu/
-Illinois Institute of Technology,PhD in Mechanical Engineering,PhD,Mechanical Engineering,IL,35222,35222,18400,0.549,https://www.iit.edu/admissions-aid
-Northwestern University,PhD in Mechanical Engineering,PhD,Mechanical Engineering,IL,54655,54655,18400,0.077,https://www.northwestern.edu/admissions/
-University of Illinois Chicago,PhD in Mechanical Engineering,PhD,Mechanical Engineering,IL,17550,27748,18400,0.774,https://www.admissions.uic.edu/
-University of Illinois Urbana-Champaign,PhD in Mechanical Engineering,PhD,Mechanical Engineering,IL,19278,34406,18400,0.424,https://illinois.edu/admissions
-Purdue University-Main Campus,PhD in Mechanical Engineering,PhD,Mechanical Engineering,IN,9992,28794,18000,0.499,https://www.purdue.edu/purdue/admissions/
-University of Notre Dame,PhD in Mechanical Engineering,PhD,Mechanical Engineering,IN,64826,64826,18000,0.113,https://admissions.nd.edu/
-Michigan State University,PhD in Mechanical Engineering,PhD,Mechanical Engineering,MI,21772,41848,18200,0.848,https://admissions.msu.edu/
-Michigan Technological University,PhD in Mechanical Engineering,PhD,Mechanical Engineering,MI,25916,25916,18200,0.924,https://www.mtu.edu/admissions/
-University of Michigan-Ann Arbor,PhD in Mechanical Engineering,PhD,Mechanical Engineering,MI,28886,57776,18200,0.156,https://admissions.umich.edu/
-University of Michigan-Dearborn,PhD in Mechanical Engineering,PhD,Mechanical Engineering,MI,17126,30350,18200,0.556,https://umdearborn.edu/admissions/
-Wayne State University,PhD in Mechanical Engineering,PhD,Mechanical Engineering,MI,17960,36542,18200,0.812,https://wayne.edu/admissions
-Case Western Reserve University,PhD in Mechanical Engineering,PhD,Mechanical Engineering,OH,53980,53980,18600,0.365,https://admission.case.edu/
-Ohio State University-Main Campus,PhD in Mechanical Engineering,PhD,Mechanical Engineering,OH,13901,42740,18600,0.606,https://undergrad.osu.edu/
-University of Akron Main Campus,PhD in Mechanical Engineering,PhD,Mechanical Engineering,OH,10125,15885,18600,0.597,https://www.uakron.edu/admissions/
-University of Cincinnati-Main Campus,PhD in Mechanical Engineering,PhD,Mechanical Engineering,OH,14902,26674,18600,0.853,https://admissions.uc.edu/
-University of Wisconsin-Madison,PhD in Mechanical Engineering,PhD,Mechanical Engineering,WI,12325,25651,19000,0.452,https://www.admissions.wisc.edu/
+university,program,degree,field,state,tuition_in_state,tuition_out_state,living_cost,acceptance_rate,stipend,website
+Bradley University,MS in Computer Science,MS,Computer Science,IL,20440,20440,18400,0.768,,https://www.bradley.edu/admissions/freshman
+Chicago State University,MS in Computer Science,MS,Computer Science,IL,10294,16162,18400,0.433,,https://www.csu.edu/admissions/
+Governors State University,MS in Computer Science,MS,Computer Science,IL,10666,10666,18400,0.483,,https://www.govst.edu/admissions/
+Illinois Institute of Technology,MS in Computer Science,MS,Computer Science,IL,35222,35222,18400,0.549,,https://www.iit.edu/admissions-aid
+Illinois State University,MS in Computer Science,MS,Computer Science,IL,10218,13062,18400,0.882,,https://www.admissions.illinoisstate.edu/
+Lewis University,MS in Computer Science,MS,Computer Science,IL,15800,15800,18400,0.713,,https://www.lewisu.edu/admissions/index.htm
+Loyola University Chicago,MS in Computer Science,MS,Computer Science,IL,21912,21912,18400,0.816,,https://www.luc.edu/undergrad/
+Northeastern Illinois University,MS in Computer Science,MS,Computer Science,IL,9874,18217,18400,0.746,,https://admissions.neiu.edu/
+Northern Illinois University,MS in Computer Science,MS,Computer Science,IL,9176,9176,18400,0.698,,https://www.niu.edu/Apply/index.shtml
+Northwestern University,MS in Computer Science,MS,Computer Science,IL,54655,54655,18400,0.077,,https://www.northwestern.edu/admissions/
+Roosevelt University,MS in Computer Science,MS,Computer Science,IL,20935,20935,18400,0.972,,https://www.roosevelt.edu/admission
+Southern Illinois University Edwardsville,MS in Computer Science,MS,Computer Science,IL,10488,10488,18400,0.975,,https://www.siue.edu/admissions
+Southern Illinois University-Carbondale,MS in Computer Science,MS,Computer Science,IL,14220,31122,18400,0.869,,https://admissions.siu.edu/
+University of Chicago,MS in Computer Science,MS,Computer Science,IL,68652,68652,18400,0.045,,https://collegeadmissions.uchicago.edu/
+University of Illinois Chicago,MS in Computer Science,MS,Computer Science,IL,17550,27748,18400,0.774,,https://www.admissions.uic.edu/
+University of Illinois Springfield,MS in Computer Science,MS,Computer Science,IL,11938,19515,18400,0.859,,https://www.uis.edu/admissions
+Indiana State University,MS in Computer Science,MS,Computer Science,IN,8596,16642,18000,0.808,,https://indianastate.edu/admissions
+Indiana University-Bloomington,MS in Computer Science,MS,Computer Science,IN,11756,33454,18000,0.782,,https://bloomington.iu.edu/admissions/
+Indiana University-Indianapolis,MS in Computer Science,MS,Computer Science,IN,11180,28964,18000,0.764,,https://indianapolis.iu.edu/admissions
+Purdue University Fort Wayne,MS in Computer Science,MS,Computer Science,IN,7052,15962,18000,0.839,,https://www.pfw.edu/admissions/
+Purdue University Northwest,MS in Computer Science,MS,Computer Science,IN,6638,11960,18000,0.724,,https://www.pnw.edu/admissions/
+Central Michigan University,MS in Computer Science,MS,Computer Science,MI,17187,17187,18200,0.898,,https://www.cmich.edu/admissions-aid
+Eastern Michigan University,MS in Computer Science,MS,Computer Science,MI,17968,30978,18200,0.796,,https://www.emich.edu/admissions/
+Lawrence Technological University,MS in Computer Science,MS,Computer Science,MI,21692,21692,18200,0.559,,https://www.ltu.edu/futurestudents/
+Michigan Technological University,MS in Computer Science,MS,Computer Science,MI,25916,25916,18200,0.924,,https://www.mtu.edu/admissions/
+Western Michigan University,MS in Computer Science,MS,Computer Science,MI,20103,29681,18200,0.846,,https://wmich.edu/admissions/
+Case Western Reserve University,MS in Computer Science,MS,Computer Science,OH,53980,53980,18600,0.365,,https://admission.case.edu/
+Cleveland State University,MS in Computer Science,MS,Computer Science,OH,11297,21107,18600,0.913,,https://www.csuohio.edu/admissions/
+Kent State University at Kent,MS in Computer Science,MS,Computer Science,OH,12483,23352,18600,0.863,,https://www.kent.edu/admissions
+Miami University-Oxford,MS in Computer Science,MS,Computer Science,OH,16751,37791,18600,0.754,,https://miamioh.edu/admission/
+Ohio University-Main Campus,MS in Computer Science,MS,Computer Science,OH,9720,17712,18600,0.85,,https://www.ohio.edu/admissions/
+University of Akron Main Campus,MS in Computer Science,MS,Computer Science,OH,10125,15885,18600,0.597,,https://www.uakron.edu/admissions/
+University of Dayton,MS in Computer Science,MS,Computer Science,OH,19580,19580,18600,0.654,,https://udayton.edu/apply/
+University of Wisconsin-Milwaukee,MS in Computer Science,MS,Computer Science,WI,12728,26159,19000,0.907,,https://uwm.edu/admission/
+University of Wisconsin-Whitewater,MS in Computer Science,MS,Computer Science,WI,10543,21603,19000,0.857,,https://www.uww.edu/admissions/
+Illinois Institute of Technology,PhD in Computer Science,PhD,Computer Science,IL,35222,35222,18400,0.549,,https://www.iit.edu/admissions-aid
+Northwestern University,PhD in Computer Science,PhD,Computer Science,IL,54655,54655,18400,0.077,,https://www.northwestern.edu/admissions/
+University of Chicago,PhD in Computer Science,PhD,Computer Science,IL,68652,68652,18400,0.045,,https://collegeadmissions.uchicago.edu/
+University of Illinois Chicago,PhD in Computer Science,PhD,Computer Science,IL,17550,27748,18400,0.774,,https://www.admissions.uic.edu/
+Indiana University-Bloomington,PhD in Computer Science,PhD,Computer Science,IN,11756,33454,18000,0.782,,https://bloomington.iu.edu/admissions/
+Indiana University-Indianapolis,PhD in Computer Science,PhD,Computer Science,IN,11180,28964,18000,0.764,,https://indianapolis.iu.edu/admissions
+Case Western Reserve University,PhD in Computer Science,PhD,Computer Science,OH,53980,53980,18600,0.365,,https://admission.case.edu/
+Kent State University at Kent,PhD in Computer Science,PhD,Computer Science,OH,12483,23352,18600,0.863,,https://www.kent.edu/admissions
+Bradley University,MS in Electrical Engineering,MS,Electrical Engineering,IL,20440,20440,18400,0.768,,https://www.bradley.edu/admissions/freshman
+Illinois Institute of Technology,MS in Electrical Engineering,MS,Electrical Engineering,IL,35222,35222,18400,0.549,,https://www.iit.edu/admissions-aid
+Northern Illinois University,MS in Electrical Engineering,MS,Electrical Engineering,IL,9176,9176,18400,0.698,,https://www.niu.edu/Apply/index.shtml
+Northwestern University,MS in Electrical Engineering,MS,Electrical Engineering,IL,54655,54655,18400,0.077,,https://www.northwestern.edu/admissions/
+Southern Illinois University-Carbondale,MS in Electrical Engineering,MS,Electrical Engineering,IL,14220,31122,18400,0.869,,https://admissions.siu.edu/
+University of Illinois Chicago,MS in Electrical Engineering,MS,Electrical Engineering,IL,17550,27748,18400,0.774,,https://www.admissions.uic.edu/
+University of Illinois Urbana-Champaign,MS in Electrical Engineering,MS,Electrical Engineering,IL,19278,34406,18400,0.424,,https://illinois.edu/admissions
+Indiana University-Indianapolis,MS in Electrical Engineering,MS,Electrical Engineering,IN,11180,28964,18000,0.764,,https://indianapolis.iu.edu/admissions
+Purdue University Northwest,MS in Electrical Engineering,MS,Electrical Engineering,IN,6638,11960,18000,0.724,,https://www.pnw.edu/admissions/
+Purdue University-Main Campus,MS in Electrical Engineering,MS,Electrical Engineering,IN,9992,28794,18000,0.499,,https://www.purdue.edu/purdue/admissions/
+University of Notre Dame,MS in Electrical Engineering,MS,Electrical Engineering,IN,64826,64826,18000,0.113,,https://admissions.nd.edu/
+Michigan State University,MS in Electrical Engineering,MS,Electrical Engineering,MI,21772,41848,18200,0.848,,https://admissions.msu.edu/
+Oakland University,MS in Electrical Engineering,MS,Electrical Engineering,MI,21960,24648,18200,0.878,,https://www.oakland.edu/futurestudents
+University of Michigan-Dearborn,MS in Electrical Engineering,MS,Electrical Engineering,MI,17126,30350,18200,0.556,,https://umdearborn.edu/admissions/
+Wayne State University,MS in Electrical Engineering,MS,Electrical Engineering,MI,17960,36542,18200,0.812,,https://wayne.edu/admissions
+Case Western Reserve University,MS in Electrical Engineering,MS,Electrical Engineering,OH,53980,53980,18600,0.365,,https://admission.case.edu/
+Cleveland State University,MS in Electrical Engineering,MS,Electrical Engineering,OH,11297,21107,18600,0.913,,https://www.csuohio.edu/admissions/
+Ohio State University-Main Campus,MS in Electrical Engineering,MS,Electrical Engineering,OH,13901,42740,18600,0.606,,https://undergrad.osu.edu/
+Ohio University-Main Campus,MS in Electrical Engineering,MS,Electrical Engineering,OH,9720,17712,18600,0.85,,https://www.ohio.edu/admissions/
+University of Cincinnati-Main Campus,MS in Electrical Engineering,MS,Electrical Engineering,OH,14902,26674,18600,0.853,,https://admissions.uc.edu/
+University of Dayton,MS in Electrical Engineering,MS,Electrical Engineering,OH,19580,19580,18600,0.654,,https://udayton.edu/apply/
+University of Toledo,MS in Electrical Engineering,MS,Electrical Engineering,OH,17605,29426,18600,0.92,,https://www.utoledo.edu/admission/
+Wright State University-Main Campus,MS in Electrical Engineering,MS,Electrical Engineering,OH,15771,25759,18600,0.963,,https://www.wright.edu/admissions
+Youngstown State University,MS in Electrical Engineering,MS,Electrical Engineering,OH,6848,7028,18600,0.844,,https://ysu.edu/admissions
+Marquette University,MS in Electrical Engineering,MS,Electrical Engineering,WI,24680,24680,19000,0.813,,https://www.marquette.edu/admissions
+University of Wisconsin-Madison,MS in Electrical Engineering,MS,Electrical Engineering,WI,12325,25651,19000,0.452,,https://www.admissions.wisc.edu/
+Illinois Institute of Technology,PhD in Electrical Engineering,PhD,Electrical Engineering,IL,35222,35222,18400,0.549,,https://www.iit.edu/admissions-aid
+Northwestern University,PhD in Electrical Engineering,PhD,Electrical Engineering,IL,54655,54655,18400,0.077,,https://www.northwestern.edu/admissions/
+Southern Illinois University-Carbondale,PhD in Electrical Engineering,PhD,Electrical Engineering,IL,14220,31122,18400,0.869,,https://admissions.siu.edu/
+University of Illinois Chicago,PhD in Electrical Engineering,PhD,Electrical Engineering,IL,17550,27748,18400,0.774,,https://www.admissions.uic.edu/
+University of Illinois Urbana-Champaign,PhD in Electrical Engineering,PhD,Electrical Engineering,IL,19278,34406,18400,0.424,,https://illinois.edu/admissions
+Indiana University-Indianapolis,PhD in Electrical Engineering,PhD,Electrical Engineering,IN,11180,28964,18000,0.764,,https://indianapolis.iu.edu/admissions
+Purdue University-Main Campus,PhD in Electrical Engineering,PhD,Electrical Engineering,IN,9992,28794,18000,0.499,,https://www.purdue.edu/purdue/admissions/
+University of Notre Dame,PhD in Electrical Engineering,PhD,Electrical Engineering,IN,64826,64826,18000,0.113,,https://admissions.nd.edu/
+Michigan State University,PhD in Electrical Engineering,PhD,Electrical Engineering,MI,21772,41848,18200,0.848,,https://admissions.msu.edu/
+Oakland University,PhD in Electrical Engineering,PhD,Electrical Engineering,MI,21960,24648,18200,0.878,,https://www.oakland.edu/futurestudents
+Wayne State University,PhD in Electrical Engineering,PhD,Electrical Engineering,MI,17960,36542,18200,0.812,,https://wayne.edu/admissions
+Case Western Reserve University,PhD in Electrical Engineering,PhD,Electrical Engineering,OH,53980,53980,18600,0.365,,https://admission.case.edu/
+Ohio State University-Main Campus,PhD in Electrical Engineering,PhD,Electrical Engineering,OH,13901,42740,18600,0.606,,https://undergrad.osu.edu/
+University of Cincinnati-Main Campus,PhD in Electrical Engineering,PhD,Electrical Engineering,OH,14902,26674,18600,0.853,,https://admissions.uc.edu/
+University of Dayton,PhD in Electrical Engineering,PhD,Electrical Engineering,OH,19580,19580,18600,0.654,,https://udayton.edu/apply/
+University of Wisconsin-Madison,PhD in Electrical Engineering,PhD,Electrical Engineering,WI,12325,25651,19000,0.452,,https://www.admissions.wisc.edu/
+Illinois Institute of Technology,MS in Mechanical Engineering,MS,Mechanical Engineering,IL,35222,35222,18400,0.549,,https://www.iit.edu/admissions-aid
+Northern Illinois University,MS in Mechanical Engineering,MS,Mechanical Engineering,IL,9176,9176,18400,0.698,,https://www.niu.edu/Apply/index.shtml
+Northwestern University,MS in Mechanical Engineering,MS,Mechanical Engineering,IL,54655,54655,18400,0.077,,https://www.northwestern.edu/admissions/
+Southern Illinois University Edwardsville,MS in Mechanical Engineering,MS,Mechanical Engineering,IL,10488,10488,18400,0.975,,https://www.siue.edu/admissions
+Southern Illinois University-Carbondale,MS in Mechanical Engineering,MS,Mechanical Engineering,IL,14220,31122,18400,0.869,,https://admissions.siu.edu/
+University of Illinois Chicago,MS in Mechanical Engineering,MS,Mechanical Engineering,IL,17550,27748,18400,0.774,,https://www.admissions.uic.edu/
+University of Illinois Urbana-Champaign,MS in Mechanical Engineering,MS,Mechanical Engineering,IL,19278,34406,18400,0.424,,https://illinois.edu/admissions
+Indiana University-Indianapolis,MS in Mechanical Engineering,MS,Mechanical Engineering,IN,11180,28964,18000,0.764,,https://indianapolis.iu.edu/admissions
+Purdue University Northwest,MS in Mechanical Engineering,MS,Mechanical Engineering,IN,6638,11960,18000,0.724,,https://www.pnw.edu/admissions/
+Purdue University-Main Campus,MS in Mechanical Engineering,MS,Mechanical Engineering,IN,9992,28794,18000,0.499,,https://www.purdue.edu/purdue/admissions/
+University of Notre Dame,MS in Mechanical Engineering,MS,Mechanical Engineering,IN,64826,64826,18000,0.113,,https://admissions.nd.edu/
+Lawrence Technological University,MS in Mechanical Engineering,MS,Mechanical Engineering,MI,21692,21692,18200,0.559,,https://www.ltu.edu/futurestudents/
+Michigan State University,MS in Mechanical Engineering,MS,Mechanical Engineering,MI,21772,41848,18200,0.848,,https://admissions.msu.edu/
+Michigan Technological University,MS in Mechanical Engineering,MS,Mechanical Engineering,MI,25916,25916,18200,0.924,,https://www.mtu.edu/admissions/
+Oakland University,MS in Mechanical Engineering,MS,Mechanical Engineering,MI,21960,24648,18200,0.878,,https://www.oakland.edu/futurestudents
+University of Detroit Mercy,MS in Mechanical Engineering,MS,Mechanical Engineering,MI,22544,22544,18200,0.754,,https://www.udmercy.edu/admission/
+University of Michigan-Ann Arbor,MS in Mechanical Engineering,MS,Mechanical Engineering,MI,28886,57776,18200,0.156,,https://admissions.umich.edu/
+University of Michigan-Dearborn,MS in Mechanical Engineering,MS,Mechanical Engineering,MI,17126,30350,18200,0.556,,https://umdearborn.edu/admissions/
+Wayne State University,MS in Mechanical Engineering,MS,Mechanical Engineering,MI,17960,36542,18200,0.812,,https://wayne.edu/admissions
+Western Michigan University,MS in Mechanical Engineering,MS,Mechanical Engineering,MI,20103,29681,18200,0.846,,https://wmich.edu/admissions/
+Case Western Reserve University,MS in Mechanical Engineering,MS,Mechanical Engineering,OH,53980,53980,18600,0.365,,https://admission.case.edu/
+Cleveland State University,MS in Mechanical Engineering,MS,Mechanical Engineering,OH,11297,21107,18600,0.913,,https://www.csuohio.edu/admissions/
+Miami University-Oxford,MS in Mechanical Engineering,MS,Mechanical Engineering,OH,16751,37791,18600,0.754,,https://miamioh.edu/admission/
+Ohio State University-Main Campus,MS in Mechanical Engineering,MS,Mechanical Engineering,OH,13901,42740,18600,0.606,,https://undergrad.osu.edu/
+University of Akron Main Campus,MS in Mechanical Engineering,MS,Mechanical Engineering,OH,10125,15885,18600,0.597,,https://www.uakron.edu/admissions/
+University of Cincinnati-Main Campus,MS in Mechanical Engineering,MS,Mechanical Engineering,OH,14902,26674,18600,0.853,,https://admissions.uc.edu/
+University of Dayton,MS in Mechanical Engineering,MS,Mechanical Engineering,OH,19580,19580,18600,0.654,,https://udayton.edu/apply/
+University of Toledo,MS in Mechanical Engineering,MS,Mechanical Engineering,OH,17605,29426,18600,0.92,,https://www.utoledo.edu/admission/
+Wright State University-Main Campus,MS in Mechanical Engineering,MS,Mechanical Engineering,OH,15771,25759,18600,0.963,,https://www.wright.edu/admissions
+Youngstown State University,MS in Mechanical Engineering,MS,Mechanical Engineering,OH,6848,7028,18600,0.844,,https://ysu.edu/admissions
+Marquette University,MS in Mechanical Engineering,MS,Mechanical Engineering,WI,24680,24680,19000,0.813,,https://www.marquette.edu/admissions
+University of Wisconsin-Madison,MS in Mechanical Engineering,MS,Mechanical Engineering,WI,12325,25651,19000,0.452,,https://www.admissions.wisc.edu/
+Illinois Institute of Technology,PhD in Mechanical Engineering,PhD,Mechanical Engineering,IL,35222,35222,18400,0.549,,https://www.iit.edu/admissions-aid
+Northwestern University,PhD in Mechanical Engineering,PhD,Mechanical Engineering,IL,54655,54655,18400,0.077,,https://www.northwestern.edu/admissions/
+University of Illinois Chicago,PhD in Mechanical Engineering,PhD,Mechanical Engineering,IL,17550,27748,18400,0.774,,https://www.admissions.uic.edu/
+University of Illinois Urbana-Champaign,PhD in Mechanical Engineering,PhD,Mechanical Engineering,IL,19278,34406,18400,0.424,,https://illinois.edu/admissions
+Purdue University-Main Campus,PhD in Mechanical Engineering,PhD,Mechanical Engineering,IN,9992,28794,18000,0.499,,https://www.purdue.edu/purdue/admissions/
+University of Notre Dame,PhD in Mechanical Engineering,PhD,Mechanical Engineering,IN,64826,64826,18000,0.113,,https://admissions.nd.edu/
+Michigan State University,PhD in Mechanical Engineering,PhD,Mechanical Engineering,MI,21772,41848,18200,0.848,,https://admissions.msu.edu/
+Michigan Technological University,PhD in Mechanical Engineering,PhD,Mechanical Engineering,MI,25916,25916,18200,0.924,,https://www.mtu.edu/admissions/
+University of Michigan-Ann Arbor,PhD in Mechanical Engineering,PhD,Mechanical Engineering,MI,28886,57776,18200,0.156,,https://admissions.umich.edu/
+University of Michigan-Dearborn,PhD in Mechanical Engineering,PhD,Mechanical Engineering,MI,17126,30350,18200,0.556,,https://umdearborn.edu/admissions/
+Wayne State University,PhD in Mechanical Engineering,PhD,Mechanical Engineering,MI,17960,36542,18200,0.812,,https://wayne.edu/admissions
+Case Western Reserve University,PhD in Mechanical Engineering,PhD,Mechanical Engineering,OH,53980,53980,18600,0.365,,https://admission.case.edu/
+Ohio State University-Main Campus,PhD in Mechanical Engineering,PhD,Mechanical Engineering,OH,13901,42740,18600,0.606,,https://undergrad.osu.edu/
+University of Akron Main Campus,PhD in Mechanical Engineering,PhD,Mechanical Engineering,OH,10125,15885,18600,0.597,,https://www.uakron.edu/admissions/
+University of Cincinnati-Main Campus,PhD in Mechanical Engineering,PhD,Mechanical Engineering,OH,14902,26674,18600,0.853,,https://admissions.uc.edu/
+University of Wisconsin-Madison,PhD in Mechanical Engineering,PhD,Mechanical Engineering,WI,12325,25651,19000,0.452,,https://www.admissions.wisc.edu/
+Loyola University Chicago,MS in Statistics,MS,Statistics,IL,21912,21912,18400,0.816,,https://www.luc.edu/undergrad/
+Northern Illinois University,MS in Statistics,MS,Statistics,IL,9176,9176,18400,0.698,,https://www.niu.edu/Apply/index.shtml
+Northwestern University,MS in Statistics,MS,Statistics,IL,54655,54655,18400,0.077,,https://www.northwestern.edu/admissions/
+University of Chicago,MS in Statistics,MS,Statistics,IL,68652,68652,18400,0.045,,https://collegeadmissions.uchicago.edu/
+University of Illinois Chicago,MS in Statistics,MS,Statistics,IL,17550,27748,18400,0.774,,https://www.admissions.uic.edu/
+University of Illinois Urbana-Champaign,MS in Statistics,MS,Statistics,IL,19278,34406,18400,0.424,,https://illinois.edu/admissions
+Western Illinois University,MS in Statistics,MS,Statistics,IL,13683,13683,18400,0.712,,https://www.wiu.edu/admissions/
+Indiana University-Bloomington,MS in Statistics,MS,Statistics,IN,11756,33454,18000,0.782,,https://bloomington.iu.edu/admissions/
+Purdue University-Main Campus,MS in Statistics,MS,Statistics,IN,9992,28794,18000,0.499,,https://www.purdue.edu/purdue/admissions/
+Central Michigan University,MS in Statistics,MS,Statistics,MI,17187,17187,18200,0.898,,https://www.cmich.edu/admissions-aid
+Grand Valley State University,MS in Statistics,MS,Statistics,MI,20030,20030,18200,0.83,,https://www.gvsu.edu/admissions/
+Michigan State University,MS in Statistics,MS,Statistics,MI,21772,41848,18200,0.848,,https://admissions.msu.edu/
+Michigan Technological University,MS in Statistics,MS,Statistics,MI,25916,25916,18200,0.924,,https://www.mtu.edu/admissions/
+University of Michigan-Ann Arbor,MS in Statistics,MS,Statistics,MI,28886,57776,18200,0.156,,https://admissions.umich.edu/
+Western Michigan University,MS in Statistics,MS,Statistics,MI,20103,29681,18200,0.846,,https://wmich.edu/admissions/
+Miami University-Oxford,MS in Statistics,MS,Statistics,OH,16751,37791,18600,0.754,,https://miamioh.edu/admission/
+Ohio State University-Main Campus,MS in Statistics,MS,Statistics,OH,13901,42740,18600,0.606,,https://undergrad.osu.edu/
+University of Wisconsin-Madison,MS in Statistics,MS,Statistics,WI,12325,25651,19000,0.452,,https://www.admissions.wisc.edu/
+University of Chicago,PhD in Statistics,PhD,Statistics,IL,68652,68652,18400,0.045,,https://collegeadmissions.uchicago.edu/
+University of Illinois Urbana-Champaign,PhD in Statistics,PhD,Statistics,IL,19278,34406,18400,0.424,,https://illinois.edu/admissions
+Purdue University-Main Campus,PhD in Statistics,PhD,Statistics,IN,9992,28794,18000,0.499,,https://www.purdue.edu/purdue/admissions/
+Michigan State University,PhD in Statistics,PhD,Statistics,MI,21772,41848,18200,0.848,,https://admissions.msu.edu/
+University of Michigan-Ann Arbor,PhD in Statistics,PhD,Statistics,MI,28886,57776,18200,0.156,,https://admissions.umich.edu/
+Bowling Green State University-Main Campus,PhD in Statistics,PhD,Statistics,OH,10291,16283,18600,0.81,,https://choose.bgsu.edu/
+Ohio State University-Main Campus,PhD in Statistics,PhD,Statistics,OH,13901,42740,18600,0.606,,https://undergrad.osu.edu/
+University of Wisconsin-Madison,PhD in Statistics,PhD,Statistics,WI,12325,25651,19000,0.452,,https://www.admissions.wisc.edu/

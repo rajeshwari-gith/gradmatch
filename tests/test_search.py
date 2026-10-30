@@ -7,7 +7,7 @@ from hypothesis import strategies as st
 from gradmatch import search
 from gradmatch.cost import yearly_cost
 from gradmatch.fit import MATCH, SAFETY
-from gradmatch.search import fields, find_programs
+from gradmatch.search import find_programs
 from helpers import make_program, make_student
 
 
@@ -60,6 +60,27 @@ def test_same_cost_is_sorted_by_name():
     assert names(find_programs(programs, make_student())) == ["Alpha", "Zeta"]
 
 
+def test_only_chosen_states():
+    programs = [make_program(university="Ohio", state="OH"), make_program(university="Indiana", state="IN"),
+                make_program(university="Michigan")]
+    found = find_programs(programs, make_student(states=("OH", "IN"), budget=100000))
+    assert names(found) == ["Indiana", "Ohio"]
+
+
+def test_no_states_chosen_means_any_state():
+    programs = [make_program(state="OH"), make_program(state="IN")]
+    assert len(find_programs(programs, make_student(budget=100000))) == 2
+
+
+def test_phd_best_funded_first():
+    programs = [make_program(university="None", degree="PhD"),
+                make_program(university="Small", degree="PhD", stipend=5000),
+                make_program(university="Big", degree="PhD", stipend=30000)]
+    found = find_programs(programs, make_student(degree="PhD", budget=100000))
+    assert names(found) == ["Big", "Small", "None"]
+    assert [r.funding for r in found] == ["Fully funded", "Partly funded", "Not listed"]
+
+
 def test_home_state_changes_the_cost():
     in_state = find_programs([make_program()], make_student(home_state="MI"))[0]
     out_of_state = find_programs([make_program()], make_student(home_state="OH"))[0]
@@ -84,11 +105,6 @@ def test_cost_only_worked_out_for_matching_programs(monkeypatch):
     programs = [make_program(), make_program(degree="PhD"), make_program()]
     find_programs(programs, make_student())
     assert spy.call_count == 2
-
-
-def test_fields():
-    programs = [make_program(field="Mechanical Engineering"), make_program(), make_program()]
-    assert fields(programs) == ["Computer Science", "Mechanical Engineering"]
 
 
 money = st.integers(0, 100000)
