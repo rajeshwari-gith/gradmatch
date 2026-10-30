@@ -16,6 +16,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from conftest import make_profile
+from gradmatch.apply_scholarship_sheet import SHEET_COLUMNS
 from gradmatch.cost import yearly_cost
 from gradmatch.deadlines import upcoming
 from gradmatch.fit import UNKNOWN
@@ -293,3 +294,17 @@ def test_programs_on_real_data_is_paged(real_data_api):
 
     assert len(first) == 100
     assert 0 < len(last) <= 1000
+
+
+# ---- The blank scholarship sheet ----
+# Why: the sheet must list exactly the scholarships in scholarships.csv, with the columns the
+# tool expects, so a person can fill it in and apply it without editing ids by hand.
+
+def test_scholarship_sheet_lists_every_scholarship_unchecked(scholarships):
+    with open("data/scholarship_lookup_sheet.csv", newline="", encoding="utf-8") as file:
+        reader = csv.DictReader(file)
+        rows = list(reader)
+
+    assert reader.fieldnames == SHEET_COLUMNS
+    assert [(r["scholarship_id"], r["name"]) for r in rows] == [(s.scholarship_id, s.name) for s in scholarships]
+    assert all(r["checked_by"] == "" for r in rows)

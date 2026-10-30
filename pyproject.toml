@@ -34,7 +34,8 @@ source_paths = ["src/gradmatch/cost.py", "src/gradmatch/fit.py", "src/gradmatch/
                 "src/gradmatch/starred.py",
                 "src/gradmatch/data_loader.py", "src/gradmatch/scholarships.py",
                 "src/gradmatch/deadlines.py", "src/gradmatch/exports.py",
-                "src/gradmatch/apply_lookup.py", "src/gradmatch/ipeds_import.py",
+                "src/gradmatch/apply_lookup.py", "src/gradmatch/apply_scholarship_sheet.py",
+                "src/gradmatch/ipeds_import.py",
                 "src/gradmatch/presentation.py", "src/gradmatch/components.py",
                 "src/gradmatch/screens.py", "src/gradmatch/data_report.py"]
 pytest_add_cli_args_test_selection = ["tests/unit/"]

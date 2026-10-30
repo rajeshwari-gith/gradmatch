@@ -29,8 +29,9 @@ mutmut results
 | `data_loader.py` | 479 | 476 | 3 |
 | `data_report.py` | 303 | 296 | 7 |
 | `apply_lookup.py` | 477 | 451 | 26 |
+| `apply_scholarship_sheet.py` | 306 | 286 | 20 |
 | `ipeds_import.py` | 652 | 633 | 19 |
-| **Total** | **3,200** | **3,142** | **58** |
+| **Total** | **3,506** | **3,428** | **78** |
 
 ## What it found
 
@@ -44,13 +45,13 @@ Every time we ran it, it found tests we were missing. Some examples:
 - Deadline edges (0, 14 and 15 days left), a $1 stipend, and a weak GPA at an easy school were
   not tested.
 
-## The 58 that are left
+## The 78 that are left
 
 We looked at each one. They can't change what the program does, so no test can catch them:
 
-- `encoding="utf-8"` changed to `"UTF-8"` or removed (25). Same thing on our machines.
+- `encoding="utf-8"` changed to `"UTF-8"` or removed (42). Same thing on our machines.
 - `escape(link, quote=True)` changed to `escape(link)` (1). `escape` quotes by default.
 - An empty value changed to a different empty-looking value, a temp file name, or `strip`
-  characters that never appear at the ends of our lines (about 13).
+  characters that never appear at the ends of our lines (about 16).
 - `ipeds_import.py` (19): file reading options and column name variants that give the same rows
   for the real IPEDS files.
