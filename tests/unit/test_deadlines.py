@@ -7,9 +7,6 @@ February 29 is counted as a real day.
 
 `today` is a fixed date in every test, never date.today().
 """
-# In plain words: these tests check the deadline labels (closed / urgent / soon / later) and the
-# list of open deadlines. Every test uses the same fixed "today", so the results never change
-# from one day to the next. That is only possible because the code takes `today` as an argument.
 
 from datetime import date, datetime, timedelta
 

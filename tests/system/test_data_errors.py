@@ -13,9 +13,6 @@ from data_fixtures import LIVING_COSTS, PROGRAM_HEADER, PROGRAM_ROWS, SCHOLARSHI
 
 pytestmark = pytest.mark.system
 
-# In plain words: if someone breaks a data file, the student should see a clear message, not a
-# crash. We point the app at broken folders on purpose and read what the page says.
-
 APP = str(Path(__file__).resolve().parents[2] / "app" / "streamlit_app.py")
 
 

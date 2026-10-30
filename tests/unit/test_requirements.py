@@ -4,9 +4,6 @@ Technique: equivalence partitioning on each cell (good value, blank, each
 kind of bad value) and on the file (no rows, several programs). The tests
 write tiny files in tmp_path and never read the real data folder.
 """
-# In plain words: these tests check that a row copied from an official page loads exactly as
-# typed, that blank limits and prompts become None (never a made-up text), and that a row
-# without its page link, checker or date is refused with the file name and line number.
 
 from datetime import date
 

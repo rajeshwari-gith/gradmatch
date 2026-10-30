@@ -16,11 +16,6 @@ deadline does: deadline_of, upcoming, glance_counts and exports.to_ics.
 `today` is always passed in by the caller; this module never calls
 date.today(), so tests can use any fixed date.
 """
-# In plain words: students miss deadlines, so the app labels each one as closed, urgent
-# (two weeks or less), soon (one month or less) or later, and lists the open ones in date order.
-# Why `today` is passed in instead of read inside: if the code called date.today() itself, a
-# test written today would give a different answer next week. Passing the date in lets every
-# test use a fixed day, and lets the app show "as of" any date for a demo.
 
 from dataclasses import dataclass
 from datetime import date, datetime

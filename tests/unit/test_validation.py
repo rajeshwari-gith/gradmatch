@@ -10,10 +10,6 @@ from gradmatch.validation import is_valid, validate_profile
 
 pytestmark = pytest.mark.unit
 
-# In plain words: the form lets students type anything. These tests prove that bad input
-# (a GPA of 5.0, a GRE of 500, an empty field) is caught with a clear message, and that good
-# input is never rejected by mistake. For every limit we test just below, on, and just above it.
-
 
 # The starting point: a normal student has no errors at all.
 def test_valid_profile_has_no_errors():

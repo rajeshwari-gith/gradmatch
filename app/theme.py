@@ -1,8 +1,4 @@
 """The look of the app: colours, fonts, background, cards and button effects (Sage & Cream).
-
-In plain words: Streamlit draws its own widgets, so to match the design we add one block of CSS
-at the top of every page. Everything visual lives here, in one place, so it is easy to change and
-easy to test. It changes how things look, never what the app calculates.
 """
 
 FONTS_URL = ("https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800"

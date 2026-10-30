@@ -1,8 +1,4 @@
 """Helpers the system and acceptance tests share to drive the app and read its screens.
-
-In plain words: the app draws its rows and cards as HTML. These helpers open the app, press
-buttons, switch screens and pull out what a student would read (names, costs, chance labels,
-days left), so each test can say what it checks in one line.
 """
 import re
 from pathlib import Path

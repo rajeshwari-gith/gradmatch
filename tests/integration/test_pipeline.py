@@ -29,10 +29,6 @@ from gradmatch.search import search_programs
 
 pytestmark = pytest.mark.integration
 
-# In plain words: unit tests check one function alone; these check that the pieces still work
-# TOGETHER. Real CSV text goes in, goes through the loader, search, scholarships, cards and
-# exports, and we check what comes out. If two modules disagree about a rule, a test here fails.
-
 TODAY = date(2026, 10, 24)
 
 

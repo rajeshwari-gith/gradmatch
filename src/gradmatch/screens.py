@@ -1,9 +1,4 @@
 """HTML for the rows and cards of each screen in the new design.
-
-In plain words: components.py has the small pieces (a badge, a tile, a tag). This file puts them
-together into one results row, one PhD card, one scholarship card or one deadline row. The app
-only places these and adds the buttons (stars, "Track deadline"), so everything that decides what
-a row says can be unit tested here without Streamlit. Text from the data is always escaped.
 """
 from datetime import date
 from html import escape

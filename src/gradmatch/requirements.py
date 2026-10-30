@@ -7,10 +7,6 @@ checked by a person: source_url (https), checked_by and checked_on are required.
 `required` is yes or no. A blank limit_text or prompt_text means the page does
 not state it and becomes None; it is never filled in with a guess.
 """
-# In plain words: students want to know which essays each program asks for, how long they may
-# be and what the question is. Nobody may make that up, so this file only reads rows that a
-# person copied from the official page, and it refuses a row without the page link, the
-# checker's name or the date. The prompt is kept word for word as it was typed.
 
 from dataclasses import dataclass, fields
 from datetime import date

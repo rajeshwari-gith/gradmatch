@@ -1,10 +1,4 @@
 """Run the API examples written in README.md, so the README cannot drift from the code."""
-# In plain words: the README shows `curl` commands for the API. If someone renames a parameter or
-# an endpoint, those examples would quietly stop working, and a reader would copy a broken command.
-# This test reads the README itself (the examples are not copied here), turns each curl command
-# into the same request with FastAPI's TestClient, and checks the answer. So a change that breaks
-# a README example fails the tests.
-# The API runs on the small fixture data (tests/data_fixtures.py), like the other API tests.
 
 import json
 import re

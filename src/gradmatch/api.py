@@ -10,10 +10,6 @@ The data folder is GRADMATCH_DATA_DIR if it is set, otherwise data/.
 The starred items (/starred) are kept in this server's memory only: they are
 shared by everyone using the server and are lost when it restarts.
 """
-# In plain words: the same search as the website, but for other programs to call over HTTP
-# and get JSON back (for example a phone app). This file has no rules of its own: it only
-# reads the request, calls the same functions the website uses, and turns the answer into
-# JSON. Keeping the rules in one place means the website and the API can never disagree.
 
 import os
 import threading

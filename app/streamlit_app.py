@@ -1,9 +1,5 @@
 """GradMatch web app (Streamlit), in the Sage & Cream design.
 
-In plain words: this file only draws the screens and reacts to clicks. Every calculation (search,
-cost, fit, funding, scholarships, deadlines) happens in src/gradmatch, and the HTML for each row
-and card is built in gradmatch.screens and gradmatch.components, so all of it can be unit tested.
-
 Screens: Program search · PhD funding · Scholarships · Deadlines. Stars and tracked scholarships
 are kept in st.session_state, the app's memory between clicks.
 

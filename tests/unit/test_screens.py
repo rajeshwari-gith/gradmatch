@@ -1,10 +1,4 @@
 """Unit tests for screens.py (rows and cards of the new design).
-
-In plain words: each function builds the HTML for one row or card. We give it small made-up
-programs and scholarships and check the exact words, numbers and badges it shows.
-Techniques: boundary values (days left at -1, 0, 1, 14, 15, 90, 91; stipend None / 0 / above
-the living cost), equivalence classes (program, scholarship, other dated item) and a decision
-table for the PhD checklist.
 """
 from datetime import date
 
@@ -392,6 +386,8 @@ def test_a_scholarship_card_body_holds_the_text_and_the_amount():
         f'{scholarship_amount_html(s, TODAY)}</div>')
     in_10 = make_scholarship(deadline=date(2026, 11, 8))
     assert "Due Nov 8, 2026" in scholarship_card_body_html(in_10, True, TODAY, 7)
+    in_15 = make_scholarship(deadline=date(2026, 11, 13))      # one day past the default 14-day window
+    assert "Due Nov 13, 2026" in scholarship_card_body_html(in_15, True, TODAY)
 
 
 def test_program_page_stays_together_on_one_line():

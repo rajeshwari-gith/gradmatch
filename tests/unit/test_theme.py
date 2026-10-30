@@ -1,8 +1,4 @@
 """Unit tests for app/theme.py.
-
-In plain words: the stylesheet is plain text, so we check it contains the design's colours, the
-two fonts, the dot-grid background and the button effects. If someone deletes one by mistake, a
-test fails.
 """
 import pytest
 

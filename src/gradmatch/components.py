@@ -1,10 +1,4 @@
 """Small HTML building blocks for the GradMatch screens (Sage & Cream design).
-
-In plain words: every piece of the new design that is drawn the same way everywhere (a chance
-badge with a face, a tag, a school's initials tile, a date tile, a warning banner, a progress bar,
-the funding bar on a PhD card, a star) is one small function here that returns HTML text. They
-are plain Python with no Streamlit, so each one has unit tests. All text that comes from data is
-escaped, and only http(s) links become clickable (see presentation.safe_link).
 """
 from datetime import date
 from html import escape
