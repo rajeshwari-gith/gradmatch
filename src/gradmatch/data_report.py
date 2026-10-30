@@ -7,12 +7,6 @@ column of the imported (source=ipeds) rows; duplicate ids; websites that do not
 start with https://; and the "Verified" counts from SOURCES.md. It exits with 1
 if it finds duplicate ids or non-https websites, so it can be used as a check.
 """
-# In plain words: with 45,000 rows nobody can read the data by eye. This report gives a short
-# summary of what is in the files and of the problems that are easy to count. The loader already
-# stops on rows that break a rule; this report shows the bigger picture, for example how many
-# imported rows have no acceptance rate, or how many programs are checked by hand.
-# It reads the CSV files as plain text on purpose (not with data_loader), so it can still
-# describe a file that the loader would refuse.
 
 import csv
 import re

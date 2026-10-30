@@ -12,9 +12,6 @@ kind_of() groups the five data types into the three kinds the app shows
 (CONTRIBUTING.md): scholarship and fee_waiver -> "Scholarship",
 fellowship -> "Fellowship", assistantship and research -> "Assistantship".
 """
-# In plain words: a student should only see scholarships they can actually apply for. This
-# file checks a student's profile against each scholarship's rules and lists the matches, the
-# ones that close soonest first, so the student does not miss a deadline.
 
 from gradmatch.models import Scholarship, StudentProfile
 
@@ -71,9 +68,6 @@ def _allows(allowed: tuple[str, ...], value: str) -> bool:
     return ANY in allowed or value in allowed
 
 
-# In plain words: the data has five types, but the screen shows only three kinds, so two types
-# are put with the closest kind (see KINDS above). An unknown type is an error, not a guess,
-# so a typo in the data is noticed instead of being shown as the wrong kind.
 def kind_of(scholarship: Scholarship) -> str:
     """Return "Scholarship", "Fellowship" or "Assistantship" for the scholarship's type."""
     try:

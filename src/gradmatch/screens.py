@@ -1,9 +1,4 @@
 """HTML for the rows and cards of each screen in the new design.
-
-In plain words: components.py has the small pieces (a badge, a tile, a tag). This file puts them
-together into one results row, one PhD card, one scholarship card or one deadline row. The app
-only places these and adds the buttons (stars, "Track deadline"), so everything that decides what
-a row says can be unit tested here without Streamlit. Text from the data is always escaped.
 """
 from datetime import date
 from html import escape
@@ -12,7 +7,7 @@ from gradmatch.components import (PASSED, chance_badge, check_item, date_tile, f
                                   official_link, school_tile, stipend_box, tag)
 from gradmatch.cost import known_stipend, tuition_charged
 from gradmatch.deadlines import deadline_of
-from gradmatch.fit import MATCH, REACH, SAFETY, UNKNOWN
+from gradmatch.fit import MATCH, REACH, SAFETY
 from gradmatch.funding import FULLY_FUNDED
 from gradmatch.models import Program, Scholarship
 from gradmatch.scholarships import ASSISTANTSHIP, FELLOWSHIP, SCHOLARSHIP, kind_of
@@ -22,6 +17,8 @@ from gradmatch.search import ProgramResult
 DISCLAIMER = ("Results are estimates, not a promise of admission. Data: US Department of Education "
               "(IPEDS), College Scorecard and official university websites.")
 NOT_STATED = "Not published"
+ESTIMATE_RULE = ("Most programs do not publish an average GPA. For those, the chance is estimated from "
+                 "the school's official acceptance rate and your GPA.")
 WITHIN_90 = 90       # a deadline more than this many days away counts as "later"
 
 # The tag colour used for each kind of award (scholarships.kind_of gives the kind).
@@ -81,7 +78,8 @@ def program_row_html(result: ProgramResult, home_state: str | None, living_cost:
         extras += " " + tag(warning, "pending")
     name = (f'<div class="gm-cell-name">{school_tile(program.university)}<div>'
             f'<div class="gm-name">{escape(program.university)}</div>'
-            f'<div class="gm-sub">{escape(program.program_name)} · {extras}</div></div></div>')
+            f'<div class="gm-sub">{escape(program.program_name)}</div>'
+            f'<div class="gm-sub">{extras}</div></div></div>')
     # data-label names each cell, so a phone can show the cells as a small labelled card.
     cells = [
         name,
@@ -107,9 +105,9 @@ def faces_info_html() -> str:
                    for label, meaning in (
                        (SAFETY, "above the program's typical range"),
                        (MATCH, "within the typical range"),
-                       (REACH, "below the typical range"),
-                       (UNKNOWN, "the school does not publish the numbers")))
-    return f'<div class="gm-card"><div class="gm-label">What the faces mean</div>{rows}</div>'
+                       (REACH, "below the typical range")))
+    return (f'<div class="gm-card"><div class="gm-label">What the faces mean</div>{rows}'
+            f'<p class="gm-sub">{ESTIMATE_RULE}</p></div>')
 
 
 # ---- Screen 2: PhD cards ----
@@ -127,7 +125,7 @@ def phd_checklist(program: Program, funding: str) -> list[tuple[str, bool]]:
     else:
         waiver = ("No stipend listed, so tuition is charged", False)
         living = ("No stipend listed", False)
-    return [waiver, living, ("Health insurance: see program page", False)]
+    return [waiver, living, ("Health insurance: see program\u00a0page", False)]
 
 
 def phd_card_html(result: ProgramResult) -> str:
@@ -155,7 +153,7 @@ def fellowships_note(count: int) -> str:
 def funding_legend_html() -> str:
     return ('<div class="gm-legend"><b>Funding level</b>'
             '<span><i style="background:#5E7D63"></i> Fully funded: stipend covers living costs</span>'
-            '<span><i style="background:#9DB8AC"></i> Partly funded</span>'
+            '<span><i style="background:#9DB8AC"></i> Partially funded</span>'
             '<span><i style="background:#E2DDD0"></i> Not funded or not published</span></div>')
 
 
@@ -183,6 +181,13 @@ def due_text(deadline: date, today: date, urgent_days: int = 14) -> str:
         unit = "day" if days == 1 else "days"
         return f'<span class="gm-urgent">Due in {days} {unit}</span>'
     return f'<span class="gm-sub">Due {format_date(deadline)}</span>'
+
+
+def scholarship_card_body_html(scholarship: Scholarship, qualifies: bool, today: date,
+                               urgent_days: int = 14) -> str:
+    """A scholarship card's text and amount side by side; the amount moves below when space is short."""
+    return (f'<div class="gm-sch"><div class="gm-sch-info">{scholarship_info_html(scholarship, qualifies)}</div>'
+            f'{scholarship_amount_html(scholarship, today, urgent_days)}</div>')
 
 
 def scholarship_amount_html(scholarship: Scholarship, today: date, urgent_days: int = 14) -> str:
@@ -242,7 +247,7 @@ def deadline_row_html(item, today: date, urgent_days: int = 14) -> str:
     name_class = "gm-name gm-passed" if days_left < 0 else "gm-name"
     link = official_link(item.website)
     detail = escape(item_kind(item)) + (f" · {link}" if link else "")
-    return (f'<div class="gm-cell-name">{date_tile(day, urgent)}<div>'
+    return (f'<div class="gm-cell-name gm-dl">{date_tile(day, urgent)}<div class="gm-dl-text">'
             f'<div class="{name_class}">{escape(item_name(item))}</div>'
             f'<div class="gm-sub">{detail}</div></div>'
             f'<div class="gm-right">{chance_badge(deadline_face(days_left, urgent_days), days_left_text(days_left))}'
@@ -254,7 +259,7 @@ def glance_html(counts: dict, urgent_days: int = 14) -> str:
     rows = [(f"Within {urgent_days} days", counts["within_window"], "gm-urgent"),
             ("Within 90 days", counts["within_90"], ""),
             ("Later", counts["later"], ""),
-            ("Passed", counts["passed"], "gm-sub")]
+            ("Passed", counts["passed"], "gm-dim")]
     body = "".join(f'<div class="gm-glance-row"><span>{label}</span><b class="{css}">{n}</b></div>'
                    for label, n, css in rows)
     return f'<div class="gm-soft"><div class="gm-serif gm-name">At a glance</div>{body}</div>'

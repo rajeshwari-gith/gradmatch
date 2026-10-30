@@ -6,11 +6,6 @@ frozenset of keys; toggle() returns a new set and never changes the old one.
 These are plain functions with no screen code, so the website and the API use
 the same rules and the tests need no browser.
 """
-# In plain words: a student can star the things they care about and then show only those.
-# Each item becomes a short text key, because a key is easy to store (in the page's memory, in
-# the API, or in a file) and two kinds of item can never get the same key thanks to the prefix.
-# The set of stars is frozen: toggling gives back a new set, so an old set held somewhere else
-# never changes behind its back.
 
 from gradmatch.deadlines import CustomDeadline
 from gradmatch.models import Program, Scholarship

@@ -13,10 +13,6 @@ from gradmatch.cost import (cost_breakdown, is_affordable, total_cost, tuition_c
 
 pytestmark = pytest.mark.unit
 
-# In plain words: these tests check the money math. A wrong cost would make the app recommend
-# programs a student cannot afford, so every rule (in-state price, stipend, PhD waiver) gets
-# its own small test. Each test builds one tiny program with make_program() and checks one number.
-
 # make_program(): MI, in-state 15,000, out-of-state 30,000, 2 years, no stipend
 
 

@@ -4,8 +4,6 @@ Techniques: equivalence partitioning on the kind of item (program,
 scholarship, custom deadline, something else) and on keys (good, each kind
 of bad key); toggling twice gives back the starting set.
 """
-# In plain words: these tests check that every kind of item gets its own key, that a star can
-# be added and taken away without changing the old set, and that filtering keeps the order.
 
 from datetime import date
 

@@ -13,10 +13,6 @@ pytestmark = pytest.mark.unit
 
 LIVING_COST = 20000     # a made-up yearly living cost, so the edges below are easy to read
 
-# In plain words: "funded" means the stipend can pay for living. The three labels depend on how
-# the stipend compares with the living cost, so we test the numbers right at each edge:
-# 0, 1, one below the living cost, exactly the living cost, and one above it.
-
 
 @pytest.mark.parametrize("stipend, expected", [
     (0, SELF_FUNDED),              # no stipend

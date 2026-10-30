@@ -16,10 +16,6 @@ one condition false, so each condition is shown to matter on its own.
 Extra tests cover the different ways a condition can be true ("Any",
 GPA exactly equal, no special requirement) and the sort order.
 """
-# In plain words: these tests prove a student sees exactly the scholarships they qualify for,
-# in the right order. The main technique is a decision table: one row where every rule is met,
-# then one row per rule where only that rule fails. If any rule were forgotten in the code,
-# its row would wrongly say "eligible" and the test would fail.
 
 from dataclasses import replace
 from datetime import date

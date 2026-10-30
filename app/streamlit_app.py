@@ -1,9 +1,5 @@
 """GradMatch web app (Streamlit), in the Sage & Cream design.
 
-In plain words: this file only draws the screens and reacts to clicks. Every calculation (search,
-cost, fit, funding, scholarships, deadlines) happens in src/gradmatch, and the HTML for each row
-and card is built in gradmatch.screens and gradmatch.components, so all of it can be unit tested.
-
 Screens: Program search · PhD funding · Scholarships · Deadlines. Stars and tracked scholarships
 are kept in st.session_state, the app's memory between clicks.
 
@@ -35,7 +31,7 @@ from gradmatch.data_loader import (DataError, load_living_costs, load_programs, 
 from gradmatch.deadlines import (CustomDeadline, deadline_of, glance_counts,  # noqa: E402
                                  validate_custom_deadline)
 from gradmatch.exports import to_csv, to_ics  # noqa: E402
-from gradmatch.fit import MATCH, REACH, SAFETY, UNKNOWN  # noqa: E402
+from gradmatch.fit import MATCH, REACH, SAFETY  # noqa: E402
 from gradmatch.models import StudentProfile  # noqa: E402
 from gradmatch.presentation import ESTIMATE_NOTE, SPECIAL_LABELS, format_date, money  # noqa: E402
 from gradmatch.scholarships import KINDS, eligible_scholarships, fellowship_count, kind_of  # noqa: E402
@@ -44,7 +40,7 @@ from gradmatch.screens import (DISCLAIMER, cost_info_html,  # noqa: E402
                                deadline_row_html, faces_info_html, fellowships_note, funding_legend_html, glance_html,
                                header_pills_html, item_name, page_title_html, phd_card_html,
                                profile_summary_html, program_row_html, results_header_html,
-                               scholarship_amount_html, scholarship_info_html)
+                               scholarship_card_body_html)
 from gradmatch.search import search_programs, tuition_state  # noqa: E402
 from gradmatch.validation import CITIZENSHIP, DEGREES, US_STATES, validate_profile  # noqa: E402
 
@@ -255,9 +251,10 @@ def show_results(profile, results, living_costs):
         return
 
     # Filter pills with counts (All / Safety / Match / Reach / Unknown) and "Starred only".
-    counts = {label: sum(r.fit == label for r in results) for label in (SAFETY, MATCH, REACH, UNKNOWN)}
+    counts = {label: sum(r.fit == label for r in results) for label in (SAFETY, MATCH, REACH)}
     options = ["All"] + [label for label, n in counts.items() if n]
-    left, right = st.columns([1, 4], vertical_alignment="center")
+    with st.container(key="wrap-results-filters"):
+        left, right = st.columns([1, 4], vertical_alignment="center")
     starred_only = left.toggle("Starred only", key="results_starred")
     chance = right.radio("Chance", options, horizontal=True, key="chance", label_visibility="collapsed",
                          format_func=lambda o: f"{o} {len(results) if o == 'All' else counts[o]}")
@@ -301,7 +298,8 @@ def show_phd_page(profile, programs, living_costs, fields, scholarships):
     if profile is None:
         st.info("Fill in your profile on **Program search** first, so we can show your chances.")
         return
-    subject_col, sort_col, waiver_col, star_col = st.columns([2, 2, 1.3, 1.3], vertical_alignment="bottom")
+    with st.container(key="wrap-phd-filters"):
+        subject_col, sort_col, waiver_col, star_col = st.columns([2, 2, 1.3, 1.3], vertical_alignment="bottom")
     start = fields.index(profile.field) if profile.field in fields else 0
     subject = subject_col.selectbox("Subject", fields, index=start, key="phd_subject")
     sort = sort_col.selectbox("Sort by", PHD_SORTS, key="phd_sort")
@@ -332,7 +330,8 @@ def show_phd_page(profile, programs, living_costs, fields, scholarships):
         return
     if len(results) > MAX_PHD_CARDS:
         st.caption(f"Showing the first {MAX_PHD_CARDS} of {len(results)} programs.")
-    columns = st.columns(3)
+    with st.container(key="wrap-phd-grid"):
+        columns = st.columns(3)
     for index, r in enumerate(results[:MAX_PHD_CARDS]):
         with columns[index % 3]:
             with st.container(key=f"card-{r.program.program_id}"):
@@ -347,7 +346,8 @@ def show_phd_page(profile, programs, living_costs, fields, scholarships):
 # ---- Screen 3: Scholarships ----
 
 def show_scholarships_page(profile, scholarships, today):
-    filters, cards = st.columns([1, 3], gap="large")
+    with st.container(key="wrap-scholarships"):
+        filters, cards = st.columns([1, 3], gap="large")
     kinds = sorted(set(KINDS.values()))
     with filters:
         st.markdown('<div class="gm-label">Type</div>', unsafe_allow_html=True)
@@ -381,17 +381,15 @@ def show_scholarships_page(profile, scholarships, today):
         for s in items:
             key = star_key(s)
             with st.container(key=f"sch-{s.scholarship_id}"):
-                star_col, info_col, amount_col, track_col = st.columns([0.6, 7, 2.2, 1.9],
-                                                                       vertical_alignment="center")
+                star_col, body_col = st.columns([0.6, 12], vertical_alignment="center")
                 with star_col:
                     star_button(s, s.name)
-                info_col.markdown(scholarship_info_html(s, s.scholarship_id in eligible),
+                body_col.markdown(scholarship_card_body_html(s, s.scholarship_id in eligible, today),
                                   unsafe_allow_html=True)
-                amount_col.markdown(scholarship_amount_html(s, today), unsafe_allow_html=True)
                 on = key in tracked()
-                track_col.button("✓ Tracking" if on else "Track deadline", key=f"track-{s.scholarship_id}",
-                                 type="secondary" if on else "primary", on_click=_flip,
-                                 args=("tracked", key))
+                body_col.button("✓ Tracking" if on else "Track deadline", key=f"track-{s.scholarship_id}",
+                                type="secondary" if on else "primary", on_click=_flip,
+                                args=("tracked", key))
 
 
 # ---- Screen 5: Deadlines ----
@@ -435,7 +433,8 @@ def show_add_deadline():
 
 
 def show_deadlines_page(items, today):
-    title_col, star_col, warn_col = st.columns([3, 1, 1.4], vertical_alignment="bottom")
+    with st.container(key="wrap-deadlines-top"):
+        title_col, star_col, warn_col = st.columns([3, 1, 1.4], vertical_alignment="bottom")
     with title_col:
         st.markdown(page_title_html("Upcoming", "deadlines"), unsafe_allow_html=True)
         st.markdown(f'<div class="gm-sub">{len(items)} tracked · today is {today:%b} {today.day}</div>',
@@ -458,7 +457,8 @@ def show_deadlines_page(items, today):
         st.markdown(warning_banner(f"{len(close)} {noun} coming up in the next {warn_days} days", names),
                     unsafe_allow_html=True)
 
-    timeline, side = st.columns([3, 1.2], gap="large")
+    with st.container(key="wrap-deadlines"):
+        timeline, side = st.columns([3, 1.2], gap="large")
     with timeline:
         st.markdown('<div class="gm-label">Timeline</div>', unsafe_allow_html=True)
         for index, item in enumerate(items):
@@ -484,7 +484,8 @@ def show_deadlines_page(items, today):
 
 def show_search_page(fields, programs, living_costs):
     """Program search: the form on the left, the results on the right. Returns the profile."""
-    left, right = st.columns([1, 3], gap="large")
+    with st.container(key="wrap-search"):
+        left, right = st.columns([1, 3], gap="large")
     with left:
         submitted = show_profile_form(fields)
     errors = []
@@ -511,7 +512,7 @@ def main():
     # then the chosen screen.
     st.set_page_config(page_title="GradMatch", page_icon="🎓", layout="wide")
     st.markdown(theme.page_css(), unsafe_allow_html=True)
-    header = st.container()
+    header = st.container(key="wrap-header")
 
     try:
         programs, living_costs, scholarships = load_data(

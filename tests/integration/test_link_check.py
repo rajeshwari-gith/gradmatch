@@ -6,10 +6,6 @@ requests but never touch the internet.
 Techniques: equivalence partitioning on the kinds of answer a website can
 give (200, 404, redirect, HEAD refused, server down, bad text).
 """
-# In plain words: the link checker opens every website in the data to find dead links. Testing
-# it on the real internet would be slow and would fail whenever a site is down, so these tests
-# start a tiny fake web server on this computer that answers 200, 404, a redirect or "HEAD not
-# allowed" on purpose. That way every kind of answer is tested, and the result is always the same.
 
 import threading
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer

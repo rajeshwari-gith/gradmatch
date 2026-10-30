@@ -20,10 +20,6 @@ from app_pages import (DEADLINES, PHD, SCHOLARSHIPS, banner, chance_filter, chan
 
 pytestmark = pytest.mark.acceptance
 
-# In plain words: acceptance tests ask "does the app do what we promised the professor?". Each test
-# plays one user story from the proposal, step by step, like a real student would, and checks
-# only what that student would see on the screen.
-
 URGENT_BG = "#FBE9E2"     # the tinted date tile of a deadline inside the warning window
 
 

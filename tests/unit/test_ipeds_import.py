@@ -15,11 +15,6 @@ from gradmatch.ipeds_import import (CIP_BY_FIELD, CIP_FIELDS, DEFAULT_MIN_AWARDS
 
 pytestmark = pytest.mark.unit
 
-# In plain words: the importer turns the government's big files into our programs. These tests use
-# tiny made-up files (never the real ones), so we can check each rule: which schools are kept,
-# how tuition is picked for each degree, how acceptance rate and test scores are built, that
-# programs are not added twice, and that running the import again gives the same result.
-
 STATES = {"MI", "OH"}
 
 

@@ -9,10 +9,6 @@ get boundary-value tests.
 Tests never read the real CSVs in data/. Each test writes a tiny CSV into
 pytest's tmp_path folder.
 """
-# In plain words: these tests feed the loader small, hand-made CSV files, some correct and
-# some broken on purpose, and check that good rows load with the right types and bad rows are
-# stopped with a clear message. We never use the real data here, so a change to the real data
-# can never break these tests, and every test is fast and repeatable.
 
 import csv
 import tempfile

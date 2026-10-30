@@ -1,9 +1,4 @@
 """Unit tests for components.py (the HTML building blocks of the new design).
-
-In plain words: each building block returns a small piece of HTML. These tests check the exact
-colours and words for each case, the edges (0%, 100%, more done than total), that text from the
-data is escaped, and that only normal web links are clickable.
-Techniques: equivalence partitioning (each chance label, each tag kind) and boundary values.
 """
 from datetime import date
 

@@ -5,10 +5,6 @@ several items) and on the text in names (plain, with commas, quotes,
 semicolons, backslashes and newlines); boundary-value analysis on line
 length (75 bytes is the folding limit) and on the date (leap day 2028-02-29).
 """
-# In plain words: these tests check the two downloads. For the CSV file we read it back with
-# the csv module and check every cell. For the calendar file we check the rules of the
-# calendar standard (RFC 5545) that apps rely on: \r\n line endings, escaped text, stable
-# event ids and lines no longer than 75 bytes.
 
 import csv
 import io

@@ -1,8 +1,4 @@
 """Shared fixtures for the integration tests that use the real data files."""
-# In plain words: programs.csv has over 45,000 rows, and reading it takes a few seconds while
-# coverage is measured. Before, the real-data tests read it again and again (once per test
-# file, and once more for every API call). Now it is read ONCE for the whole test run and
-# shared. Every assertion stays the same; only the waiting is gone.
 
 from pathlib import Path
 

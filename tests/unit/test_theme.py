@@ -1,8 +1,4 @@
 """Unit tests for app/theme.py.
-
-In plain words: the stylesheet is plain text, so we check it contains the design's colours, the
-two fonts, the dot-grid background and the button effects. If someone deletes one by mistake, a
-test fails.
 """
 import pytest
 
@@ -53,6 +49,14 @@ def test_buttons_lift_on_hover_and_press_down_when_clicked():
 
 def test_on_a_phone_the_table_becomes_labelled_cards():
     css = page_css()
-    assert "@media (max-width: 640px)" in css
+    assert "@container (max-width: 660px)" in css
+    assert "container-type: inline-size;" in css
     assert ".gm-table-head { display:none; }" in css
     assert "content: attr(data-label);" in css
+
+
+def test_narrow_windows_wrap_columns_instead_of_squeezing_them():
+    css = page_css()
+    assert 'flex-wrap: wrap !important; row-gap: 12px;' in css
+    assert ".gm-sch {" in css and ".gm-dl { flex-wrap: wrap; }" in css
+    assert ".stDownloadButton > button { white-space: normal; height: auto; }" in css

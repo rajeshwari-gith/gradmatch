@@ -10,10 +10,6 @@ text that calendar apps can import; a program with no published deadline is left
 lines end in CRLF, text values are escaped, and long lines are folded.
 The DTSTAMP time is passed in by the caller; this module never calls now().
 """
-# In plain words: students want to keep their results. This file makes two downloads: a CSV
-# file of the programs (opens in Excel or Google Sheets) and an .ics file of the deadlines
-# (opens in Google Calendar, Outlook or Apple Calendar). Both are plain text built here, so they
-# can be unit tested without the app.
 
 import csv
 import io

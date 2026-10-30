@@ -1,9 +1,4 @@
 """Unit tests for data_report.py."""
-# In plain words: these tests build tiny data folders on purpose (a few rows, some with problems)
-# and check every number of the report, the printed text and the exit code. They never read the
-# real data, so the expected numbers stay the same when the real data changes.
-# Techniques: equivalence classes (no problem / duplicate ids / non-https links, SOURCES.md with
-# and without the counts) and boundary values (no imported rows at all, so no division by zero).
 
 import csv
 from collections import Counter

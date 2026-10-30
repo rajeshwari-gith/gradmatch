@@ -6,14 +6,16 @@ checked_by, checked_on. One row is one thing a program asks for, for example
 checked by a person: source_url (https), checked_by and checked_on are required.
 `required` is yes or no. A blank limit_text or prompt_text means the page does
 not state it and becomes None; it is never filled in with a guess.
+
+For the Essays screen, checklist() lists one program's requirements with a
+done mark, and progress() counts the required ones that are done. The done
+set holds essay_key(program_id, name) keys, so the same essay name at two
+programs is ticked off separately.
 """
-# In plain words: students want to know which essays each program asks for, how long they may
-# be and what the question is. Nobody may make that up, so this file only reads rows that a
-# person copied from the official page, and it refuses a row without the page link, the
-# checker's name or the date. The prompt is kept word for word as it was typed.
 
 from dataclasses import dataclass, fields
 from datetime import date
+from typing import NamedTuple
 
 from gradmatch.data_loader import _cell, _date, _load, _text
 
@@ -34,6 +36,15 @@ class Requirement:
 
 
 COLUMNS = [f.name for f in fields(Requirement)]
+
+
+# One line of the Essays checklist. A NamedTuple, so it can be unpacked as
+# (name, required, limit_text, done) and also read as item.name, item.done, ...
+class ChecklistItem(NamedTuple):
+    name: str
+    required: bool
+    limit_text: str | None        # None = the official page does not state a limit
+    done: bool
 
 
 # Read requirements.csv with the same loader as the other files, so a bad row stops with the
@@ -64,3 +75,26 @@ def _to_requirement(row) -> Requirement:
         checked_by=_text(row, "checked_by"),
         checked_on=_date(row, "checked_on"),
     )
+
+
+# ---- The Essays checklist ----
+# In plain words: the student ticks off each essay as it is written. The screen keeps the ticks
+# as a set of keys; these functions only read that set, so they are easy to test and never
+# change anything. A tick for an essay the program does not ask for is simply ignored.
+
+# The key of one essay in the done set: "<program_id>:<name>".
+def essay_key(program_id: str, name: str) -> str:
+    return f"{program_id}:{name}"
+
+
+# One program's requirements in the order of the data file, each with its done mark.
+def checklist(program_id: str, requirements: list[Requirement], done: frozenset) -> list[ChecklistItem]:
+    return [ChecklistItem(r.name, r.required, r.limit_text, essay_key(program_id, r.name) in done)
+            for r in requirements_for(program_id, requirements)]
+
+
+# (done_required, total_required) for one program. Optional items are left out on purpose: the
+# progress bar shows what the student MUST still write, and an optional essay never blocks it.
+def progress(program_id: str, requirements: list[Requirement], done: frozenset) -> tuple[int, int]:
+    required = [item for item in checklist(program_id, requirements, done) if item.required]
+    return sum(1 for item in required if item.done), len(required)
