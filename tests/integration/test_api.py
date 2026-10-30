@@ -214,6 +214,28 @@ def test_deadlines_bad_urgent_days_gives_422(client, bad):
     assert client.get(f"/deadlines?today={TODAY}&urgent_days={bad}").status_code == 422
 
 
+
+@pytest.mark.parametrize("bad, limit", [("91", "less than or equal to 90"), ("-1", "greater than or equal to 0")])
+def test_deadlines_urgent_days_out_of_range_names_the_parameter(client, bad, limit):
+    response = client.get(f"/deadlines?today={TODAY}&urgent_days={bad}")
+
+    assert response.status_code == 422
+    [error] = response.json()["detail"]
+    assert error["loc"] == ["query", "urgent_days"]
+    assert limit in error["msg"]
+
+
+def test_api_docs_show_deadlines_as_an_object(client):
+    # The /docs page is built from this description; it must say the answer is an object.
+    spec = client.get("/openapi.json").json()
+    answer = spec["paths"]["/deadlines"]["get"]["responses"]["200"]["content"]["application/json"]["schema"]
+    model = spec["components"]["schemas"][answer["$ref"].split("/")[-1]]
+
+    assert model["type"] == "object"
+    assert set(model["properties"]) == {"urgent_days", "glance", "deadlines"}
+    assert set(spec["components"]["schemas"]["GlanceOut"]["properties"]) == {
+        "within_window", "within_90", "later", "passed"}
+
 # ---- /starred ----
 # Why: stars are added, listed sorted, removed, and a repeated add or remove is harmless.
 # A bad key gives 422. The stars live in the server's memory, so each test starts empty.

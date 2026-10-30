@@ -10,7 +10,8 @@ from datetime import date
 import pytest
 
 from gradmatch.data_loader import DataError
-from gradmatch.requirements import COLUMNS, Requirement, load_requirements, requirements_for
+from gradmatch.requirements import (COLUMNS, Requirement, checklist, essay_key, load_requirements, progress,
+                                    requirements_for)
 
 pytestmark = pytest.mark.unit
 
@@ -89,3 +90,56 @@ def test_missing_column_is_reported(tmp_path):
 
     with pytest.raises(DataError, match="missing column\\(s\\): required, limit_text"):
         load_requirements(path)
+
+
+# ---- The Essays checklist: checklist() and progress() ----
+# Why (boundary values): nothing done, everything done, and optional items that never count;
+# (equivalence classes): ticks for this program, for another program and for unknown names.
+# The requirements are made in the test; none is real data.
+
+def req(name, required=True, program_id="P1", limit_text=None) -> Requirement:
+    return Requirement(program_id=program_id, name=name, required=required, limit_text=limit_text,
+                       prompt_text=None, source_url="https://example.edu/apply", checked_by="Tester",
+                       checked_on=date(2026, 10, 29))
+
+
+ESSAYS = [req("Statement", limit_text="2 pages"), req("Writing sample", required=False),
+          req("Statement", program_id="P2"), req("Diversity essay", limit_text="500 words")]
+
+
+def test_essay_key():
+    assert essay_key("P1", "Statement") == "P1:Statement"
+
+
+def test_checklist_lists_one_program_in_file_order_with_done_marks():
+    items = checklist("P1", ESSAYS, frozenset({"P1:Diversity essay"}))
+
+    assert items == [("Statement", True, "2 pages", False), ("Writing sample", False, None, False),
+                     ("Diversity essay", True, "500 words", True)]
+    assert (items[0].name, items[0].required, items[0].limit_text, items[0].done) == items[0]
+
+
+def test_a_tick_for_the_same_name_at_another_program_does_not_count():
+    assert [i.done for i in checklist("P1", ESSAYS, frozenset({"P2:Statement"}))] == [False, False, False]
+    assert [i.done for i in checklist("P2", ESSAYS, frozenset({"P2:Statement"}))] == [True]
+
+
+def test_checklist_of_a_program_without_requirements_is_empty():
+    assert checklist("NONE", ESSAYS, frozenset({"NONE:Statement"})) == []
+
+
+@pytest.mark.parametrize("done, expected", [
+    (frozenset(), (0, 2)),                                              # boundary: nothing done
+    (frozenset({"P1:Statement"}), (1, 2)),
+    (frozenset({"P1:Statement", "P1:Diversity essay"}), (2, 2)),        # boundary: all done
+    (frozenset({"P1:Statement", "P1:Diversity essay", "P1:Writing sample"}), (2, 2)),
+    (frozenset({"P1:Writing sample"}), (0, 2)),                         # optional never counts
+    (frozenset({"P2:Statement", "P1:Unknown"}), (0, 2)),                # other program, unknown name
+])
+def test_progress_counts_only_required_items(done, expected):
+    assert progress("P1", ESSAYS, done) == expected
+
+
+def test_progress_with_only_optional_or_no_requirements_is_zero_of_zero():
+    assert progress("P1", [req("Writing sample", required=False)], frozenset({"P1:Writing sample"})) == (0, 0)
+    assert progress("NONE", ESSAYS, frozenset()) == (0, 0)

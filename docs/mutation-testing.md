@@ -21,7 +21,7 @@ mutmut results
 | `scholarships.py` | 44 | 44 | 0 |
 | `deadlines.py` | 95 | 95 | 0 |
 | `starred.py` | 22 | 22 | 0 |
-| `requirements.py` | 82 | 82 | 0 |
+| `requirements.py` | 108 | 108 | 0 |
 | `screens.py` | 371 | 371 | 0 |
 | `components.py` | 112 | 111 | 1 |
 | `presentation.py` | 83 | 82 | 1 |
@@ -29,7 +29,7 @@ mutmut results
 | `data_loader.py` | 479 | 476 | 3 |
 | `apply_lookup.py` | 477 | 451 | 26 |
 | `ipeds_import.py` | 652 | 633 | 19 |
-| **Total** | **2,871** | **2,820** | **51** |
+| **Total** | **2,897** | **2,846** | **51** |
 
 ## What it found
 
