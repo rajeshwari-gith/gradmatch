@@ -39,15 +39,25 @@ pytest --cov                                # coverage report in htmlcov/index.h
 
 ## Data
 
-- `data/programs.csv`: 159 MS and PhD programs in Computer Science, Electrical Engineering,
-  Mechanical Engineering and Statistics in IL, IN, MI, OH and WI. Tuition, school names and websites are from
-  the 2024 IPEDS data (U.S. Department of Education). The acceptance rate is the school's
-  overall rate from IPEDS, not the program's. Living cost is from the MERIC cost of living index.
-  `stipend`, `avg_gre` and `deadline` are not in the government data, so they are our estimates:
-  - stipend: $0 for MS; for PhD $30,000 if the school accepts under 50%, otherwise $24,000
-  - avg_gre: 320 if the school accepts under 50%, otherwise 310
-  - deadline: Dec 15, 2026 for PhD and Feb 1, 2027 for MS
-- `data/scholarships.csv`: 7 national scholarships and fellowships. Amounts and deadlines are
-  estimates.
+**Programs** (`data/programs.csv`)
+- 159 MS and PhD programs.
+- 4 subjects: Computer Science, Electrical Engineering, Mechanical Engineering, Statistics.
+- 5 states: Illinois, Indiana, Michigan, Ohio, Wisconsin.
 
-Results are estimates and do not promise admission.
+Where the numbers come from:
+- Tuition, school names and websites: government data (IPEDS 2024).
+- Acceptance rate: also IPEDS. It is the whole school's rate, not the program's.
+- Living cost: the MERIC cost of living index for each state.
+- Stipend, average GRE and deadline: our own estimates, because the government data
+  does not have them.
+
+How we estimated:
+- Stipend: MS gets $0. PhD gets $30,000 at harder schools (accept under 50%), $24,000 at others.
+- Average GRE: 320 at harder schools, 310 at others.
+- Deadline: December 15, 2026 for PhD. February 1, 2027 for MS.
+
+**Scholarships** (`data/scholarships.csv`)
+- 7 national scholarships and fellowships.
+- The amounts and deadlines are estimates.
+
+All results are estimates. They do not promise admission.
