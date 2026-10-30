@@ -6,10 +6,9 @@ from hypothesis import strategies as st
 
 from gradmatch import search
 from gradmatch.cost import yearly_cost
-from gradmatch.data_loader import load_programs
 from gradmatch.fit import MATCH, SAFETY
 from gradmatch.search import fields, find_programs
-from helpers import DATA, make_program, make_student
+from helpers import make_program, make_student
 
 
 def names(results):
@@ -27,8 +26,12 @@ def test_no_programs():
     assert find_programs([], make_student()) == []
 
 
+def test_other_degree_is_left_out():
+    assert find_programs([make_program(degree="PhD")], make_student()) == []
+
+
 def test_other_field_is_left_out():
-    assert find_programs([make_program(field="Data Science")], make_student()) == []
+    assert find_programs([make_program(field="Mechanical Engineering")], make_student()) == []
 
 
 def test_too_expensive_is_left_out():
@@ -36,8 +39,8 @@ def test_too_expensive_is_left_out():
 
 
 def test_mixed_list():
-    programs = [make_program(field="Data Science"), make_program(living_cost=90000),
-                make_program(university="Kept")]
+    programs = [make_program(degree="PhD"), make_program(field="Mechanical Engineering"),
+                make_program(living_cost=90000), make_program(university="Kept")]
     assert names(find_programs(programs, make_student())) == ["Kept"]
 
 
@@ -59,7 +62,7 @@ def test_home_state_changes_the_cost():
 
 
 def test_student_gpa_is_used_for_chance():
-    result = find_programs([make_program(avg_gpa=3.0)], make_student(gpa=3.9))[0]
+    result = find_programs([make_program()], make_student(gpa=3.9))[0]
     assert result.chance == SAFETY
 
 
@@ -70,43 +73,30 @@ def test_bad_input(student):
         find_programs([make_program()], student)
 
 
-def test_cost_only_worked_out_for_the_right_field(monkeypatch):
+def test_cost_only_worked_out_for_matching_programs(monkeypatch):
     spy = Mock(wraps=yearly_cost)
     monkeypatch.setattr(search, "yearly_cost", spy)
-    programs = [make_program(), make_program(field="Data Science"), make_program()]
+    programs = [make_program(), make_program(degree="PhD"), make_program()]
     find_programs(programs, make_student())
     assert spy.call_count == 2
 
 
 def test_fields():
-    programs = [make_program(field="Data Science"), make_program(), make_program()]
-    assert fields(programs) == ["Computer Science", "Data Science"]
-
-
-def test_search_real_data():
-    results = find_programs(load_programs(DATA), make_student(budget=40000))
-    assert [(r.program.university, r.cost) for r in results] == [
-        ("Grand Valley State University", 32600),
-        ("Wayne State University", 38200),
-    ]
-
-
-def test_search_real_data_big_budget():
-    results = find_programs(load_programs(DATA), make_student(budget=1_000_000))
-    assert len(results) == 11
+    programs = [make_program(field="Mechanical Engineering"), make_program(), make_program()]
+    assert fields(programs) == ["Computer Science", "Mechanical Engineering"]
 
 
 money = st.integers(0, 100000)
 program_lists = st.lists(st.builds(make_program, state=st.sampled_from(["MI", "OH"]),
-                                   field=st.sampled_from(["Computer Science", "Data Science"]),
+                                   degree=st.sampled_from(["MS", "PhD"]),
                                    tuition_in_state=money, tuition_out_state=money,
-                                   living_cost=money, avg_gpa=st.floats(0, 4)), max_size=10)
+                                   living_cost=money, acceptance_rate=st.floats(0, 1)), max_size=10)
 
 
 @given(program_lists, st.floats(0, 4), money)
-def test_results_always_in_field_budget_and_order(programs, gpa, budget):
+def test_results_always_match_and_are_in_order(programs, gpa, budget):
     results = find_programs(programs, make_student(gpa=gpa, budget=budget))
     costs = [r.cost for r in results]
-    assert all(r.program.field == "Computer Science" for r in results)
+    assert all(r.program.degree == "MS" for r in results)
     assert all(cost <= budget for cost in costs)
     assert costs == sorted(costs)

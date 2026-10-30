@@ -18,12 +18,12 @@ def find_programs(programs: list[Program], student: Student) -> list[Result]:
         raise ValueError("budget can't be negative")
     results = []
     for program in programs:
-        if program.field != student.field:
+        if program.degree != student.degree or program.field != student.field:
             continue
         cost = yearly_cost(program, student.home_state)
         if cost > student.budget:
             continue
-        results.append(Result(program, cost, chance(student.gpa, program.avg_gpa)))
+        results.append(Result(program, cost, chance(student.gpa, program.acceptance_rate)))
     results.sort(key=lambda result: result.cost)
     return results
 
