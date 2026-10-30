@@ -7,15 +7,14 @@ from gradmatch.models import Program
 COLUMNS = [f.name for f in fields(Program)]
 
 
+# SQLite has no date type, so the deadline is saved as text like "2027-01-15"
 def to_row(program: Program) -> tuple:
-    # SQLite has no date type, so the deadline is saved as text like "2027-01-15"
     return tuple(v.isoformat() if isinstance(v, date) else v for v in astuple(program))
 
 
 def to_program(row: tuple) -> Program:
     values = dict(zip(COLUMNS, row))
-    if values["deadline"]:
-        values["deadline"] = date.fromisoformat(values["deadline"])
+    values["deadline"] = date.fromisoformat(values["deadline"])
     return Program(**values)
 
 

@@ -15,8 +15,6 @@ def yearly_cost(program: Program, home_state: str) -> int:
 
 
 def funding(program: Program) -> str:
-    if program.stipend is None:
-        return "Not listed"
     if program.stipend >= program.living_cost:
         return "Fully funded"
     if program.stipend > 0:

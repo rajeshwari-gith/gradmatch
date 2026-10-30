@@ -31,7 +31,7 @@ def test_stipend_waives_tuition_and_pays_living_cost(stipend, expected):
 
 
 @pytest.mark.parametrize("stipend, expected", [
-    (None, "Not listed"), (0, "No funding"), (1, "Partly funded"),
+    (0, "No funding"), (1, "Partly funded"),
     (14999, "Partly funded"), (15000, "Fully funded"), (30000, "Fully funded"),
 ])
 def test_funding(stipend, expected):

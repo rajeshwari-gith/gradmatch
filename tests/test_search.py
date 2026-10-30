@@ -78,7 +78,7 @@ def test_phd_best_funded_first():
                 make_program(university="Big", degree="PhD", stipend=30000)]
     found = find_programs(programs, make_student(degree="PhD", budget=100000))
     assert names(found) == ["Big", "Small", "None"]
-    assert [r.funding for r in found] == ["Fully funded", "Partly funded", "Not listed"]
+    assert [r.funding for r in found] == ["Fully funded", "Partly funded", "No funding"]
 
 
 def test_home_state_changes_the_cost():

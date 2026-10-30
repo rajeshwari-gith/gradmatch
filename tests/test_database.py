@@ -32,8 +32,3 @@ def test_database_file(tmp_path):
     create_database([make_program()], tmp_path / "test.db").commit()
     count = sqlite3.connect(tmp_path / "test.db").execute("SELECT COUNT(*) FROM programs").fetchone()
     assert count == (1,)
-
-
-def test_program_without_deadline_comes_back_the_same():
-    program = make_program()
-    assert get_programs(create_database([program]), "MS", "Computer Science") == [program]

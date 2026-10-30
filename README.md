@@ -43,9 +43,11 @@ pytest --cov                                # coverage report in htmlcov/index.h
   Mechanical Engineering and Statistics in IL, IN, MI, OH and WI. Tuition, school names and websites are from
   the 2024 IPEDS data (U.S. Department of Education). The acceptance rate is the school's
   overall rate from IPEDS, not the program's. Living cost is from the MERIC cost of living index.
-  The `stipend`, `avg_gre` and `deadline` columns are not in the government data, so they stay
-  blank until we check them on the program's website. Blank means "not listed", never a guess.
-- `data/scholarships.csv`: 7 national scholarships and fellowships. The amounts and deadlines
-  still need to be checked on each official website.
+  `stipend`, `avg_gre` and `deadline` are not in the government data, so they are our estimates:
+  - stipend: $0 for MS; for PhD $30,000 if the school accepts under 50%, otherwise $24,000
+  - avg_gre: 320 if the school accepts under 50%, otherwise 310
+  - deadline: Dec 15, 2026 for PhD and Feb 1, 2027 for MS
+- `data/scholarships.csv`: 7 national scholarships and fellowships. Amounts and deadlines are
+  estimates.
 
 Results are estimates and do not promise admission.

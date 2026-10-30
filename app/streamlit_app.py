@@ -81,7 +81,7 @@ if submitted:
     st.subheader("Deadlines")
     dates = [(s.name, s.deadline) for s in found]
     dates += [(f"{r.program.university} ({r.program.program})", r.program.deadline)
-              for r in results if r.program.deadline]
+              for r in results]
     coming = deadlines.upcoming(dates, deadlines.today())
     for d in coming:
         if d.soon:
