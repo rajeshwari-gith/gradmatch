@@ -1,4 +1,4 @@
-# Test plan
+# GradMatch Test Plan
 
 ## Requirements
 
