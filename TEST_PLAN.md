@@ -46,7 +46,7 @@ The tests are grouped by technique, one folder each:
 
 | Folder | Technique | What it checks |
 |---|---|---|
-| `tests/unit/` | Unit testing | Each function on its own with a simple example |
+| `tests/unit/` | Unit testing | One file per feature (`test_cost.py`, `test_fit.py`, `test_search.py`, `test_scholarships.py`, `test_deadlines.py`), each function with a simple example |
 | `tests/boundary_values/` | Equivalence partitioning and boundary values | GPA, acceptance rate, budget, scholarship minimum GPA, days until a deadline |
 | `tests/decision_tables/` | Decision tables | Tables C and S above, one test per rule |
 | `tests/control_flow/` | Control-flow (branch) testing | Every branch of `find_programs()` |
@@ -85,4 +85,4 @@ Coverage: `pytest --cov` measures line and branch coverage and fails below 100%.
 runs every test on each push and saves the HTML coverage report (download "coverage-report"
 from the run's page).
 
-Current result: 44 tests passing, 100% line and branch coverage.
+Current result: 45 tests passing, 100% line and branch coverage.
