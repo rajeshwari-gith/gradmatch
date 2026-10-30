@@ -1,3 +1,4 @@
+# Control-flow test: every branch of find_programs
 import pytest
 
 from programs import find_programs
