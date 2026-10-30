@@ -201,3 +201,83 @@ def test_command_uses_the_data_folder_by_default(data_dir, monkeypatch, capsys):
 def test_command_with_too_many_arguments_shows_usage(capsys):
     assert main(["data_report", "a", "b"]) == 2
     assert capsys.readouterr().out == "usage: python -m gradmatch.data_report [data_dir]\n"
+
+
+# ---- Tests added after mutation testing (see docs/mutation-testing.md) ----
+# Why (mutation testing): small changes to the titles, blank lines, separators and default values
+# went unnoticed, because the tests above only looked for parts of the text. These check the whole
+# printed report, files with missing columns, a single imported row (boundary) and line breaks.
+
+EXPECTED_REPORT = """Programs: 5    Scholarships: 1
+
+Programs by source:
+  ipeds                                          3
+  estimate                                       1
+  official-page                                  1
+
+Programs by degree:
+  BS                                             2
+  MS                                             2
+  PhD                                            1
+
+Programs by field (2 fields):
+  Computer Science                               4
+  Data Science                                   1
+
+Blank cells in the 3 imported (ipeds) rows (blank = not published):
+  program_id                   0  0%
+  field                        0  0%
+  degree                       0  0%
+  acceptance_rate              2  67%
+  stipend                      1  33%
+  website                      0  0%
+  source                       0  0%
+
+Duplicate program ids: none
+Duplicate scholarship ids: none
+Websites not starting with https://: none
+
+Checked by hand on official pages (from SOURCES.md):
+  programs:     2 of 5 hand-entered rows
+  scholarships: 1 of 13"""
+
+
+def test_whole_printed_report_is_exact(data_dir):
+    assert format_report(build_report(data_dir)) == EXPECTED_REPORT
+
+
+def test_files_with_missing_columns_still_get_a_report(tmp_path):
+    # Only program_id/scholarship_id are missing in one file, and degree, field and website in
+    # the other: every missing cell counts as blank, so nothing crashes and nothing is invented.
+    write(tmp_path / "programs.csv", ["source"], [{"source": "ipeds"}, {"source": "ipeds"}])
+    write(tmp_path / "scholarships.csv", ["name"], [{"name": "A"}, {"name": "B"}])
+
+    report = build_report(tmp_path)
+
+    assert report["by_degree"] == {"": 2} and report["by_field"] == {"": 2}
+    assert report["duplicate_program_ids"] == [""]           # both rows have no id
+    assert report["duplicate_scholarship_ids"] == [""]
+    assert report["non_https"] == ["", "", "", ""]            # no website column at all
+    assert "  (blank)                                        2" in format_report(report)
+
+
+def test_a_single_imported_row_is_counted(tmp_path):
+    # Boundary value: exactly one imported row.
+    write(tmp_path / "programs.csv", PROGRAM_COLUMNS, [program("ONLY", stipend="")])
+    write(tmp_path / "scholarships.csv", ["scholarship_id", "website"], [])
+
+    assert build_report(tmp_path)["blank_in_imported"]["stipend"] == 1
+
+
+def test_a_line_break_inside_a_quoted_cell_stays_in_that_cell(tmp_path):
+    write(tmp_path / "programs.csv", PROGRAM_COLUMNS, [program("P1", field="Data\r\nScience")])
+    write(tmp_path / "scholarships.csv", ["scholarship_id", "website"], [])
+
+    assert build_report(tmp_path)["by_field"] == {"Data\r\nScience": 1}
+
+
+def test_two_duplicate_scholarship_ids_are_printed_with_comma_and_space(data_dir):
+    write(data_dir / "scholarships.csv", ["scholarship_id", "website"],
+          [{"scholarship_id": s, "website": "https://a.org"} for s in ("S2", "S1", "S2", "S1")])
+
+    assert "Duplicate scholarship ids: S1, S2\n" in format_report(build_report(data_dir))
