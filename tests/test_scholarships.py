@@ -39,5 +39,10 @@ def test_biggest_amount_first_and_others_left_out():
     assert [s.name for s in found] == ["Big", "Small"]
 
 
+def test_same_amount_sorted_by_name():
+    found = find_scholarships([make_scholarship(name="Zeta"), make_scholarship(name="Alpha")], make_student())
+    assert [s.name for s in found] == ["Alpha", "Zeta"]
+
+
 def test_no_scholarships():
     assert find_scholarships([], make_student()) == []
