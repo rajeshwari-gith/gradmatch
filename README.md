@@ -20,7 +20,7 @@ Live app: https://gradmatch-rg.streamlit.app
 
 The page itself is `app/streamlit_app.py`.
 
-## Running
+## Running (Python 3.11 or newer)
 
 ```
 pip install -r requirements.txt

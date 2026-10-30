@@ -1,16 +1,16 @@
 university,program,field,state,tuition_in_state,tuition_out_state,living_cost,avg_gpa,website
-Grand Valley State University,MS in Applied Computer Science,Computer Science,MI,14400,14400,18200,3.30,https://www.gvsu.edu/computing/
-University of Michigan,MS in Computer Science and Engineering,Computer Science,MI,30000,60000,18200,3.70,https://cse.engin.umich.edu
-Michigan State University,MS in Computer Science,Computer Science,MI,22000,42000,18200,3.40,https://engineering.msu.edu/about/departments/cse
-Wayne State University,MS in Computer Science,Computer Science,MI,20000,40000,18200,3.20,https://engineering.wayne.edu/computer-science
-University of Illinois Urbana-Champaign,MS in Computer Science,Computer Science,IL,38000,52000,18400,3.70,https://siebelschool.illinois.edu
+Arizona State University,MS in Computer Science,Computer Science,AZ,13000,34000,21400,3.30,https://scai.engineering.asu.edu
 Georgia Institute of Technology,MS in Computer Science,Computer Science,GA,16000,32000,18400,3.60,https://www.cc.gatech.edu
-University of Texas at Austin,MS in Computer Science,Computer Science,TX,22000,42000,18600,3.70,https://www.cs.utexas.edu
+Grand Valley State University,MS in Applied Computer Science,Computer Science,MI,14400,14400,18200,3.30,https://www.gvsu.edu/computing/
+Michigan State University,MS in Computer Science,Computer Science,MI,22000,42000,18200,3.40,https://engineering.msu.edu/about/departments/cse
+Ohio State University,MS in Computer Science and Engineering,Computer Science,OH,15000,40000,18600,3.50,https://cse.osu.edu
 Purdue University,MS in Computer Science,Computer Science,IN,12000,30000,18000,3.60,https://cs.purdue.edu/graduate/admission/steps.html
 Stanford University,MS in Computer Science,Computer Science,CA,65000,65000,27800,3.80,https://cs.stanford.edu
-Ohio State University,MS in Computer Science and Engineering,Computer Science,OH,15000,40000,18600,3.50,https://cse.osu.edu
-Arizona State University,MS in Computer Science,Computer Science,AZ,13000,34000,21400,3.30,https://scai.engineering.asu.edu
+University of Illinois Urbana-Champaign,MS in Computer Science,Computer Science,IL,38000,52000,18400,3.70,https://siebelschool.illinois.edu
+University of Michigan,MS in Computer Science and Engineering,Computer Science,MI,30000,60000,18200,3.70,https://cse.engin.umich.edu
+University of Texas at Austin,MS in Computer Science,Computer Science,TX,22000,42000,18600,3.70,https://www.cs.utexas.edu
+Wayne State University,MS in Computer Science,Computer Science,MI,20000,40000,18200,3.20,https://engineering.wayne.edu/computer-science
 Columbia University,MS in Data Science,Data Science,NY,70000,70000,25000,3.60,https://datascience.columbia.edu
+Indiana University Bloomington,MS in Data Science,Data Science,IN,13000,38000,18000,3.20,https://luddy.indiana.edu
 New York University,MS in Data Science,Data Science,NY,60000,60000,25000,3.60,https://cds.nyu.edu
 University of California San Diego,MS in Data Science,Data Science,CA,18000,33000,27800,3.50,https://datascience.ucsd.edu
-Indiana University Bloomington,MS in Data Science,Data Science,IN,13000,38000,18000,3.20,https://luddy.indiana.edu

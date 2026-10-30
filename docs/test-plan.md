@@ -20,6 +20,6 @@
 | `test_search.py` | search.py, every branch, plus searches on the real data |
 | `test_app.py` | the whole page with Streamlit's AppTest |
 
-Run with `pytest --cov`. GitHub Actions runs the tests on every push.
+Run them with `pytest --cov`. GitHub Actions runs the tests on every push.
 
 Current result: 61 tests passing, 100% line and branch coverage.
