@@ -12,7 +12,7 @@ DATABASE = ROOT / "data" / "gradmatch.db"
 
 
 def make_program(**changes):
-    values = dict(university="Test University", program="MS in Computer Science", degree="MS",
+    values = dict(university="Test University", degree="MS",
                   field="Computer Science", state="MI", tuition_in_state=10000,
                   tuition_out_state=20000, living_cost=15000, acceptance_rate=0.5, deadline=date(2027, 2, 1),
                   website="https://example.edu")

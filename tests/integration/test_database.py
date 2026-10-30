@@ -3,8 +3,7 @@ from contextlib import closing
 
 import pytest
 
-from gradmatch.database import (add_programs, add_scholarships, connect, get_fields, get_programs,
-                                get_scholarships)
+from gradmatch.database import add_programs, add_scholarships, connect, get_programs, get_scholarships
 from helpers import DATABASE, make_program, make_scholarship
 
 
@@ -17,15 +16,14 @@ def test_save_and_read_back(tmp_path):
     with closing(connect(tmp_path / "test.db")) as connection:
         assert get_programs(connection) == [program]
         assert get_scholarships(connection) == [scholarship]
-        assert get_fields(connection) == ["Computer Science"]
 
 
 def test_real_database():
     with closing(connect(DATABASE)) as connection:
         assert len(get_programs(connection)) == 159
         assert len(get_scholarships(connection)) == 7
-        assert get_fields(connection) == ["Computer Science", "Electrical Engineering",
-                                          "Mechanical Engineering", "Statistics"]
+        assert {p.field for p in get_programs(connection)} == {
+            "Computer Science", "Electrical Engineering", "Mechanical Engineering", "Statistics"}
 
 
 def test_req8_database_refuses_bad_data():
