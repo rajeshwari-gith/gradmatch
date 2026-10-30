@@ -1,3 +1,6 @@
+# Program search, yearly cost and admission chance
+
+
 def yearly_cost(program, home_state):
     if home_state == program["state"]:
         tuition = program["tuition_in_state"]

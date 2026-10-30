@@ -1,3 +1,4 @@
+# SQLite database for programs and scholarships
 import sqlite3
 
 # CHECK makes SQLite refuse bad values
