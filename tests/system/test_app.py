@@ -4,33 +4,7 @@ from unittest.mock import Mock, patch
 from streamlit.testing.v1 import AppTest
 
 from gradmatch.data_loader import DataError
-from helpers import APP, PROGRAMS, make_program
-
-
-def open_app():
-    at = AppTest.from_file(APP, default_timeout=30).run()
-    assert not at.exception
-    return at
-
-
-def search(at, degree="MS", field="Computer Science", gpa=3.5, home_state="MI", budget=40000,
-           citizenship="US citizen", states=(), gre=None, today=date(2026, 11, 20)):
-    at.radio(key="degree").set_value(degree)
-    at.selectbox(key="field").set_value(field)
-    at.number_input(key="gpa").set_value(gpa)
-    at.selectbox(key="home_state").set_value(home_state)
-    at.number_input(key="budget").set_value(budget)
-    at.selectbox(key="citizenship").set_value(citizenship)
-    at.multiselect(key="states").set_value(list(states))
-    at.number_input(key="gre").set_value(gre)
-    with patch("gradmatch.deadlines.today", Mock(return_value=today)):
-        at.button[0].click().run()
-    assert not at.exception
-    return at
-
-
-def table(at, title):
-    return at.dataframe[["Programs", "Scholarships", "Deadlines"].index(title)].value
+from helpers import APP, PROGRAMS, make_program, open_app, search, table
 
 
 def test_page_opens():
@@ -39,32 +13,6 @@ def test_page_opens():
     assert at.selectbox(key="field").options == [
         "Computer Science", "Electrical Engineering", "Mechanical Engineering", "Statistics"]
     assert at.dataframe.len == 0
-
-
-def test_story_1_student_finds_ms_programs_they_can_afford():
-    at = search(open_app(), budget=35000)
-    programs = table(at, "Programs")
-    costs = [int(c.strip("$").replace(",", "")) for c in programs["Yearly cost"]]
-    assert len(costs) > 0
-    assert costs == sorted(costs) and max(costs) <= 35000
-    assert set(programs["Chance"]) <= {"Safety", "Match", "Reach"}
-
-
-def test_story_2_student_finds_phd_programs_and_fellowships():
-    at = search(open_app(), degree="PhD", budget=100000)
-    programs = table(at, "Programs")
-    assert len(programs) == 8
-    assert "Funding" in programs.columns
-    names = list(table(at, "Scholarships")["Name"])
-    assert names[0] == "DoD National Defense Science and Engineering Graduate Fellowship"
-    assert "GVSU Graduate Assistantship" not in names
-
-
-def test_story_3_student_is_warned_about_a_close_deadline():
-    at = search(open_app(), today=date(2026, 11, 20))
-    assert "DoD SMART Scholarship is due in 11 days" in at.warning[0].value
-    deadlines = table(at, "Deadlines")
-    assert list(deadlines["Date"]) == sorted(deadlines["Date"])
 
 
 def test_no_warning_when_nothing_is_close():

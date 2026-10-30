@@ -24,7 +24,8 @@ Live app: https://gradmatch-rg.streamlit.app
 | Deadline tracker | `deadlines.py` | Sai Nishith |
 
 Also: the page `app/streamlit_app.py` and CI (Rajeshwari), and the data loader
-`data_loader.py`, the SQLite database `database.py` and the API `api.py` (Sai Nishith). All code is in `src/gradmatch/`.
+`data_loader.py`, the SQLite database `database.py` and the API `api.py` (Sai Nishith). All code is in `src/gradmatch/`. The tests are in `tests/`, one folder per kind of test
+(unit, integration, system, acceptance). See [TEST_PLAN.md](TEST_PLAN.md).
 
 ## Running
 
@@ -35,6 +36,7 @@ pip install -r requirements.txt
 streamlit run app/streamlit_app.py
 uvicorn --app-dir src gradmatch.api:app     # API at http://127.0.0.1:8000/docs
 pytest --cov                                # coverage report in htmlcov/index.html
+pytest tests/unit                           # only one kind of test
 ```
 
 ## Data

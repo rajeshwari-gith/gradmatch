@@ -37,17 +37,14 @@ Under 10% acceptance is always Reach. Otherwise:
 
 ## Tests
 
-| File | What it tests |
-|---|---|
-| `test_cost.py` | cost.py: tuition, stipends, funding labels |
-| `test_fit.py` | fit.py: the table above, GPA, rate and GRE edge values, bad GPAs and GREs |
-| `test_search.py` | search.py: every branch, budget edges, order |
-| `test_scholarships.py` | scholarships.py: each rule, GPA edge |
-| `test_deadlines.py` | deadlines.py: 0, 14 and 15 days, passed deadlines |
-| `test_database.py` | database.py: saving and reading programs in SQLite |
-| `test_data_loader.py` | data_loader.py: good and bad CSV files, the real files |
-| `test_api.py` | api.py with FastAPI's TestClient |
-| `test_app.py` | the whole page with Streamlit's AppTest, including the 3 user stories |
+| Folder | Kind of test | Files |
+|---|---|---|
+| `tests/unit/` | One module on its own | `test_cost.py`, `test_fit.py`, `test_search.py`, `test_scholarships.py`, `test_deadlines.py`, `test_data_loader.py` |
+| `tests/integration/` | Parts working together: the SQLite database and the API | `test_database.py`, `test_api.py` |
+| `tests/system/` | The whole app page, with Streamlit's AppTest | `test_app.py` |
+| `tests/acceptance/` | The 3 user stories above | `test_user_stories.py` |
+
+`tests/helpers.py` has the made-up programs, scholarships and students the tests share.
 
 Methods used: equivalence partitioning and boundary values (GPA, GRE, rate, budget, days left),
 decision tables (chance, scholarships), branch coverage, mocks (data loader, today's date)

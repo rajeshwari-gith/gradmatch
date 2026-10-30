@@ -1,5 +1,8 @@
 from datetime import date
 from pathlib import Path
+from unittest.mock import Mock, patch
+
+from streamlit.testing.v1 import AppTest
 
 from gradmatch.models import Program, Scholarship, Student
 
@@ -44,3 +47,29 @@ def write_csv(folder, header, *rows):
     path = folder / "data.csv"
     path.write_text(header + "\n" + "".join(row + "\n" for row in rows), encoding="utf-8")
     return path
+
+
+def open_app():
+    at = AppTest.from_file(APP, default_timeout=30).run()
+    assert not at.exception
+    return at
+
+
+def search(at, degree="MS", field="Computer Science", gpa=3.5, home_state="MI", budget=40000,
+           citizenship="US citizen", states=(), gre=None, today=date(2026, 11, 20)):
+    at.radio(key="degree").set_value(degree)
+    at.selectbox(key="field").set_value(field)
+    at.number_input(key="gpa").set_value(gpa)
+    at.selectbox(key="home_state").set_value(home_state)
+    at.number_input(key="budget").set_value(budget)
+    at.selectbox(key="citizenship").set_value(citizenship)
+    at.multiselect(key="states").set_value(list(states))
+    at.number_input(key="gre").set_value(gre)
+    with patch("gradmatch.deadlines.today", Mock(return_value=today)):
+        at.button[0].click().run()
+    assert not at.exception
+    return at
+
+
+def table(at, title):
+    return at.dataframe[["Programs", "Scholarships", "Deadlines"].index(title)].value
