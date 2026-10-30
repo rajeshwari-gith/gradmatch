@@ -1,7 +1,6 @@
-# This file tells GitHub to run all our tests automatically, so we notice a broken change quickly.
+# Runs all the tests with coverage on every push and pull request (week 13: continuous testing).
 name: Tests
 
-# When: on every push to any branch, and on every pull request.
 on:
   push:
   pull_request:
@@ -10,46 +9,9 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      # Step 1: download our code onto GitHub's test computer.
       - uses: actions/checkout@v4
-
-      # Step 2: install Python (the project needs 3.11 or newer).
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-
-      # Step 3: install the libraries from requirements.txt (Streamlit, pytest, ...).
-      - name: Install dependencies
-        run: pip install -r requirements.txt
-
-      # Step 4: run every test and measure how much of the code the tests touched (coverage).
-      - name: Run tests with coverage
-        run: pytest --cov --cov-report=term-missing --cov-report=xml --junitxml=test-results.xml
-
-      # Step 5: print the test count and coverage table on the run page (if: always = even when tests fail).
-      - name: Show test results and coverage on the run summary page
-        if: always()
-        run: |
-          {
-            echo "## Test results"
-            python - <<'PY'
-          import xml.etree.ElementTree as ET
-          root = ET.parse("test-results.xml").getroot()
-          suite = root if root.tag == "testsuite" else root.find("testsuite")
-          print(f"**Tests:** {suite.get('tests')} run, {suite.get('failures')} failed, "
-                f"{suite.get('errors')} errors, {suite.get('skipped')} skipped")
-          PY
-            echo
-            echo "## Coverage (line and branch)"
-            coverage report --format=markdown
-          } >> "$GITHUB_STEP_SUMMARY"
-
-      # Step 6: keep the report files so we can download them later.
-      - name: Upload test and coverage reports
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: test-and-coverage-reports
-          path: |
-            coverage.xml
-            test-results.xml
+      - run: pip install -r requirements.txt
+      - run: pytest --cov
