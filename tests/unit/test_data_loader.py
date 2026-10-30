@@ -33,6 +33,18 @@ def test_real_files_load():
     assert len(load_scholarships(SCHOLARSHIPS)) == 7
 
 
+@pytest.mark.parametrize("gre", [260, 340])
+def test_gre_edges_are_accepted(tmp_path, gre):
+    row = PROGRAM_ROW.replace(",310,", f",{gre},")
+    assert load_programs(write_csv(tmp_path, PROGRAM_HEADER, row))[0].avg_gre == gre
+
+
+@pytest.mark.parametrize("gre", [259, 341])
+def test_gre_just_outside_is_refused(tmp_path, gre):
+    row = PROGRAM_ROW.replace(",310,", f",{gre},")
+    with pytest.raises(DataError, match="avg_gre"):
+        load_programs(write_csv(tmp_path, PROGRAM_HEADER, row))
+
 @pytest.mark.parametrize("bad_row, message", [
     (PROGRAM_ROW.replace("10000", "lots"), "invalid literal"),
     (PROGRAM_ROW.replace(",MS,", ",BS,"), "degree"),

@@ -53,4 +53,4 @@ and property-based tests with Hypothesis.
 Run with `pytest --cov`. GitHub Actions runs the tests on every push and saves the HTML
 coverage report (download "coverage-report" from the run's page).
 
-Current result: 149 tests passing, 100% line and branch coverage.
+Current result: 154 tests passing, 100% line and branch coverage.
