@@ -1,6 +1,6 @@
 from datetime import date
 
-from deadlines import today, upcoming
+from scholarships import today, upcoming
 
 
 def test_upcoming():

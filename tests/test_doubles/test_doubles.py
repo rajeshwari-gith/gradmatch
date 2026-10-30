@@ -3,15 +3,15 @@ from unittest.mock import Mock, patch
 
 from streamlit.testing.v1 import AppTest
 
-import search
-from cost import yearly_cost
+import programs
 from helpers import APP, make_program, make_student, open_app, search as search_page, table
+from programs import yearly_cost
 
 
 def test_spy_on_cost():
     spy = Mock(wraps=yearly_cost)
-    with patch.object(search, "yearly_cost", spy):
-        search.find_programs([make_program(), make_program(degree="PhD")], make_student())
+    with patch.object(programs, "yearly_cost", spy):
+        programs.find_programs([make_program(), make_program(degree="PhD")], make_student())
     assert spy.call_count == 1
 
 

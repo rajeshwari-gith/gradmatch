@@ -1,6 +1,5 @@
-from fit import SAFETY
-from search import find_programs
 from helpers import make_program, make_student
+from programs import SAFETY, find_programs
 
 # follows each value in find_programs() from where it is set to where it is used
 

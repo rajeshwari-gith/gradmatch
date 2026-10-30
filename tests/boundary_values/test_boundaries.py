@@ -2,11 +2,9 @@ from datetime import date
 
 import pytest
 
-from deadlines import upcoming
-from fit import MATCH, REACH, SAFETY, chance, check_gpa
-from scholarships import find_scholarships, qualifies
-from search import find_programs
 from helpers import make_program, make_scholarship, make_student
+from programs import MATCH, REACH, SAFETY, chance, check_gpa, find_programs
+from scholarships import find_scholarships, qualifies, upcoming
 
 
 def test_req7_gpa_must_be_0_to_4():

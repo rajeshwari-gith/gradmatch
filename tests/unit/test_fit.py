@@ -1,4 +1,4 @@
-from fit import MATCH, chance
+from programs import MATCH, chance
 
 
 def test_chance():

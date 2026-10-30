@@ -1,8 +1,8 @@
 import pytest
 
-from fit import MATCH, REACH, SAFETY, chance
-from scholarships import qualifies
 from helpers import make_scholarship, make_student
+from programs import MATCH, REACH, SAFETY, chance
+from scholarships import qualifies
 
 
 # REQ-4 chance table from TEST_PLAN.md, one test per rule

@@ -20,13 +20,13 @@ Live app: https://gradmatch-rg.streamlit.app
 
 | Feature | File | Owner |
 |---|---|---|
-| Program search and yearly cost | `search.py`, `cost.py` | Rajeshwari |
-| Admission chance | `fit.py` | Rajeshwari |
+| Program search and yearly cost | `programs.py` | Rajeshwari |
+| Admission chance | `programs.py` | Rajeshwari |
 | Scholarships | `scholarships.py` | Sai Nishith |
-| Deadline tracker | `deadlines.py` | Sai Nishith |
+| Deadline tracker | `scholarships.py` | Sai Nishith |
 
 Also: the page `app.py` and CI (Rajeshwari), and the SQLite database `database.py`
-(Sai Nishith). `models.py` has the data classes.
+(Sai Nishith).
 
 ## Technologies Used
 
@@ -44,7 +44,7 @@ Python, Streamlit, SQLite, pytest, pytest-cov and Hypothesis.
 
 `python -m pytest -v`
 
-The tests are in `tests/`, one folder per testing technique. See [TEST_PLAN.md](TEST_PLAN.md).
+The tests are in `tests/`, one folder per testing technique. See [TEST_PLAN.md](TEST_PLAN.md), which also has the defect log.
 
 ## Generate Coverage Report
 

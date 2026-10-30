@@ -1,7 +1,7 @@
 import pytest
 
-from search import find_programs
 from helpers import make_program, make_student
+from programs import find_programs
 
 # covers every branch of find_programs() in search.py
 

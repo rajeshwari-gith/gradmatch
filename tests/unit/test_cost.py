@@ -1,5 +1,5 @@
-from cost import yearly_cost
 from helpers import make_program
+from programs import yearly_cost
 
 
 def test_req3_yearly_cost():

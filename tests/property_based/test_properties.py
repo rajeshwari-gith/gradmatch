@@ -1,8 +1,8 @@
 from hypothesis import given
 from hypothesis import strategies as st
 
-from search import find_programs
 from helpers import make_program, make_student
+from programs import find_programs
 
 money = st.integers(0, 100000)
 programs = st.lists(st.builds(make_program, degree=st.sampled_from(["MS", "PhD"]),

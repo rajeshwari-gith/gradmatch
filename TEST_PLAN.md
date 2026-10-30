@@ -49,7 +49,7 @@ The tests are grouped by technique, one folder each:
 | `tests/unit/` | Unit testing | One file per feature (`test_cost.py`, `test_fit.py`, `test_search.py`, `test_scholarships.py`, `test_deadlines.py`), each function with a simple example |
 | `tests/boundary_values/` | Equivalence partitioning and boundary values | GPA, acceptance rate, budget, scholarship minimum GPA, days until a deadline |
 | `tests/decision_tables/` | Decision tables | Tables C and S above, one test per rule |
-| `tests/control_flow/` | Control-flow (branch) testing | Every branch of `find_programs()` |
+| `tests/control_flow/` | Control-flow (branch) testing | Every branch of `find_programs()` in `programs.py` |
 | `tests/data_flow/` | Data-flow testing | Each value in `find_programs()` from where it is set to where it is used |
 | `tests/test_doubles/` | Test doubles | A spy on the cost function, mocks for the database and today's date |
 | `tests/integration/` | Integration testing | Our code with the SQLite database, including its rules for bad data |
@@ -86,3 +86,12 @@ runs every test on each push and saves the HTML coverage report (download "cover
 from the run's page).
 
 Current result: 41 tests passing, 100% line and branch coverage.
+
+## Defect log
+
+| ID | Date | File | Problem | Found by | Fixed |
+|----|------|------|---------|----------|-------|
+| 1 | Oct 30 | data_loader.py (file removed later) | A row with too few values crashed with AttributeError instead of our error message, and a row with too many values was accepted. | test_bad_program_row (test removed later) | Oct 30 |
+| 2 | Oct 30 | streamlit_app.py | The app crashed on start with "No module named gradmatch" when run with `streamlit run`, because Python couldn't find the src folder. The tests passed because pytest adds src itself. | Running the app by hand | Oct 30 |
+| 3 | Oct 30 | streamlit_app.py | The MS results table showed a Funding column saying "Not listed" for every program. Hiding the column only changed what was shown, not the table's data. | test_ms_table_has_no_funding_column (test removed later) | Oct 30 |
+| 4 | Oct 31 | api.py (file removed later) | /scholarships accepted a GPA outside 0–4 and still listed scholarships (GPA 5 returned NSF, SMART and GVSU) instead of a 400 error like /programs. Found by Nishith in review. | test_scholarships_bad_gpa_is_400 (test removed later) | Oct 31 |
