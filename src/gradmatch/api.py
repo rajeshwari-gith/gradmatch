@@ -70,6 +70,30 @@ class ProfileIn(BaseModel):
     special: list[str] = []
 
 
+# The shape of the GET /deadlines answer. FastAPI shows it on the /docs page, so a reader can see
+# that the answer is an object with the window, the four counts and the list, not a plain list.
+class GlanceOut(BaseModel):
+    within_window: int
+    within_90: int
+    later: int
+    passed: int
+
+
+class DeadlineOut(BaseModel):
+    kind: str                     # "program" or "scholarship"
+    id: str
+    name: str
+    deadline: date
+    status: str                   # "urgent", "soon" or "later" (closed ones are left out)
+    website: str
+
+
+class DeadlinesOut(BaseModel):
+    urgent_days: int
+    glance: GlanceOut
+    deadlines: list[DeadlineOut]
+
+
 # The JSON body of POST /starred, e.g. {"key": "program:GVSU-MS-CS"}.
 class StarIn(BaseModel):
     key: str
@@ -113,7 +137,9 @@ def match(body: ProfileIn, limit: int = Query(MATCH_LIMIT, ge=1, le=MAX_LIMIT)):
     """Programs and scholarships for a student; 422 with the validation messages if invalid.
 
     `programs` holds the first `limit` results in the search's order (default 50) and
-    `total_programs` says how many matched in all.
+    `total_programs` says how many matched in all. Each program's `fit` is Safety, Match
+    or Reach. Without a published average GPA it is estimated from the acceptance rate
+    (the program's own, or its university's); a program with neither is left out.
     """
     profile = StudentProfile(
         degree_sought=body.degree_sought,
@@ -146,7 +172,7 @@ def match(body: ProfileIn, limit: int = Query(MATCH_LIMIT, ge=1, le=MAX_LIMIT)):
 # "at a glance" counts. `today` can be sent by the caller (handy for tests and demos); only when
 # it is missing do we read the clock, here at the edge of the program, so the logic in
 # deadlines.py stays free of date.today(). `urgent_days` is the student's warning window.
-@app.get("/deadlines")
+@app.get("/deadlines", response_model=DeadlinesOut)
 def deadlines(today: date | None = None,
               urgent_days: int = Query(URGENT_MAX_DAYS, ge=0, le=GLANCE_DAYS)):
     """Open program and scholarship deadlines, soonest first, and the glance counts.
