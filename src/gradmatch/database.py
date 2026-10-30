@@ -15,8 +15,6 @@ CREATE TABLE IF NOT EXISTS programs (
     tuition_out_state INTEGER NOT NULL CHECK (tuition_out_state >= 0),
     living_cost       INTEGER NOT NULL CHECK (living_cost >= 0),
     acceptance_rate   REAL    NOT NULL CHECK (acceptance_rate BETWEEN 0 AND 1),
-    stipend           INTEGER NOT NULL CHECK (stipend >= 0),
-    avg_gre           INTEGER NOT NULL CHECK (avg_gre BETWEEN 260 AND 340),
     deadline          TEXT    NOT NULL CHECK (date(deadline) IS deadline),
     website           TEXT    NOT NULL
 ) STRICT;
@@ -42,9 +40,9 @@ def connect(path) -> sqlite3.Connection:
 
 def add_programs(connection: sqlite3.Connection, programs: list[Program]) -> None:
     rows = [(p.university, p.program, p.degree, p.field, p.state, p.tuition_in_state,
-             p.tuition_out_state, p.living_cost, p.acceptance_rate, p.stipend, p.avg_gre,
-             p.deadline.isoformat(), p.website) for p in programs]
-    connection.executemany("INSERT INTO programs VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", rows)
+             p.tuition_out_state, p.living_cost, p.acceptance_rate, p.deadline.isoformat(),
+             p.website) for p in programs]
+    connection.executemany("INSERT INTO programs VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", rows)
     connection.commit()
 
 
@@ -57,7 +55,7 @@ def add_scholarships(connection: sqlite3.Connection, scholarships: list[Scholars
 
 def get_programs(connection: sqlite3.Connection) -> list[Program]:
     rows = connection.execute("SELECT * FROM programs ORDER BY university")
-    return [Program(*row[:11], date.fromisoformat(row[11]), row[12]) for row in rows]
+    return [Program(*row[:9], date.fromisoformat(row[9]), row[10]) for row in rows]
 
 
 def get_scholarships(connection: sqlite3.Connection) -> list[Scholarship]:

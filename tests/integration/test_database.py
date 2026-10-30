@@ -9,7 +9,7 @@ from helpers import DATABASE, make_program, make_scholarship
 
 
 def test_programs_come_back_the_same():
-    program = make_program(stipend=30000, avg_gre=320)
+    program = make_program()
     with closing(connect(":memory:")) as connection:
         add_programs(connection, [program])
         assert get_programs(connection) == [program]
@@ -59,22 +59,12 @@ def test_real_database():
     dict(tuition_in_state=-1),
     dict(living_cost=-1),
     dict(acceptance_rate=1.5),
-    dict(stipend=-1),
-    dict(avg_gre=259),
-    dict(avg_gre=341),
     dict(tuition_in_state="lots"),
 ], ids=lambda bad: f"{list(bad)[0]}={list(bad.values())[0]}")
 def test_bad_program_is_refused(bad):
     with closing(connect(":memory:")) as connection:
         with pytest.raises(sqlite3.IntegrityError):
             add_programs(connection, [make_program(**bad)])
-
-
-@pytest.mark.parametrize("gre", [260, 340])
-def test_gre_edges_are_accepted(gre):
-    with closing(connect(":memory:")) as connection:
-        add_programs(connection, [make_program(avg_gre=gre)])
-        assert get_programs(connection)[0].avg_gre == gre
 
 
 @pytest.mark.parametrize("bad", [dict(name=""), dict(amount=-5), dict(min_gpa=4.5)],

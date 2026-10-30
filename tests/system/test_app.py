@@ -19,17 +19,9 @@ def test_no_warning_when_nothing_is_close():
     assert at.warning.len == 0
 
 
-def test_ms_table_has_no_funding_column():
-    assert "Funding" not in table(search(open_app()), "Programs").columns
-
-
 def test_only_chosen_states_are_shown():
     programs = table(search(open_app(), states=["OH"], budget=100000), "Programs")
     assert set(programs["State"]) == {"OH"}
-
-
-def test_gre_is_accepted():
-    assert len(table(search(open_app(), gre=320), "Programs")) > 0
 
 
 def test_program_deadline_is_tracked():

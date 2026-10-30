@@ -1,6 +1,4 @@
 streamlit>=1.40
-fastapi
-httpx
 pytest
 pytest-cov
 hypothesis

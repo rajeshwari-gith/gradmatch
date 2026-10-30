@@ -16,7 +16,6 @@ def test_story_2_student_finds_phd_programs_and_fellowships():
     at = search(open_app(), degree="PhD", budget=100000)
     programs = table(at, "Programs")
     assert len(programs) == 8
-    assert "Funding" in programs.columns
     names = list(table(at, "Scholarships")["Name"])
     assert names[0] == "DoD National Defense Science and Engineering Graduate Fellowship"
     assert "GVSU Graduate Assistantship" not in names

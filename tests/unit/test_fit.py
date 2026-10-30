@@ -2,7 +2,7 @@ import pytest
 from hypothesis import given
 from hypothesis import strategies as st
 
-from gradmatch.fit import MATCH, REACH, SAFETY, chance, check_gpa, check_gre
+from gradmatch.fit import MATCH, REACH, SAFETY, chance, check_gpa
 
 
 # decision table: acceptance rate (rows) x GPA (columns)
@@ -52,26 +52,3 @@ def test_chance_rejects_invalid_gpa():
 @given(st.floats(0, 4), st.floats(0, 1))
 def test_chance_is_always_one_of_three(gpa, rate):
     assert chance(gpa, rate) in {SAFETY, MATCH, REACH}
-
-
-# GRE moves the chance one step when the program's average GRE is known
-@pytest.mark.parametrize("gre, expected", [
-    (None, MATCH), (325, SAFETY), (324, MATCH), (315, MATCH), (314, REACH),
-])
-def test_gre_edges(gre, expected):
-    assert chance(3.5, 0.40, gre, 320) == expected
-
-
-def test_gre_ignored_when_program_average_unknown():
-    assert chance(3.5, 0.40, 340, None) == MATCH
-
-
-@pytest.mark.parametrize("gre", [260, 300, 340])
-def test_valid_gre(gre):
-    check_gre(gre)
-
-
-@pytest.mark.parametrize("gre", [259, 341])
-def test_invalid_gre(gre):
-    with pytest.raises(ValueError):
-        check_gre(gre)

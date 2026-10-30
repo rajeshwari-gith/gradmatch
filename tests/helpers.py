@@ -14,8 +14,7 @@ DATABASE = ROOT / "data" / "gradmatch.db"
 def make_program(**changes):
     values = dict(university="Test University", program="MS in Computer Science", degree="MS",
                   field="Computer Science", state="MI", tuition_in_state=10000,
-                  tuition_out_state=20000, living_cost=15000, acceptance_rate=0.5, stipend=0,
-                  avg_gre=310, deadline=date(2027, 2, 1),
+                  tuition_out_state=20000, living_cost=15000, acceptance_rate=0.5, deadline=date(2027, 2, 1),
                   website="https://example.edu")
     values.update(changes)
     return Program(**values)
@@ -42,14 +41,13 @@ def open_app():
 
 
 def search(at, degree="MS", field="Computer Science", gpa=3.5, home_state="MI", budget=40000,
-           states=(), gre=None, today=date(2026, 11, 20)):
+           states=(), today=date(2026, 11, 20)):
     at.radio(key="degree").set_value(degree)
     at.selectbox(key="field").set_value(field)
     at.number_input(key="gpa").set_value(gpa)
     at.selectbox(key="home_state").set_value(home_state)
     at.number_input(key="budget").set_value(budget)
     at.multiselect(key="states").set_value(list(states))
-    at.number_input(key="gre").set_value(gre)
     with patch("gradmatch.deadlines.today", Mock(return_value=today)):
         at.button[0].click().run()
     assert not at.exception
