@@ -13,10 +13,6 @@ from streamlit.testing.v1 import AppTest
 
 pytestmark = pytest.mark.system
 
-# In plain words: system tests open the whole app (the real Streamlit page) without a browser,
-# fill in the form, press the button and read what the page shows. These ones cover the form:
-# what is accepted, what shows an error, and that every problem is listed at once.
-
 APP = str(Path(__file__).resolve().parents[2] / "app" / "streamlit_app.py")
 
 
@@ -34,6 +30,11 @@ def submit(at):
     return at
 
 
+def accepted(at) -> bool:
+    """The profile was saved (so the results are shown) and no error is on the page."""
+    return "profile" in at.session_state and not at.error
+
+
 def error_text(at):
     return " ".join(m.value for m in at.markdown) + " ".join(e.value for e in at.error)
 
@@ -41,9 +42,9 @@ def error_text(at):
 # ---- The page loads ----
 
 def test_page_shows_title_and_form(app):
-    assert app.title[0].value == "🎓 GradMatch"
+    assert any('class="gm-serif">GradMatch<' in m.value for m in app.markdown)
     assert app.button[0].label == "Find programs"
-    assert not app.error and not app.success
+    assert not app.error and "profile" not in app.session_state
 
 
 def test_field_list_comes_from_the_data(app):
@@ -62,8 +63,7 @@ def test_default_form_values(app):
 
 def test_default_profile_is_accepted(app):
     submit(app)
-    assert app.success[0].value == "Your profile looks good."
-    assert not app.error
+    assert accepted(app)
 
 
 def test_accepted_profile_is_saved_with_the_entered_values(app):
@@ -86,8 +86,7 @@ def test_summary_is_shown_after_success(app):
     app.number_input(key="budget").set_value(25_000)
     submit(app)
     summary = " ".join(m.value for m in app.markdown)
-    assert "$25,000" in summary
-    assert "GPA **3.50**" in summary
+    assert "in Computer Science within $25,000 / year · any state" in summary
 
 
 # ---- Boundary-value analysis on GPA (limit 4.0) ----
@@ -96,14 +95,14 @@ def test_summary_is_shown_after_success(app):
 def test_gpa_on_the_limit_is_accepted(app, gpa):
     app.number_input(key="gpa").set_value(gpa)
     submit(app)
-    assert app.success and not app.error
+    assert accepted(app)
 
 
 def test_gpa_just_over_the_limit_shows_an_error(app):
     app.number_input(key="gpa").set_value(4.05)
     submit(app)
     assert "GPA must be between 0.0 and 4.0." in error_text(app)
-    assert not app.success
+    assert "profile" not in app.session_state
 
 
 # ---- Boundary-value analysis on GRE (limits 260 and 340) ----
@@ -112,7 +111,7 @@ def test_gpa_just_over_the_limit_shows_an_error(app):
 def test_gre_on_the_limit_is_accepted(app, gre):
     app.number_input(key="gre").set_value(gre)
     submit(app)
-    assert app.success and not app.error
+    assert accepted(app)
 
 
 @pytest.mark.parametrize("gre", [259, 341])
@@ -132,20 +131,20 @@ def test_international_student_without_toefl_gets_an_error(app):
     app.selectbox(key="citizenship").set_value("International")
     submit(app)
     assert "TOEFL score is required for international students." in error_text(app)
-    assert not app.success
+    assert "profile" not in app.session_state
 
 
 def test_international_student_with_toefl_is_accepted(app):
     app.selectbox(key="citizenship").set_value("International")
     app.number_input(key="toefl").set_value(95)
     submit(app)
-    assert app.success and not app.error
+    assert accepted(app)
 
 
 def test_us_citizen_without_toefl_is_accepted(app):
     app.selectbox(key="citizenship").set_value("US")
     submit(app)
-    assert app.success and not app.error
+    assert accepted(app)
 
 
 # ---- Several problems at once are all shown ----
@@ -167,4 +166,4 @@ def test_error_goes_away_after_the_student_fixes_it(app):
     assert app.error
     app.number_input(key="gpa").set_value(3.2)
     submit(app)
-    assert app.success and not app.error
+    assert accepted(app)

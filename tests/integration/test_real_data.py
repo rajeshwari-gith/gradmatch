@@ -6,10 +6,6 @@ across files, and works with the modules that use it. When a data row is
 added or changed, these tests catch mistakes the loader cannot see on its
 own (a state with no living cost, a duplicate id, a misspelled field).
 """
-# In plain words: the other tests use tiny made-up data. These tests read the REAL files in
-# data/ (45,000+ programs) and check that every row follows the rules: unique ids, a living
-# cost for every state, https links, allowed fields and degrees, score ranges in order. They
-# also run the search and the API on the real data, so a bad row added later is caught here.
 
 import csv
 import time
@@ -23,11 +19,14 @@ from conftest import make_profile
 from gradmatch.apply_scholarship_sheet import SHEET_COLUMNS
 from gradmatch.cost import yearly_cost
 from gradmatch.deadlines import upcoming
-from gradmatch.scholarships import eligible_scholarships
+from gradmatch.fit import UNKNOWN
+from gradmatch.scholarships import eligible_scholarships, kind_of
+from gradmatch.search import search_programs
 
 pytestmark = pytest.mark.integration
 
 from gradmatch.ipeds_import import CIP_FIELDS
+from gradmatch.requirements import COLUMNS as REQUIREMENT_COLUMNS, load_requirements
 
 # The hand-entered programs use four fields; rows imported from official data use the CIP_FIELDS names.
 FIELDS = {"Electrical and Computer Engineering", "Business Analytics", *CIP_FIELDS.values()}
@@ -142,6 +141,11 @@ def test_imported_program_ids_are_unique(programs):
     assert len(ids) == len(set(ids))
 
 
+
+def test_every_scholarship_type_has_a_kind(scholarships):
+    # kind_of raises for a type it does not know, so a typo in the type column fails here.
+    assert {kind_of(s) for s in scholarships} <= {"Scholarship", "Fellowship", "Assistantship"}
+
 # ---- The modules run on the real data ----
 # Why: real data has cases our small tests may not think of; the code must not crash on any of them.
 
@@ -204,6 +208,46 @@ def test_bachelors_rows_are_four_years_with_no_stipend(programs):
            if p.degree == "BS" and (p.duration_years != 4 or p.stipend != 0)]
     assert bad == []
 
+
+# ---- Essay and statement requirements ----
+# Why: every requirement must belong to a real program, and the blank sheet must list real
+# programs with exactly the columns of requirements.csv (plus two to help the reader).
+
+def test_every_requirement_belongs_to_a_program(programs):
+    ids = {p.program_id for p in programs}
+    requirements = load_requirements("data/requirements.csv")
+    assert [r.program_id for r in requirements if r.program_id not in ids] == []
+
+
+def test_requirements_sheet_lists_real_programs_unchecked(programs):
+    by_id = {p.program_id: p for p in programs}
+    with open("data/requirements_sheet.csv", newline="", encoding="utf-8") as file:
+        reader = csv.DictReader(file)
+        rows = list(reader)
+
+    assert reader.fieldnames == ["program_id", "university", "program_name", *REQUIREMENT_COLUMNS[1:], "notes"]
+    assert len(rows) == 10
+    for row in rows:
+        program = by_id[row["program_id"]]
+        assert (row["university"], row["program_name"]) == (program.university, program.program_name)
+        assert all(row[name] == "" for name in REQUIREMENT_COLUMNS[1:])     # nothing filled in yet
+
+
+
+# ---- The fit rule on the real data ----
+# Why: most imported programs publish no average GPA, so their chance is estimated from the
+# acceptance rate (their own or their university's). A program with neither is left out of the
+# search, so the default search must never show "Unknown".
+
+def test_default_ms_computer_science_search_has_no_unknown_fits(programs, living_costs):
+    profile = make_profile()                 # MS, Computer Science, GPA 3.5, MI, $40,000
+
+    results = search_programs(profile, programs, living_costs)
+
+    assert results                           # the search still finds programs
+    assert [r.program.program_id for r in results if r.fit == UNKNOWN] == []
+    # Programs with no published average GPA are still shown, with a chance from a rate.
+    assert any(r.program.avg_gpa is None for r in results)
 
 # ---- The API on the real data (45,000+ rows) ----
 # Why: the API must stay fast with the full file; 5 seconds is a generous limit for a search.

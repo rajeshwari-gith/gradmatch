@@ -6,7 +6,7 @@ matching, deadlines, presentation and exports. No Streamlit and no real data.
 
 Techniques: equivalence partitioning on the path through the system (MS
 search, funded PhD, scholarships, exports, broken data), and checks that two
-modules agree with each other (for example the card colors and the deadline
+modules agree with each other (for example the deadline row and the deadline
 status).
 """
 import csv
@@ -21,15 +21,13 @@ from data_fixtures import write_fixture_data
 from gradmatch.data_loader import DataError, load_living_costs, load_programs, load_scholarships
 from gradmatch.deadlines import CLOSED, URGENT, deadline_of, deadline_status, upcoming
 from gradmatch.exports import to_csv, to_ics
-from gradmatch.presentation import DEADLINE_COLORS, result_card_html, scholarship_card_html
+from gradmatch.components import URGENT_BG
+from gradmatch.fit import REACH
+from gradmatch.screens import deadline_face, deadline_row_html, program_row_html, scholarship_amount_html, scholarship_info_html
 from gradmatch.scholarships import eligible_scholarships
 from gradmatch.search import search_programs
 
 pytestmark = pytest.mark.integration
-
-# In plain words: unit tests check one function alone; these check that the pieces still work
-# TOGETHER. Real CSV text goes in, goes through the loader, search, scholarships, cards and
-# exports, and we check what comes out. If two modules disagree about a rule, a test here fails.
 
 TODAY = date(2026, 10, 24)
 
@@ -113,27 +111,31 @@ def test_programs_and_scholarships_are_ordered_together_by_deadline(data):
     assert all(deadline_status(deadline_of(i), TODAY) != CLOSED for i in ordered)
 
 
-# ---- Search results -> cards: two modules must agree ----
-# Why: the card colours come from presentation.py but the deadline status comes from deadlines.py.
+# ---- Search results -> rows: two modules must agree ----
+# Why: the deadline face comes from screens.py but the deadline status comes from deadlines.py.
 
-def test_card_colors_agree_with_the_deadline_status(data):
+def test_deadline_rows_agree_with_the_deadline_status(data):
     programs, living, _ = data
     for result in search_programs(make_profile(annual_budget=100000), programs, living):
-        status = deadline_status(result.program.application_deadline, TODAY)
-        assert f"--chip:{DEADLINE_COLORS[status]}" in result_card_html(result, TODAY)
+        day = result.program.application_deadline
+        urgent = deadline_status(day, TODAY) == URGENT
+        html = deadline_row_html(result.program, TODAY)
+        assert (URGENT_BG in html) is urgent
+        assert (deadline_face((day - TODAY).days) == REACH) is urgent
 
 
-def test_the_urgent_program_gets_a_coral_deadline_chip(data):
+def test_a_loaded_program_becomes_a_row_with_its_cost(data):
     programs, living, _ = data
     cheap = search_programs(make_profile(), programs, living)[0]
-    assert deadline_status(cheap.program.application_deadline, TODAY) == URGENT
-    assert "--chip:#F0705F" in result_card_html(cheap, TODAY)
+    html = program_row_html(cheap, "MI", living["MI"])
+    assert "Cheap State University" in html and 'gm-money" data-label="Est. yearly">$25,000<' in html
+    assert 'href="https://example.edu/cheap"' in html
 
 
 def test_loaded_scholarship_becomes_a_card(data):
     _, _, scholarships = data
     sch5 = next(s for s in scholarships if s.scholarship_id == "SCH5")
-    html = scholarship_card_html(sch5, TODAY)
+    html = scholarship_info_html(sch5, True) + scholarship_amount_html(sch5, TODAY)
     assert "Michigan Fee Waiver" in html and "Non-monetary" in html and "Residents of MI" in html
 
 

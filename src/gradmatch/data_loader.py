@@ -5,10 +5,6 @@ cells to the right types and checks the business limits. A bad row raises
 DataError with the file name, the line number and the problem, so whoever
 edits the data can find and fix it quickly.
 """
-# In plain words: the data lives in CSV files that people type into or that an import
-# script writes. This file reads them and turns every row into a Python object the rest of
-# the app can trust. If a row is wrong (a GPA of 5, a date like 2027-02-30), we stop with a
-# clear message instead of quietly showing a wrong number to a student.
 
 import csv
 from dataclasses import MISSING, fields

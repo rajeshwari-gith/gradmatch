@@ -7,10 +7,6 @@ rounding, every test-score column, extra columns kept by a merge, and the
 tuition report. See docs/mutation-testing.md. The helpers come from
 test_ipeds_import.py; nothing here reads the real government files.
 """
-# In plain words: mutation testing showed that some of the importer's rules and most of its
-# command line were not really checked. These tests close those gaps. They run the importer on
-# tiny made-up files (never the real government files) and reuse the helpers from
-# test_ipeds_import.py, so that file did not have to change.
 
 import csv
 

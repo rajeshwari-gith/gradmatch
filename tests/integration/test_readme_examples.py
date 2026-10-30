@@ -1,10 +1,4 @@
 """Run the API examples written in README.md, so the README cannot drift from the code."""
-# In plain words: the README shows `curl` commands for the API. If someone renames a parameter or
-# an endpoint, those examples would quietly stop working, and a reader would copy a broken command.
-# This test reads the README itself (the examples are not copied here), turns each curl command
-# into the same request with FastAPI's TestClient, and checks the answer. So a change that breaks
-# a README example fails the tests.
-# The API runs on the small fixture data (tests/data_fixtures.py), like the other API tests.
 
 import json
 import re
@@ -16,6 +10,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from data_fixtures import write_fixture_data
+from gradmatch import api
 from gradmatch.api import app
 
 pytestmark = pytest.mark.integration
@@ -64,6 +59,7 @@ EXAMPLES = [parse_curl(command) for command in curl_commands(api_section())]
 @pytest.fixture
 def client(tmp_path, monkeypatch):
     monkeypatch.setenv("GRADMATCH_DATA_DIR", str(write_fixture_data(tmp_path)))
+    monkeypatch.setattr(api, "_starred", frozenset())      # the stars live in memory: start empty
     return TestClient(app)
 
 
@@ -73,13 +69,15 @@ def client(tmp_path, monkeypatch):
 
 def test_readme_has_the_api_examples():
     assert [(method, path.split("?")[0]) for method, path, _ in EXAMPLES] == [
-        ("GET", "/programs"), ("POST", "/match"), ("GET", "/deadlines")]
+        ("GET", "/programs"), ("POST", "/match"), ("GET", "/deadlines"), ("POST", "/starred"),
+        ("DELETE", "/starred")]
 
 
 # ---- Each example works ----
 # Why: these are exactly the requests a reader will copy, so each must give 200 and the answer the
-# README describes (a list for /programs and /deadlines; total_programs, programs and scholarships
-# for /match), and must respect the limit it asks for.
+# README describes (a list for /programs and /starred; urgent_days, glance and deadlines for
+# /deadlines; total_programs, programs and scholarships for /match), and must respect the limit
+# it asks for.
 
 @pytest.mark.parametrize("method, path, body", EXAMPLES, ids=[f"{m} {p}" for m, p, _ in EXAMPLES])
 def test_readme_example_uses_only_real_parameters(method, path, body):
@@ -102,6 +100,11 @@ def test_readme_example_works(client, method, path, body):
     if path.startswith("/match"):
         assert set(answer) == {"total_programs", "programs", "scholarships"}
         assert len(answer["programs"]) <= limit
+    elif path.startswith("/deadlines"):
+        assert set(answer) == {"urgent_days", "glance", "deadlines"}
+        assert set(answer["glance"]) == {"within_window", "within_90", "later", "passed"}
+    elif method == "POST":
+        assert answer == [body["key"]]                 # the starred keys after starring one item
     else:
         assert isinstance(answer, list) and len(answer) <= limit
 
@@ -115,6 +118,26 @@ def test_health_answer_in_the_table_matches_the_api(client):
 
     assert client.get("/health").json() == documented
 
+
+
+def test_deadlines_row_in_the_table_names_the_real_keys(client):
+    row = next(line for line in api_section().split("\n") if line.startswith("| `GET /deadlines"))
+    answer = client.get("/deadlines?today=2026-10-27").json()
+
+    assert all(f'"{key}"' in row for key in answer)                    # urgent_days, glance, deadlines
+    assert all(f"`{key}`" in row for key in answer["glance"])         # the four counts
+
+
+def test_match_row_names_the_fit_values_the_api_really_gives(client):
+    row = next(line for line in api_section().split("\n") if line.startswith("| `POST /match"))
+    documented = set(re.findall(r'`"(Safety|Match|Reach|Unknown)"`', row))
+    body = dict(degree_sought="MS", gpa=3.5, field="Computer Science", home_state="MI",
+                citizenship="US", annual_budget=100000)
+
+    fits = {p["fit"] for p in client.post("/match", json=body).json()["programs"]}
+
+    assert documented == {"Safety", "Match", "Reach", "Unknown"}      # "never Unknown" is said
+    assert fits and fits <= {"Safety", "Match", "Reach"}
 
 def test_the_uvicorn_command_names_the_real_app():
     command = re.search(r"uvicorn (\S+):(\S+)", api_section())

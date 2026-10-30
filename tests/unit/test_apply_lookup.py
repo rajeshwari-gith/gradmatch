@@ -5,10 +5,6 @@ each kind of bad value, unknown program_id, unchecked row) and a decision
 table for the PhD tuition-waiver rule. Every test works on copies of tiny
 data files in tmp_path, never on the real data/ folder.
 """
-# In plain words: these tests run the lookup-sheet tool on tiny copies of programs.csv and
-# SOURCES.md in a temporary folder. They prove that checked values are copied, blank cells
-# keep the old value, every kind of mistake is reported with its line number, and that one
-# bad row means nothing at all is written (all or nothing).
 
 import csv
 

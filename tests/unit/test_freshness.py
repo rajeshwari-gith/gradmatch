@@ -14,10 +14,6 @@ from freshness import forget_stale_gradmatch, source_signature
 
 pytestmark = pytest.mark.unit
 
-# In plain words: Streamlit can keep an OLD copy of our code in memory after an update, which
-# crashed the live app once. freshness.py spots that and reloads. We test it with fake module
-# lists, so the real test run is never disturbed.
-
 PACKAGE_DIR = Path(gradmatch.__file__).parent
 
 
