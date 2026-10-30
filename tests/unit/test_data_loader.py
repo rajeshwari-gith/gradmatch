@@ -18,7 +18,7 @@ def test_load_programs(tmp_path):
 def test_load_scholarships(tmp_path):
     scholarship = load_scholarships(write_csv(tmp_path, SCHOLARSHIP_HEADER, SCHOLARSHIP_ROW))[0]
     assert scholarship.degrees == ("MS", "PhD")
-    assert scholarship.citizenship == ("US", "PR")
+    assert scholarship.open_to == "Everyone"
     assert scholarship.deadline == date(2026, 12, 1)
 
 

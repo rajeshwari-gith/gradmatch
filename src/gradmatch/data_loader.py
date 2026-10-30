@@ -56,7 +56,7 @@ def parse_scholarship(row: dict) -> Scholarship:
         degrees=tuple(row["degrees"].split(";")),
         fields=tuple(row["fields"].split(";")),
         min_gpa=float(row["min_gpa"]),
-        citizenship=tuple(row["citizenship"].split(";")),
+        open_to=row["open_to"],
         deadline=date.fromisoformat(row["deadline"]),
         website=row["website"],
     )

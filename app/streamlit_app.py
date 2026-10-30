@@ -18,7 +18,6 @@ STATES = ["AL", "AK", "AZ", "AR", "CA", "CO", "CT", "DC", "DE", "FL", "GA", "HI"
           "IN", "KS", "KY", "LA", "MA", "MD", "ME", "MI", "MN", "MO", "MS", "MT", "NC", "ND", "NE",
           "NH", "NJ", "NM", "NV", "NY", "OH", "OK", "OR", "PA", "RI", "SC", "SD", "TN", "TX", "UT",
           "VA", "VT", "WA", "WI", "WV", "WY"]
-CITIZENSHIP = {"US citizen": "US", "Permanent resident": "PR", "International": "International"}
 
 st.set_page_config(page_title="GradMatch")
 st.title("GradMatch")
@@ -40,12 +39,11 @@ with st.form("profile"):
                           key="gre")
     states = st.multiselect("States you'd like (leave empty for any)", STATES, key="states")
     budget = st.number_input("Yearly budget ($)", min_value=0, value=40000, step=1000, key="budget")
-    citizenship = st.selectbox("Citizenship", list(CITIZENSHIP), key="citizenship")
     submitted = st.form_submit_button("Search")
 
 if submitted:
-    student = Student(degree, field, gpa, home_state, int(budget), CITIZENSHIP[citizenship],
-                      tuple(states), None if gre is None else int(gre))
+    student = Student(degree, field, gpa, home_state, int(budget), tuple(states),
+                      None if gre is None else int(gre))
 
     st.subheader("Programs")
     results = find_programs(get_programs(database, degree, field), student)
@@ -71,12 +69,13 @@ if submitted:
     found = find_scholarships(scholarships, student)
     if found:
         st.dataframe(
-            [{"Name": s.name, "Amount": f"${s.amount:,}", "Deadline": s.deadline.isoformat(),
+            [{"Name": s.name, "Amount": f"${s.amount:,}", "Open to": s.open_to,
+              "Deadline": s.deadline.isoformat(),
               "Website": s.website} for s in found],
             hide_index=True, column_config={"Website": st.column_config.LinkColumn()},
         )
     else:
-        st.info("No scholarships match you.")
+        st.info("No scholarships match your degree, field and GPA.")
 
     st.subheader("Deadlines")
     dates = [(s.name, s.deadline) for s in found]

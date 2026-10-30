@@ -4,7 +4,7 @@ SE 413/513 Software Testing project, Fall 2026
 Rajeshwari Galugu and Sai Nishith Jangili
 
 A Streamlit app for students planning grad school. You enter your degree (MS or PhD), field,
-GPA, GRE score (optional), home state, the states you'd like, budget and citizenship. The app shows:
+GPA, GRE score (optional), home state, the states you'd like and budget. The app shows:
 
 - programs you can afford, cheapest first (PhD: best funded first), with a Safety / Match / Reach chance
 - scholarships and fellowships you can apply for
@@ -60,6 +60,7 @@ How we estimated:
 
 **Scholarships** (`data/scholarships.csv`)
 - 7 national scholarships and fellowships.
+- Each one says who can apply (for example "US citizens" or "Everyone").
 - The amounts and deadlines are estimates.
 
 All results are estimates. They do not promise admission.

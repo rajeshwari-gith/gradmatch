@@ -6,8 +6,6 @@ def qualifies(scholarship: Scholarship, student: Student) -> bool:
         return False
     if "Any" not in scholarship.fields and student.field not in scholarship.fields:
         return False
-    if "Any" not in scholarship.citizenship and student.citizenship not in scholarship.citizenship:
-        return False
     return student.gpa >= scholarship.min_gpa
 
 

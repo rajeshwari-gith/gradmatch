@@ -41,15 +41,17 @@ def test_programs_missing_value_is_422():
     assert client.get("/programs", params={"degree": "MS"}).status_code == 422
 
 
-def test_scholarships_for_international_ms_student():
-    params = {"degree": "MS", "field": "Computer Science", "gpa": 3.5, "citizenship": "International"}
-    names = [s["name"] for s in client.get("/scholarships", params=params).json()]
-    assert names == ["GVSU Graduate Assistantship"]
+def test_scholarships_for_ms_student():
+    params = {"degree": "MS", "field": "Computer Science", "gpa": 3.5}
+    found = client.get("/scholarships", params=params).json()
+    assert [s["name"] for s in found] == ["NSF Graduate Research Fellowship Program",
+                                          "DoD SMART Scholarship", "GVSU Graduate Assistantship"]
+    assert found[0]["open_to"] == "US citizens and permanent residents"
 
 
 
 def test_scholarships_bad_gpa_is_400():
-    params = {"degree": "MS", "field": "Computer Science", "gpa": 5, "citizenship": "US"}
+    params = {"degree": "MS", "field": "Computer Science", "gpa": 5}
     response = client.get("/scholarships", params=params)
     assert response.status_code == 400
     assert "GPA" in response.json()["detail"]

@@ -46,21 +46,22 @@ def test_small_budget_shows_message():
 
 
 def test_nothing_matches_shows_messages():
-    at = search(open_app(), field="Mechanical Engineering", citizenship="International",
-                budget=1000, today=date(2027, 3, 1))
+    at = search(open_app(), field="Mechanical Engineering", budget=1000, today=date(2027, 3, 1))
     assert [i.value for i in at.info] == ["No programs fit your budget. Try a bigger budget.",
                                           "No upcoming deadlines."]
 
 
-def test_international_student_gets_no_us_only_awards():
-    at = search(open_app(), citizenship="International")
-    assert list(table(at, "Scholarships")["Name"]) == ["GVSU Graduate Assistantship"]
+def test_scholarships_show_who_can_apply():
+    scholarships = table(search(open_app()), "Scholarships")
+    open_to = dict(zip(scholarships["Name"], scholarships["Open to"]))
+    assert open_to["DoD SMART Scholarship"] == "US citizens"
+    assert open_to["GVSU Graduate Assistantship"] == "Everyone"
 
 
 def test_no_scholarships_message():
-    at = search(open_app(), degree="PhD", field="Mechanical Engineering",
-                citizenship="International")
-    assert "No scholarships match you." in [i.value for i in at.info]
+    with patch("gradmatch.data_loader.load_scholarships", Mock(return_value=[])):
+        at = search(open_app())
+    assert "No scholarships match your degree, field and GPA." in [i.value for i in at.info]
 
 
 def test_app_uses_the_loader():

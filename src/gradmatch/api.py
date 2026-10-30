@@ -22,7 +22,7 @@ app = FastAPI(title="GradMatch")
 @app.get("/programs")
 def programs(degree: str, field: str, gpa: float, home_state: str, budget: int,
              states: list[str] = Query([]), gre: int | None = None):
-    student = Student(degree, field, gpa, home_state, budget, "US", tuple(states), gre)
+    student = Student(degree, field, gpa, home_state, budget, tuple(states), gre)
     try:
         results = find_programs(get_programs(DATABASE, degree, field), student)
     except ValueError as error:
@@ -34,13 +34,14 @@ def programs(degree: str, field: str, gpa: float, home_state: str, budget: int,
 
 
 @app.get("/scholarships")
-def scholarships(degree: str, field: str, gpa: float, citizenship: str):
+def scholarships(degree: str, field: str, gpa: float):
     try:
         check_gpa(gpa)
     except ValueError as error:
         raise HTTPException(status_code=400, detail=str(error))
-    student = Student(degree, field, gpa, "", 0, citizenship)
-    return [{"name": s.name, "amount": s.amount, "deadline": s.deadline.isoformat()}
+    student = Student(degree, field, gpa, "", 0)
+    return [{"name": s.name, "amount": s.amount, "open_to": s.open_to,
+             "deadline": s.deadline.isoformat()}
             for s in find_scholarships(SCHOLARSHIPS, student)]
 
 
