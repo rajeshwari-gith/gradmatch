@@ -1,3 +1,4 @@
+# Unit test for yearly cost
 from programs import yearly_cost
 from tests.helpers import make_program
 
