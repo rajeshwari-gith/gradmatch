@@ -4,7 +4,7 @@ import pytest
 
 from gradmatch.deadlines import upcoming
 from gradmatch.fit import MATCH, REACH, SAFETY, chance, check_gpa
-from gradmatch.scholarships import qualifies
+from gradmatch.scholarships import find_scholarships, qualifies
 from gradmatch.search import find_programs
 from helpers import make_program, make_scholarship, make_student
 
@@ -63,3 +63,11 @@ def test_days_left_edges(deadline, days_left, soon):
 
 def test_deadline_one_day_ago_is_hidden():
     assert upcoming([("Award", date(2026, 10, 31))], date(2026, 11, 1)) == []
+
+
+def test_no_scholarships_gives_empty_list():
+    assert find_scholarships([], make_student()) == []
+
+
+def test_no_deadlines_gives_empty_list():
+    assert upcoming([], date(2026, 11, 1)) == []
