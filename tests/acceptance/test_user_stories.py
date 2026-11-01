@@ -1,7 +1,7 @@
 # Acceptance tests for the 3 user stories
 from datetime import date
-from tests.helpers import open_app, search, table
 
+from tests.helpers import open_app, search, table
 
 
 def test_story_1_student_finds_ms_programs_they_can_afford():
