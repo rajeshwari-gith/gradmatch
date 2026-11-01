@@ -22,11 +22,11 @@ def today():
     return date.today()
 
 
-def upcoming(deadlines, today):
+def upcoming(deadlines, current_date):
     # deadlines is a list of (name, "YYYY-MM-DD") pairs
     coming = []
     for name, day in deadlines:
-        days_left = (date.fromisoformat(day) - today).days
+        days_left = (date.fromisoformat(day) - current_date).days
         if days_left < 0:
             continue
         coming.append({"name": name, "date": day, "days_left": days_left,
