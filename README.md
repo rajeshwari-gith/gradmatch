@@ -9,6 +9,15 @@ scholarships, and deadlines. The data is stored in a SQLite database.
 
 Live app: https://gradmatch-app.streamlit.app
 
+## Project files
+
+- `app.py` – the web page
+- `programs.py` – program search, yearly cost and admission chance
+- `scholarships.py` – scholarships and deadlines
+- `database.py` – the SQLite database
+- `data/gradmatch.db` – the program and scholarship data
+- `tests/` – the tests, one folder per testing technique
+
 ## Install
 
 `python -m pip install -r requirements.txt`
