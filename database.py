@@ -1,8 +1,10 @@
 # SQLite database for programs and scholarships
 import sqlite3
 
-# CHECK makes SQLite refuse bad values
+# The CHECK rules make SQLite refuse bad values (REQ-8)
 SCHEMA = """
+-- programs: no empty names, only MS or PhD, 2-letter state, no negative costs,
+-- acceptance rate from 0 to 1, and a real date
 CREATE TABLE IF NOT EXISTS programs (
     university        TEXT    NOT NULL CHECK (university != ''),
     degree            TEXT    NOT NULL CHECK (degree IN ('MS', 'PhD')),
@@ -16,6 +18,7 @@ CREATE TABLE IF NOT EXISTS programs (
     website           TEXT    NOT NULL
 );
 
+-- scholarships: no empty name, no negative amount, minimum GPA from 0 to 4, and a real date
 CREATE TABLE IF NOT EXISTS scholarships (
     name     TEXT    NOT NULL CHECK (name != ''),
     amount   INTEGER NOT NULL CHECK (amount >= 0),
