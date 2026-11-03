@@ -15,9 +15,11 @@ def check_gpa(gpa):
 
 
 def chance(gpa, acceptance_rate):
+    # very hard schools are always a reach
     if acceptance_rate < 0.10:
         return "Reach"
 
+    # easier school = more points, stronger GPA = more points
     points = 0
     if acceptance_rate >= 0.60:
         points += 2
@@ -29,6 +31,7 @@ def chance(gpa, acceptance_rate):
     elif gpa < 3.0:
         points -= 1
 
+    # 2 or more points = Safety, 1 = Match, 0 or less = Reach
     if points >= 2:
         return "Safety"
     if points == 1:
